@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "@radix-ui/colors/brown.css";
 
+@theme {
+  --font-sans: "Inter Variable", sans-serif;
+}
+
 @theme inline {
   --shadow-claude: 0px 4px 20px --alpha(var(--color-black) / 3.5%);
 

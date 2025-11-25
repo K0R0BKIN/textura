@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "@fontsource-variable/inter";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 
 function SearchBox() {
