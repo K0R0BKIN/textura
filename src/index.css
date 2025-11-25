@@ -1,5 +1,19 @@
 @import "tailwindcss";
+@import "@radix-ui/colors/brown.css";
 
 @theme inline {
   --shadow-claude: 0px 4px 20px --alpha(var(--color-black) / 3.5%);
+
+  --color-brown-1: var(--brown-1);
+  --color-brown-2: var(--brown-2);
+  --color-brown-3: var(--brown-3);
+  --color-brown-4: var(--brown-4);
+  --color-brown-5: var(--brown-5);
+  --color-brown-6: var(--brown-6);
+  --color-brown-7: var(--brown-7);
+  --color-brown-8: var(--brown-8);
+  --color-brown-9: var(--brown-9);
+  --color-brown-10: var(--brown-10);
+  --color-brown-11: var(--brown-11);
+  --color-brown-12: var(--brown-12);
 }
