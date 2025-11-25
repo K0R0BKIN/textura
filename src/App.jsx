@@ -3,6 +3,7 @@ import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 
 function SearchBox() {
   const [isFocused, setIsFocused] = useState(false);
+  const [value, setValue] = useState("");
 
   return (
     <div className="flex">
@@ -16,14 +17,16 @@ function SearchBox() {
         <input
           type="text"
           placeholder="Look up definitions..."
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className="w-full text-base text-gray-700 outline-none"
           autoFocus
         />
         <button
-          className="bg-brown-9 hover:bg-brown-10 flex h-8 w-8 items-center justify-center rounded-lg text-white disabled:pointer-events-none disabled:opacity-50"
-          disabled
+          className="bg-brown-9 hover:bg-brown-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-white disabled:pointer-events-none disabled:opacity-50"
+          disabled={value.trim() === ""}
         >
           <MagnifyingGlassIcon className="h-5 w-5" />
         </button>
