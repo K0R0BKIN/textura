@@ -9,10 +9,8 @@ function SearchBox() {
   return (
     <div className="flex">
       <div
-        className={`shadow-claude group flex w-xs gap-2 rounded-2xl border bg-white p-2 pl-4 transition-colors sm:w-lg ${
-          isFocused
-            ? "border-gray-300"
-            : "border-gray-200 hover:border-gray-300"
+        className={`shadow-claude/6 hover:shadow-claude/8 border-gray-5 hover:border-gray-6 flex h-15 w-xs items-center gap-2 rounded-[20px] border bg-white p-2.5 pl-[18px] shadow-neutral-950 transition-colors sm:w-lg ${
+          isFocused && "shadow-claude/8 border-gray-6"
         }`}
       >
         <input
@@ -22,14 +20,14 @@ function SearchBox() {
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="w-full text-base text-gray-700 outline-none"
+          className="placeholder:text-gray-11 w-full text-base leading-none font-light outline-none"
           autoFocus
         />
         <button
-          className="bg-brown-9 hover:bg-brown-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-white disabled:pointer-events-none disabled:opacity-50"
+          className="bg-brown-9 hover:bg-brown-10 flex aspect-square h-full cursor-pointer items-center justify-center rounded-xl text-white disabled:pointer-events-none disabled:opacity-50"
           disabled={value.trim() === ""}
         >
-          <MagnifyingGlassIcon className="h-5 w-5" />
+          <MagnifyingGlassIcon className="size-6" />
         </button>
       </div>
     </div>
