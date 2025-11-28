@@ -1,5 +1,20 @@
 import { useState } from "react";
-import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { MagnifyingGlassIcon, SunIcon } from "@radix-ui/react-icons";
+
+function NavBar({ alignment = "space-between", children }) {
+  const alignmentVariants = {
+    "space-between": "justify-between",
+    end: "justify-end",
+  };
+
+  return (
+    <nav
+      className={`fixed top-0 flex h-[68px] w-full items-center px-4 ${alignmentVariants[alignment]}`}
+    >
+      {children}
+    </nav>
+  );
+}
 
 function Logo({ text }) {
   return (
@@ -34,13 +49,26 @@ function SearchBox() {
   );
 }
 
+function AppearanceToggle() {
+  return (
+    <button className="hover:bg-brown-3 size-9 cursor-pointer rounded-full bg-transparent transition-colors">
+      <SunIcon className="text-gray-12 m-auto size-5" />
+    </button>
+  );
+}
+
 export default function HomePage() {
   return (
-    <div className="bg-brown-2 flex min-h-screen items-center justify-center">
-      <div className="relative flex justify-center">
-        <Logo text="Textura" />
-        <SearchBox />
-      </div>
+    <div className="bg-brown-2 h-screen">
+      <NavBar alignment="end">
+        <AppearanceToggle />
+      </NavBar>
+      <main className="flex h-full items-center justify-center">
+        <div className="relative flex justify-center">
+          <Logo text="Textura" />
+          <SearchBox />
+        </div>
+      </main>
     </div>
   );
 }
