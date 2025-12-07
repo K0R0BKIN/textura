@@ -2,6 +2,7 @@
 @import "@radix-ui/colors/gray.css";
 @import "@radix-ui/colors/brown.css";
 @import "@radix-ui/colors/brown-alpha.css";
+@import "@radix-ui/colors/sand.css";
 
 @theme {
   --font-sans: "Inter Variable", sans-serif;
@@ -49,4 +50,17 @@
   --color-brown-a10: var(--brown-a10);
   --color-brown-a11: var(--brown-a11);
   --color-brown-a12: var(--brown-a12);
+
+  --color-sand-1: var(--sand-1);
+  --color-sand-2: var(--sand-2);
+  --color-sand-3: var(--sand-3);
+  --color-sand-4: var(--sand-4);
+  --color-sand-5: var(--sand-5);
+  --color-sand-6: var(--sand-6);
+  --color-sand-7: var(--sand-7);
+  --color-sand-8: var(--sand-8);
+  --color-sand-9: var(--sand-9);
+  --color-sand-10: var(--sand-10);
+  --color-sand-11: var(--sand-11);
+  --color-sand-12: var(--sand-12);
 }
