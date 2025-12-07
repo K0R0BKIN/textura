@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "@radix-ui/colors/gray.css";
 @import "@radix-ui/colors/brown.css";
+@import "@radix-ui/colors/brown-alpha.css";
 
 @theme {
   --font-sans: "Inter Variable", sans-serif;
@@ -35,4 +36,17 @@
   --color-brown-10: var(--brown-10);
   --color-brown-11: var(--brown-11);
   --color-brown-12: var(--brown-12);
+
+  --color-brown-a1: var(--brown-a1);
+  --color-brown-a2: var(--brown-a2);
+  --color-brown-a3: var(--brown-a3);
+  --color-brown-a4: var(--brown-a4);
+  --color-brown-a5: var(--brown-a5);
+  --color-brown-a6: var(--brown-a6);
+  --color-brown-a7: var(--brown-a7);
+  --color-brown-a8: var(--brown-a8);
+  --color-brown-a9: var(--brown-a9);
+  --color-brown-a10: var(--brown-a10);
+  --color-brown-a11: var(--brown-a11);
+  --color-brown-a12: var(--brown-a12);
 }
