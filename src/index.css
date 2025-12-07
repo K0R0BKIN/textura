@@ -78,3 +78,25 @@
   --color-sand-11: var(--sand-11);
   --color-sand-12: var(--sand-12);
 }
+
+@theme inline {
+  --text-primary: var(--color-sand-12);
+}
+
+@layer base {
+  body {
+    @apply bg-brown-2 font-sans text-(--text-primary);
+  }
+}
+
+@layer components {
+  .icon {
+    @apply size-5;
+  }
+  .btn {
+    @apply cursor-pointer disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-icon {
+    @apply flex size-10 items-center justify-center;
+  }
+}
