@@ -29,7 +29,7 @@ function SearchBox() {
 
   return (
     <div
-      className={`shadow-claude/6 hover:shadow-claude/8 focus-within:shadow-claude/8 focus-within:border-gray-6 border-gray-5 hover:border-gray-6 flex h-15 w-xs items-center gap-2 rounded-[20px] border bg-white p-2.5 pl-[18px] shadow-neutral-950 transition-colors sm:w-lg`}
+      className={`shadow-claude/6 hover:shadow-claude/8 focus-within:shadow-claude/8 focus-within:border-gray-6 border-gray-5 hover:border-gray-6 flex h-15 w-xs items-center gap-2 rounded-[20px] border bg-white p-2 pl-4 shadow-neutral-950 transition-colors sm:w-lg`}
     >
       <input
         type="text"
