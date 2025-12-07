@@ -51,7 +51,7 @@ function SearchBox() {
 
 function AppearanceToggle() {
   return (
-    <button className="hover:bg-brown-3 size-9 cursor-pointer rounded-full bg-transparent transition-colors">
+    <button className="hover:bg-brown-3/70 size-9 cursor-pointer rounded-full bg-transparent transition-colors">
       <SunIcon className="text-gray-12 m-auto size-5" />
     </button>
   );
