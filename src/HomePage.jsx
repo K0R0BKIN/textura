@@ -43,7 +43,7 @@ function SearchBox() {
         className="bg-brown-9 hover:bg-brown-10 flex aspect-square h-full cursor-pointer items-center justify-center rounded-xl text-white disabled:pointer-events-none disabled:opacity-50"
         disabled={value.trim() === ""}
       >
-        <MagnifyingGlassIcon className="size-6" />
+        <MagnifyingGlassIcon className="size-7" />
       </button>
     </div>
   );
