@@ -83,6 +83,9 @@
   --bg-2: var(--color-brown-2);
   --bg-2-hover: --alpha(var(--color-brown-3) / 70%);
 
+  --border-5: var(--color-sand-5);
+  --border-6: var(--color-sand-6);
+
   --text-12: var(--color-sand-12);
 }
 

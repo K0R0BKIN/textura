@@ -5,7 +5,7 @@ import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 function SearchBar({ value, onChange, onBlur, onFocus, placeholder }) {
   return (
     <div
-      className={`shadow-claude/6 hover:shadow-claude/8 focus-within:shadow-claude/8 focus-within:border-gray-6 border-gray-5 hover:border-gray-6 flex h-15 w-xs items-center gap-2 rounded-[20px] border bg-white p-2 pl-4 shadow-neutral-950 transition-colors sm:w-lg`}
+      className={`shadow-claude/6 hover:shadow-claude/8 focus-within:shadow-claude/8 flex h-15 w-xs items-center gap-2 rounded-[20px] border border-(--border-5) bg-white p-2 pl-4 shadow-neutral-950 transition-colors focus-within:border-(--border-6) hover:border-(--border-6) sm:w-lg`}
     >
       <input
         type="text"
