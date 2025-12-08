@@ -16,7 +16,7 @@ export default function HomePage() {
       <main className="flex h-full items-center justify-center">
         <div className="relative flex justify-center">
           <Logo text="Textura" />
-          <SearchBox placeholder={"Look up definitions…"} />
+          <SearchBox />
         </div>
       </main>
     </div>

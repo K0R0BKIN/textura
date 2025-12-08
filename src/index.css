@@ -80,12 +80,21 @@
 }
 
 @theme inline {
-  --text-primary: var(--color-sand-12);
+  --bg-2: var(--color-brown-2);
+  --bg-2-hover: --alpha(var(--color-brown-3) / 70%);
+
+  --text-12: var(--color-sand-12);
 }
 
 @layer base {
   body {
-    @apply bg-brown-2 font-sans text-(--text-primary);
+    @apply bg-(--bg-2) font-sans text-(--text-12);
+  }
+}
+
+@layer components {
+  .text-ui {
+    @apply text-base font-light;
   }
 }
 
