@@ -3,7 +3,7 @@ import { SunIcon } from "@radix-ui/react-icons";
 
 function ToolbarButton({ icon: Icon }) {
   return (
-    <button className="hover:bg-(--bg-2-hover) btn btn-icon rounded-full bg-transparent">
+    <button className="btn btn-icon rounded-full bg-transparent hover:bg-(--bg-2-hover)">
       <Icon className="icon" />
     </button>
   );

@@ -86,6 +86,8 @@
   --border-5: var(--color-sand-5);
   --border-6: var(--color-sand-6);
 
+  --text-10: var(--color-sand-10);
+  --text-11: var(--color-sand-11);
   --text-12: var(--color-sand-12);
 }
 
@@ -99,11 +101,17 @@
   .text-ui {
     @apply text-base font-light;
   }
+  .text-ui-sm {
+    @apply text-sm font-light;
+  }
 }
 
 @layer components {
   .icon {
     @apply size-5;
+  }
+  .icon-sm {
+    @apply size-4;
   }
   .btn {
     @apply cursor-pointer disabled:pointer-events-none disabled:opacity-50;

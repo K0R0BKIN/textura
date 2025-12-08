@@ -1,3 +1,5 @@
+import { ChevronRightIcon } from "@radix-ui/react-icons";
+
 const SUGGESTIONS = [
   "Serendipity",
   "Eloquent",
@@ -11,14 +13,21 @@ const SUGGESTIONS = [
   "Ambiguous",
 ];
 
-function SuggestionItem({ suggestion, onClick }) {
+function SuggestionItem({
+  suggestion,
+  icon: Icon = ChevronRightIcon,
+  onClick,
+}) {
   return (
     <li>
       <button
         onClick={() => onClick(suggestion)}
-        className="text-ui btn h-10 w-full rounded-xl px-4 text-left hover:bg-(--bg-2-hover)"
+        className="btn flex h-10 w-full items-center justify-between rounded-xl px-4 text-left hover:bg-(--bg-2-hover)"
       >
-        {suggestion}
+        <div className="text-ui-sm">{suggestion}</div>
+        <div>
+          <Icon className="icon-sm text-(--text-10)"></Icon>
+        </div>
       </button>
     </li>
   );
