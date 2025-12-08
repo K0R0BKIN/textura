@@ -2,7 +2,31 @@ import { useState } from "react";
 import SuggestionList from "./SuggestionList.jsx";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 
-function SearchBar({ value, onChange, onBlur, onFocus, placeholder }) {
+const MAX_DEFINITION_LENGTH = 60;
+
+const SUGGESTIONS = [
+  { word: "Serendipity", definition: "finding something good by happy chance" },
+  {
+    word: "Eloquent",
+    definition: "fluent, persuasive, and expressive in speech",
+  },
+  {
+    word: "Mellifluous",
+    definition: "sweet or musical in sound; pleasant to hear",
+  },
+  { word: "Ephemeral", definition: "lasting for a very short time; fleeting" },
+  { word: "Ubiquitous", definition: "present, appearing, or found everywhere" },
+  { word: "Pragmatic", definition: "dealing with things in a realistic way" },
+].map((s, i) => ({ ...s, key: i }));
+
+function SearchBar({
+  value,
+  onChange,
+  onBlur,
+  onFocus,
+  onKeyDown,
+  placeholder,
+}) {
   return (
     <div
       className={`shadow-claude/6 hover:shadow-claude/8 focus-within:shadow-claude/8 flex h-15 w-xs items-center gap-2 rounded-[20px] border border-(--border-5) bg-white p-2 pl-4 shadow-neutral-950 transition-colors focus-within:border-(--border-6) hover:border-(--border-6) sm:w-lg`}
@@ -14,6 +38,7 @@ function SearchBar({ value, onChange, onBlur, onFocus, placeholder }) {
         onChange={onChange}
         onBlur={onBlur}
         onFocus={onFocus}
+        onKeyDown={onKeyDown}
         className="placeholder:text-gray-11 w-full text-base leading-none font-light text-black outline-none"
         autoFocus
       />
@@ -30,6 +55,20 @@ function SearchBar({ value, onChange, onBlur, onFocus, placeholder }) {
 export default function SearchBox() {
   const [value, setValue] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions] = useState(SUGGESTIONS);
+  const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
+
+  const handleKeyDown = (e) => {
+    if (e.key === "ArrowDown") {
+      setHighlightedSuggestion((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : prev,
+      );
+    } else if (e.key === "ArrowUp") {
+      setHighlightedSuggestion((prev) => (prev > 0 ? prev - 1 : -1));
+    } else if (e.key === "Enter" && highlightedSuggestion >= 0) {
+      handleSuggestionClick(suggestions[highlightedSuggestion]);
+    }
+  };
 
   const handleInputChange = (e) => {
     setValue(e.target.value);
@@ -45,7 +84,7 @@ export default function SearchBox() {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    setValue(suggestion);
+    setValue(suggestion.word);
     setShowSuggestions(false);
   };
 
@@ -56,11 +95,16 @@ export default function SearchBox() {
         onChange={handleInputChange}
         onBlur={handleInputBlur}
         onFocus={handleInputFocus}
+        onKeyDown={handleKeyDown}
         placeholder={"Look up definitions…"}
       />
 
       {showSuggestions && (
-        <SuggestionList onSuggestionClick={handleSuggestionClick} />
+        <SuggestionList
+          suggestions={suggestions}
+          highlightedSuggestion={highlightedSuggestion}
+          onSuggestionClick={handleSuggestionClick}
+        />
       )}
     </div>
   );
