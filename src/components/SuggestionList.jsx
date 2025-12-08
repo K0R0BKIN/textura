@@ -15,7 +15,7 @@ function SuggestionItem({
         onClick={() => onClick(suggestion)}
         onMouseEnter={() => onHover(index)}
         onMouseLeave={() => onHoverEnd()}
-        className={`btn flex h-10 w-full items-center justify-between rounded-xl px-4 text-left ${
+        className={`btn flex h-10 w-full items-center justify-between gap-1 rounded-xl px-4 text-left  ${
           isHighlighted && "bg-(--bg-2-hover)"
         }`}
       >
