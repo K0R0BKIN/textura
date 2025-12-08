@@ -27,17 +27,17 @@ function SuggestionItem({
 
 export default function SuggestionList({
   suggestions,
-  highlightedSuggestion,
+  highlightedIndex,
   onSuggestionClick,
 }) {
   return (
     <div className="absolute mt-4 w-full bg-transparent">
       <ul>
-        {suggestions.map((suggestion) => (
+        {suggestions.map((suggestion, index) => (
           <SuggestionItem
             key={suggestion.word}
             suggestion={suggestion}
-            isHighlighted={suggestion.key === highlightedSuggestion}
+            isHighlighted={index === highlightedIndex}
             onClick={onSuggestionClick}
           />
         ))}

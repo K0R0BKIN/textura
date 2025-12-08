@@ -2,8 +2,6 @@ import { useState } from "react";
 import SuggestionList from "./SuggestionList.jsx";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 
-const MAX_DEFINITION_LENGTH = 60;
-
 const SUGGESTIONS = [
   { word: "Serendipity", definition: "finding something good by happy chance" },
   {
@@ -17,7 +15,7 @@ const SUGGESTIONS = [
   { word: "Ephemeral", definition: "lasting for a very short time; fleeting" },
   { word: "Ubiquitous", definition: "present, appearing, or found everywhere" },
   { word: "Pragmatic", definition: "dealing with things in a realistic way" },
-].map((s, i) => ({ ...s, key: i }));
+];
 
 function SearchBar({
   value,
@@ -56,23 +54,24 @@ export default function SearchBox() {
   const [value, setValue] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions] = useState(SUGGESTIONS);
-  const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   const handleKeyDown = (e) => {
     if (e.key === "ArrowDown") {
-      setHighlightedSuggestion((prev) =>
+      setHighlightedIndex((prev) =>
         prev < suggestions.length - 1 ? prev + 1 : prev,
       );
     } else if (e.key === "ArrowUp") {
-      setHighlightedSuggestion((prev) => (prev > 0 ? prev - 1 : -1));
-    } else if (e.key === "Enter" && highlightedSuggestion >= 0) {
-      handleSuggestionClick(suggestions[highlightedSuggestion]);
+      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+    } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      handleSuggestionClick(suggestions[highlightedIndex]);
     }
   };
 
   const handleInputChange = (e) => {
     setValue(e.target.value);
     setShowSuggestions(e.target.value.length > 0);
+    setHighlightedIndex(e.target.value.length < 1 ? -1 : highlightedIndex);
   };
 
   const handleInputBlur = () => {
@@ -102,7 +101,7 @@ export default function SearchBox() {
       {showSuggestions && (
         <SuggestionList
           suggestions={suggestions}
-          highlightedSuggestion={highlightedSuggestion}
+          highlightedIndex={highlightedIndex}
           onSuggestionClick={handleSuggestionClick}
         />
       )}
