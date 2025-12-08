@@ -16,7 +16,7 @@ function SuggestionItem({ suggestion, onClick }) {
     <li>
       <button
         onClick={() => onClick(suggestion)}
-        className="text-ui btn h-10 w-full rounded-xl px-4 text-left transition-colors hover:bg-(--bg-2-hover)"
+        className="text-ui btn h-10 w-full rounded-xl px-4 text-left hover:bg-(--bg-2-hover)"
       >
         {suggestion}
       </button>
@@ -29,8 +29,8 @@ export default function SuggestionList({
   onSuggestionClick,
 }) {
   return (
-    <div className="absolute mt-2 w-full bg-transparent">
-      <ul className="py-2">
+    <div className="absolute mt-4 w-full bg-transparent">
+      <ul className="flex flex-col gap-0.5">
         {suggestions.map((suggestion) => (
           <SuggestionItem
             key={suggestion}
