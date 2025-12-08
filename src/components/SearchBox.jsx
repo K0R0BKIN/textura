@@ -71,7 +71,7 @@ export default function SearchBox() {
   const handleInputChange = (e) => {
     setValue(e.target.value);
     setShowSuggestions(e.target.value.length > 0);
-    setHighlightedIndex(e.target.value.length < 1 ? -1 : highlightedIndex);
+    setHighlightedIndex(-1);
   };
 
   const handleInputBlur = () => {
@@ -103,6 +103,8 @@ export default function SearchBox() {
           suggestions={suggestions}
           highlightedIndex={highlightedIndex}
           onSuggestionClick={handleSuggestionClick}
+          onSuggestionHover={setHighlightedIndex}
+          onSuggestionHoverEnd={() => setHighlightedIndex(-1)}
         />
       )}
     </div>
