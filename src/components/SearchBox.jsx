@@ -58,10 +58,12 @@ export default function SearchBox() {
 
   const handleKeyDown = (e) => {
     if (e.key === "ArrowDown") {
+      e.preventDefault();
       setHighlightedIndex((prev) =>
         prev < suggestions.length - 1 ? prev + 1 : prev,
       );
     } else if (e.key === "ArrowUp") {
+      e.preventDefault();
       setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
     } else if (e.key === "Enter" && highlightedIndex >= 0) {
       handleSuggestionClick(suggestions[highlightedIndex]);
