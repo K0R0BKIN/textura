@@ -37,7 +37,7 @@ function SearchBar({
         onBlur={onBlur}
         onFocus={onFocus}
         onKeyDown={onKeyDown}
-        className="placeholder:text-gray-11 w-full text-base leading-none font-light text-black outline-none"
+        className="placeholder:text-(--text-11) w-full text-base leading-none font-light text-black outline-none"
         autoFocus
       />
       <button
