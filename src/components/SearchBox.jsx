@@ -37,7 +37,7 @@ function SearchBar({
         onBlur={onBlur}
         onFocus={onFocus}
         onKeyDown={onKeyDown}
-        className="w-full text-ui text-black outline-none placeholder:text-(--text-11)"
+        className="text-ui w-full text-black outline-none placeholder:text-(--text-11)"
         autoFocus
       />
       <button
@@ -60,11 +60,13 @@ export default function SearchBox() {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setHighlightedIndex((prev) =>
-        prev < suggestions.length - 1 ? prev + 1 : prev,
+        prev < suggestions.length - 1 ? prev + 1 : 0,
       );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+      setHighlightedIndex((prev) =>
+        prev > 0 ? prev - 1 : suggestions.length - 1,
+      );
     } else if (e.key === "Enter" && highlightedIndex >= 0) {
       handleSuggestionClick(suggestions[highlightedIndex]);
     }
