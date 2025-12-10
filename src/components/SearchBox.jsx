@@ -52,9 +52,11 @@ function SearchBar({
 
 export default function SearchBox() {
   const [value, setValue] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestions] = useState(SUGGESTIONS);
+  const [isFocused, setIsFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [suggestions] = useState(SUGGESTIONS);
+
+  const showSuggestions = value.length > 0 && isFocused;
 
   const handleKeyDown = (e) => {
     if (e.key === "ArrowDown") {
@@ -74,21 +76,20 @@ export default function SearchBox() {
 
   const handleInputChange = (e) => {
     setValue(e.target.value);
-    setShowSuggestions(e.target.value.length > 0);
     setHighlightedIndex(-1);
   };
 
   const handleInputBlur = () => {
-    setTimeout(() => setShowSuggestions(false), 200);
+    setTimeout(() => setIsFocused(false), 200);
   };
 
   const handleInputFocus = () => {
-    value.length > 0 && setShowSuggestions(true);
+    setIsFocused(true);
   };
 
   const handleSuggestionClick = (suggestion) => {
     setValue(suggestion.word);
-    setShowSuggestions(false);
+    setIsFocused(false);
   };
 
   return (
