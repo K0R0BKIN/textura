@@ -41,14 +41,16 @@ export default function SearchBox() {
   const [isFocused, setIsFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
-  const MAX_SUGGESTIONS = 6;
-  const suggestions = ENTRIES.filter((entry) =>
-    entry.term.toLowerCase().startsWith(value.toLowerCase()),
-  ).slice(0, MAX_SUGGESTIONS);
-
   const isTyping = value.length > 0;
-  const hasResults = suggestions.length > 0;
 
+  const MAX_SUGGESTIONS = 6;
+  const suggestions = isTyping
+    ? ENTRIES.filter((entry) =>
+        entry.term.toLowerCase().startsWith(value.toLowerCase()),
+      ).slice(0, MAX_SUGGESTIONS)
+    : ENTRIES.slice(0, MAX_SUGGESTIONS);
+
+  const hasResults = suggestions.length > 0;
   const showSuggestions = isFocused && (isTyping ? hasResults : true);
 
   const handleKeyDown = (e) => {
