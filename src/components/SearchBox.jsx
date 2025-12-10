@@ -45,8 +45,10 @@ export default function SearchBox() {
 
   const MAX_SUGGESTIONS = 6;
   const suggestions = isTyping
-    ? ENTRIES.filter((entry) =>
-        entry.term.toLowerCase().startsWith(value.toLowerCase()),
+    ? ENTRIES.filter(
+        (entry) =>
+          entry.term.toLowerCase().startsWith(value.toLowerCase()) &&
+          entry.term.toLowerCase() !== value.toLowerCase(),
       ).slice(0, MAX_SUGGESTIONS)
     : ENTRIES.slice(0, MAX_SUGGESTIONS);
 
