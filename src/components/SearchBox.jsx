@@ -77,7 +77,10 @@ export default function SearchBox() {
   };
 
   const handleInputBlur = () => {
-    setTimeout(() => setIsFocused(false), 200);
+    setTimeout(() => {
+      setIsFocused(false);
+      setHighlightedIndex(-1);
+    }, 200);
   };
 
   const handleInputFocus = () => {
@@ -87,6 +90,7 @@ export default function SearchBox() {
   const handleSuggestionClick = (entry) => {
     setValue(entry.term);
     setIsFocused(true);
+    setHighlightedIndex(-1);
   };
 
   return (
