@@ -84,7 +84,7 @@ export default function SearchBox() {
 
   const handleSuggestionClick = (entry) => {
     setValue(entry.term);
-    setIsFocused(false);
+    setIsFocused(true);
   };
 
   return (
