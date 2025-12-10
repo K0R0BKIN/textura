@@ -13,7 +13,7 @@ export default function HomePage() {
   return (
     <div className="h-screen">
       <Toolbar />
-      <main className="flex h-full items-center justify-center">
+      <main className="flex h-full items-start pt-[300px] justify-center">
         <div className="relative flex justify-center">
           <Logo text="Textura" />
           <SearchBox />
