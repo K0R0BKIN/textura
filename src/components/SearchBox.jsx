@@ -1,21 +1,7 @@
 import { useState } from "react";
 import SuggestionList from "./SuggestionList.jsx";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
-
-const SUGGESTIONS = [
-  { word: "Serendipity", definition: "finding something good by happy chance" },
-  {
-    word: "Eloquent",
-    definition: "fluent, persuasive, and expressive in speech",
-  },
-  {
-    word: "Mellifluous",
-    definition: "sweet or musical in sound; pleasant to hear",
-  },
-  { word: "Ephemeral", definition: "lasting for a very short time; fleeting" },
-  { word: "Ubiquitous", definition: "present, appearing, or found everywhere" },
-  { word: "Pragmatic", definition: "dealing with things in a realistic way" },
-];
+import { ENTRIES } from "../data/entries.js";
 
 function SearchBar({
   value,
@@ -54,9 +40,16 @@ export default function SearchBox() {
   const [value, setValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [suggestions] = useState(SUGGESTIONS);
 
-  const showSuggestions = value.length > 0 && isFocused;
+  const MAX_SUGGESTIONS = 6;
+  const suggestions = ENTRIES.filter((entry) =>
+    entry.term.toLowerCase().startsWith(value.toLowerCase()),
+  ).slice(0, MAX_SUGGESTIONS);
+
+  const isTyping = value.length > 0;
+  const hasResults = suggestions.length > 0;
+
+  const showSuggestions = isFocused && (isTyping ? hasResults : true);
 
   const handleKeyDown = (e) => {
     if (e.key === "ArrowDown") {
@@ -87,8 +80,8 @@ export default function SearchBox() {
     setIsFocused(true);
   };
 
-  const handleSuggestionClick = (suggestion) => {
-    setValue(suggestion.word);
+  const handleSuggestionClick = (entry) => {
+    setValue(entry.term);
     setIsFocused(false);
   };
 

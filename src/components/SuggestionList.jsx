@@ -20,7 +20,7 @@ function SuggestionItem({
         }`}
       >
         <div className="text-ui-sm">
-          <span>{suggestion.word}</span>
+          <span>{suggestion.term}</span>
           <span className="px-1 text-(--text-10)">⋅</span>
           <span className="text-(--text-10)">{suggestion.definition}</span>
         </div>
@@ -44,7 +44,7 @@ export default function SuggestionList({
       <ul>
         {suggestions.map((suggestion, index) => (
           <SuggestionItem
-            key={suggestion.word}
+            key={suggestion.term}
             suggestion={suggestion}
             index={index}
             isHighlighted={index === highlightedIndex}
