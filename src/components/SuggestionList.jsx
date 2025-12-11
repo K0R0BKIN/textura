@@ -1,7 +1,7 @@
 import { ChevronRightIcon } from "@radix-ui/react-icons";
 
 function SuggestionItem({
-  suggestion,
+  entry,
   index,
   icon: Icon = ChevronRightIcon,
   isHighlighted,
@@ -12,17 +12,17 @@ function SuggestionItem({
   return (
     <li>
       <button
-        onClick={() => onClick(suggestion)}
+        onClick={() => onClick(entry)}
         onMouseEnter={() => onHover(index)}
         onMouseLeave={() => onHoverEnd()}
-        className={`btn flex h-10 w-full items-center justify-between gap-1 rounded-xl px-4 text-left  ${
+        className={`btn flex h-10 w-full items-center justify-between gap-1 rounded-xl px-4 text-left ${
           isHighlighted && "bg-(--bg-2-hover)"
         }`}
       >
         <div className="text-ui-sm">
-          <span>{suggestion.term}</span>
+          <span>{entry.term}</span>
           <span className="px-1 text-(--text-10)">⋅</span>
-          <span className="text-(--text-10)">{suggestion.definition}</span>
+          <span className="text-(--text-10)">{entry.definition}</span>
         </div>
         <div>
           <Icon className="icon-sm text-(--text-10)"></Icon>
@@ -33,7 +33,7 @@ function SuggestionItem({
 }
 
 export default function SuggestionList({
-  suggestions,
+  entries,
   highlightedIndex,
   onSuggestionClick,
   onSuggestionHover,
@@ -42,10 +42,10 @@ export default function SuggestionList({
   return (
     <div className="absolute mt-4 w-full bg-transparent">
       <ul>
-        {suggestions.map((suggestion, index) => (
+        {entries.map((entry, index) => (
           <SuggestionItem
-            key={suggestion.term}
-            suggestion={suggestion}
+            key={entry.term}
+            entry={entry}
             index={index}
             isHighlighted={index === highlightedIndex}
             onClick={onSuggestionClick}
