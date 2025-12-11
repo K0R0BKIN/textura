@@ -37,6 +37,9 @@ function searchBoxReducer(state, action) {
     case "HIGHLIGHT":
       return { ...state, activeIndex: action.payload };
 
+    case "CLOSE":
+      return { ...state, isFocused: false, activeIndex: -1 };
+
     case "NAVIGATE": {
       const { direction, listCount } = action.payload;
       if (listCount === 0) return state;
@@ -109,6 +112,9 @@ export default function SearchBox() {
     } else if (e.key === "Enter" && activeIndex >= 0) {
       e.preventDefault();
       dispatch({ type: "SELECT", payload: suggestions[activeIndex].term });
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      dispatch({ type: "CLOSE" });
     }
   };
 
