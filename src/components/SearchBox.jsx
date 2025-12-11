@@ -23,7 +23,6 @@ function searchBoxReducer(state, action) {
       return { ...state, isFocused: true };
 
     case "BLUR":
-      if (state.activeIndex >= 0) return state;
       return { ...state, isFocused: false, activeIndex: -1 };
 
     case "SELECT":

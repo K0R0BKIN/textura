@@ -40,7 +40,10 @@ export default function SuggestionList({
   onSuggestionHoverEnd,
 }) {
   return (
-    <div className="absolute mt-4 w-full bg-transparent">
+    <div
+      onMouseDown={(e) => e.preventDefault()}
+      className="absolute mt-4 w-full bg-transparent"
+    >
       <ul>
         {entries.map((entry, index) => (
           <SuggestionItem
