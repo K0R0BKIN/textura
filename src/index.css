@@ -99,10 +99,10 @@
 
 @layer components {
   .text-ui {
-    @apply text-base font-light leading-none;
+    @apply text-base leading-none font-light;
   }
   .text-ui-sm {
-    @apply text-sm font-light leading-none;
+    @apply text-sm leading-none font-light;
   }
 }
 
