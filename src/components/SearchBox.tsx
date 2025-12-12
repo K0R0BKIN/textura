@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCombobox } from 'downshift';
 import SuggestionList from './SuggestionList';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
@@ -6,15 +6,88 @@ import { ENTRIES } from '@/data/entries';
 import { type SuggestionEntry } from '@/types';
 
 const MAX_SUGGESTIONS = 6;
+const DEBOUNCE_MS = 200;
+const SIMULATED_NETWORK_MS = 120;
 
-function getPrefixSuggestions(query: string): SuggestionEntry[] {
+function sleep(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => resolve(), ms);
+
+    const onAbort = () => {
+      window.clearTimeout(timeout);
+      reject(new DOMException('Aborted', 'AbortError'));
+    };
+
+    if (signal.aborted) {
+      onAbort();
+      return;
+    }
+
+    signal.addEventListener('abort', onAbort, { once: true });
+  });
+}
+
+async function fetchPrefixSuggestions(
+  query: string,
+  signal: AbortSignal,
+): Promise<SuggestionEntry[]> {
   const normalizedQuery = query.trim().toLowerCase();
   if (normalizedQuery.length === 0) return [];
+
+  await sleep(SIMULATED_NETWORK_MS, signal);
 
   return ENTRIES.filter((entry) => {
     const term = entry.term.toLowerCase();
     return term.startsWith(normalizedQuery) && term !== normalizedQuery;
   }).slice(0, MAX_SUGGESTIONS);
+}
+
+function useDictionarySuggestions(query: string) {
+  const [suggestions, setSuggestions] = useState<SuggestionEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const trimmedQuery = query.trim();
+
+    if (trimmedQuery.length === 0) {
+      setSuggestions([]);
+      setIsLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    setIsLoading(true);
+
+    const timeout = window.setTimeout(async () => {
+      try {
+        const nextSuggestions = await fetchPrefixSuggestions(
+          trimmedQuery,
+          controller.signal,
+        );
+
+        if (!controller.signal.aborted) {
+          setSuggestions(nextSuggestions);
+        }
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        if (error instanceof DOMException && error.name === 'AbortError')
+          return;
+        console.error(error);
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }, DEBOUNCE_MS);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeout);
+    };
+  }, [query]);
+
+  return { suggestions, isLoading };
 }
 
 interface SearchBarProps {
@@ -46,7 +119,7 @@ function SearchBar({ inputProps, isEmpty }: SearchBarProps) {
 
 export default function SearchBox() {
   const [query, setQuery] = useState('');
-  const suggestions = useMemo(() => getPrefixSuggestions(query), [query]);
+  const { suggestions, isLoading } = useDictionarySuggestions(query);
 
   const {
     isOpen,
@@ -89,7 +162,7 @@ export default function SearchBox() {
   });
 
   const showSuggestions =
-    isOpen && query.trim().length > 0 && suggestions.length > 0;
+    isOpen && query.trim().length > 0 && suggestions.length > 0 && !isLoading;
 
   return (
     <div className="relative">
