@@ -1,102 +1,42 @@
-import { useReducer } from 'react';
+import { useMemo, useState } from 'react';
+import { useCombobox } from 'downshift';
 import SuggestionList from './SuggestionList';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import { ENTRIES } from '@/data/entries';
 import { type SuggestionEntry } from '@/types';
 
-interface SearchBoxState {
-  query: string;
-  isFocused: boolean;
-  activeIndex: number;
+const MAX_SUGGESTIONS = 6;
+
+function getPrefixSuggestions(query: string): SuggestionEntry[] {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (normalizedQuery.length === 0) return [];
+
+  return ENTRIES.filter((entry) => {
+    const term = entry.term.toLowerCase();
+    return term.startsWith(normalizedQuery) && term !== normalizedQuery;
+  }).slice(0, MAX_SUGGESTIONS);
 }
 
-type SearchBoxAction =
-  | { type: 'TYPE'; payload: string }
-  | { type: 'FOCUS' }
-  | { type: 'BLUR' }
-  | { type: 'SELECT'; payload: string }
-  | { type: 'HIGHLIGHT'; payload: number }
-  | { type: 'CLOSE' }
-  | { type: 'NAVIGATE'; payload: { direction: number; listCount: number } };
-
-const initialState: SearchBoxState = {
-  query: '',
-  isFocused: false,
-  activeIndex: -1,
-};
-
-function searchBoxReducer(
-  state: SearchBoxState,
-  action: SearchBoxAction,
-): SearchBoxState {
-  switch (action.type) {
-    case 'TYPE':
-      return {
-        ...state,
-        query: action.payload,
-        activeIndex: -1,
-        isFocused: true,
-      };
-
-    case 'FOCUS':
-      return { ...state, isFocused: true };
-
-    case 'BLUR':
-      return { ...state, isFocused: false, activeIndex: -1 };
-
-    case 'SELECT':
-      return {
-        ...state,
-        query: action.payload,
-        isFocused: false,
-        activeIndex: -1,
-      };
-
-    case 'HIGHLIGHT':
-      return { ...state, activeIndex: action.payload };
-
-    case 'CLOSE':
-      return { ...state, isFocused: false, activeIndex: -1 };
-
-    case 'NAVIGATE': {
-      const { direction, listCount } = action.payload;
-      if (listCount === 0) return state;
-
-      let nextIndex = state.activeIndex + direction;
-
-      if (nextIndex >= listCount) nextIndex = 0;
-      if (nextIndex < 0) nextIndex = listCount - 1;
-
-      return { ...state, activeIndex: nextIndex };
-    }
-
-    default:
-      return state;
-  }
+interface SearchBarProps {
+  inputProps: React.InputHTMLAttributes<HTMLInputElement>;
+  isEmpty: boolean;
 }
 
-interface SearchBarProps extends Omit<
-  React.InputHTMLAttributes<HTMLInputElement>,
-  'value' | 'placeholder'
-> {
-  value: string;
-  placeholder: string;
-}
+function SearchBar({ inputProps, isEmpty }: SearchBarProps) {
+  const { className, ...restInputProps } = inputProps;
 
-function SearchBar({ value, placeholder, ...props }: SearchBarProps) {
   return (
     <div className="shadow-claude/6 hover:shadow-claude/8 focus-within:shadow-claude/8 flex h-15 w-xs items-center gap-2 rounded-[20px] border border-(--border-5) bg-white p-2 pl-4 shadow-neutral-950 transition-colors focus-within:border-(--border-6) hover:border-(--border-6) sm:w-lg">
       <input
-        type="text"
-        placeholder={placeholder}
-        value={value}
-        className="text-ui w-full text-black outline-none placeholder:text-(--text-11)"
-        autoFocus
-        {...props}
+        {...restInputProps}
+        className={`text-ui w-full text-black outline-none placeholder:text-(--text-11) ${
+          className ?? ''
+        }`}
       />
       <button
+        type="button"
         className="bg-brown-9 hover:bg-brown-10 btn btn-icon aspect-square h-full rounded-xl text-white"
-        disabled={value.trim() === ''}
+        disabled={isEmpty}
       >
         <MagnifyingGlassIcon className="icon size-6" />
       </button>
@@ -105,71 +45,69 @@ function SearchBar({ value, placeholder, ...props }: SearchBarProps) {
 }
 
 export default function SearchBox() {
-  const [state, dispatch] = useReducer(searchBoxReducer, initialState);
-  const { query, isFocused, activeIndex } = state;
+  const [query, setQuery] = useState('');
+  const suggestions = useMemo(() => getPrefixSuggestions(query), [query]);
 
-  const MAX_SUGGESTIONS = 6;
-  const isTyping = query.length > 0;
+  const {
+    isOpen,
+    highlightedIndex,
+    getInputProps,
+    getMenuProps,
+    getItemProps,
+  } = useCombobox<SuggestionEntry>({
+    items: suggestions,
+    inputValue: query,
+    itemToString: (item) => item?.term ?? '',
+    onInputValueChange: ({ inputValue }) => {
+      setQuery(inputValue ?? '');
+    },
+    onSelectedItemChange: ({ selectedItem }) => {
+      if (!selectedItem) return;
+      setQuery(selectedItem.term);
+    },
+    stateReducer: (state, actionAndChanges) => {
+      const { type, changes } = actionAndChanges;
 
-  const suggestions = isTyping
-    ? ENTRIES.filter(
-        (entry) =>
-          entry.term.toLowerCase().startsWith(query.toLowerCase()) &&
-          entry.term.toLowerCase() !== query.toLowerCase(),
-      ).slice(0, MAX_SUGGESTIONS)
-    : ENTRIES.slice(0, MAX_SUGGESTIONS);
+      if (
+        type === useCombobox.stateChangeTypes.InputKeyDownEnter &&
+        state.highlightedIndex < 0
+      ) {
+        return state;
+      }
+
+      if (type === useCombobox.stateChangeTypes.InputChange) {
+        const nextInputValue = (changes.inputValue ?? '').trim();
+        return { ...state, ...changes, isOpen: nextInputValue.length > 0 };
+      }
+
+      if (type === useCombobox.stateChangeTypes.InputBlur) {
+        return { ...state, ...changes, isOpen: false, highlightedIndex: -1 };
+      }
+
+      return { ...state, ...changes };
+    },
+  });
 
   const showSuggestions =
-    isFocused && (isTyping ? suggestions.length > 0 : true);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      dispatch({
-        type: 'NAVIGATE',
-        payload: { direction: 1, listCount: suggestions.length },
-      });
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      dispatch({
-        type: 'NAVIGATE',
-        payload: { direction: -1, listCount: suggestions.length },
-      });
-    } else if (e.key === 'Enter' && activeIndex >= 0) {
-      e.preventDefault();
-      dispatch({ type: 'SELECT', payload: suggestions[activeIndex].term });
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      dispatch({ type: 'CLOSE' });
-    }
-  };
+    isOpen && query.trim().length > 0 && suggestions.length > 0;
 
   return (
     <div className="relative">
       <SearchBar
-        value={query}
-        placeholder="Look up definitions…"
-        onChange={(e) => dispatch({ type: 'TYPE', payload: e.target.value })}
-        onFocus={() => dispatch({ type: 'FOCUS' })}
-        onBlur={() => dispatch({ type: 'BLUR' })}
-        onKeyDown={handleKeyDown}
+        isEmpty={query.trim() === ''}
+        inputProps={getInputProps({
+          placeholder: 'Look up definitions…',
+          autoFocus: true,
+        })}
       />
 
-      {showSuggestions && (
-        <SuggestionList
-          entries={suggestions}
-          highlightedIndex={activeIndex}
-          onSuggestionClick={(entry: SuggestionEntry) =>
-            dispatch({ type: 'SELECT', payload: entry.term })
-          }
-          onSuggestionHover={(index: number) =>
-            dispatch({ type: 'HIGHLIGHT', payload: index })
-          }
-          onSuggestionHoverEnd={() =>
-            dispatch({ type: 'HIGHLIGHT', payload: -1 })
-          }
-        />
-      )}
+      <SuggestionList
+        entries={suggestions}
+        highlightedIndex={highlightedIndex ?? -1}
+        isOpen={showSuggestions}
+        menuProps={getMenuProps({}, { suppressRefError: true })}
+        getItemProps={getItemProps}
+      />
     </div>
   );
 }

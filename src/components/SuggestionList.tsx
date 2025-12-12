@@ -3,32 +3,27 @@ import { type SuggestionEntry } from '@/types';
 
 interface SuggestionItemProps {
   entry: SuggestionEntry;
-  index: number;
   icon?: React.ComponentType<{ className?: string }>;
   isHighlighted: boolean;
-  onClick: (entry: SuggestionEntry) => void;
-  onHover: (index: number) => void;
-  onHoverEnd: () => void;
+  buttonProps: React.ButtonHTMLAttributes<HTMLButtonElement>;
 }
 
 function SuggestionItem({
   entry,
-  index,
   isHighlighted,
-  onClick,
-  onHover,
-  onHoverEnd,
+  buttonProps,
   icon: Icon = ChevronRightIcon,
 }: SuggestionItemProps) {
+  const { className, ...restButtonProps } = buttonProps;
+
   return (
     <li>
       <button
-        onClick={() => onClick(entry)}
-        onMouseEnter={() => onHover(index)}
-        onMouseLeave={() => onHoverEnd()}
+        {...restButtonProps}
+        type="button"
         className={`btn flex h-10 w-full items-center justify-between gap-1 rounded-xl px-4 text-left ${
-          isHighlighted && 'bg-(--bg-2-hover)'
-        }`}
+          isHighlighted ? 'bg-(--bg-2-hover)' : ''
+        } ${className ?? ''}`}
       >
         <div className="text-ui-sm">
           <span>{entry.term}</span>
@@ -45,34 +40,36 @@ function SuggestionItem({
 
 interface SuggestionListProps {
   entries: SuggestionEntry[];
-  highlightedIndex: number | null;
-  onSuggestionClick: (entry: SuggestionEntry) => void;
-  onSuggestionHover: (index: number) => void;
-  onSuggestionHoverEnd: () => void;
+  highlightedIndex: number;
+  isOpen: boolean;
+  menuProps: React.HTMLAttributes<HTMLUListElement>;
+  getItemProps: (options: {
+    item: SuggestionEntry;
+    index: number;
+  }) => React.ButtonHTMLAttributes<HTMLButtonElement>;
 }
 
 export default function SuggestionList({
   entries,
   highlightedIndex,
-  onSuggestionClick,
-  onSuggestionHover,
-  onSuggestionHoverEnd,
+  isOpen,
+  menuProps,
+  getItemProps,
 }: SuggestionListProps) {
+  const { className, ...restMenuProps } = menuProps;
+
   return (
     <div
       onMouseDown={(e) => e.preventDefault()}
-      className="absolute mt-4 w-full bg-transparent"
+      className={`absolute mt-4 w-full bg-transparent ${isOpen ? '' : 'hidden'}`}
     >
-      <ul>
+      <ul {...restMenuProps} className={className}>
         {entries.map((entry, index) => (
           <SuggestionItem
             key={entry.term}
             entry={entry}
-            index={index}
             isHighlighted={index === highlightedIndex}
-            onClick={onSuggestionClick}
-            onHover={onSuggestionHover}
-            onHoverEnd={onSuggestionHoverEnd}
+            buttonProps={getItemProps({ item: entry, index })}
           />
         ))}
       </ul>
