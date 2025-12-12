@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from '@radix-ui/react-icons';
-import { type SuggestionEntry } from '../types';
+import { type SuggestionEntry } from '@/types';
 
 interface SuggestionItemProps {
   entry: SuggestionEntry;

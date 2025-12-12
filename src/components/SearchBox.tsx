@@ -1,8 +1,8 @@
 import { useReducer } from 'react';
 import SuggestionList from './SuggestionList';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { ENTRIES } from '../data/entries';
-import { type SuggestionEntry } from '../types';
+import { ENTRIES } from '@/data/entries';
+import { type SuggestionEntry } from '@/types';
 
 interface SearchBoxState {
   query: string;

@@ -1,5 +1,5 @@
-import Toolbar from '../components/Toolbar';
-import SearchBox from '../components/SearchBox';
+import Toolbar from '@/components/Toolbar';
+import SearchBox from '@/components/SearchBox';
 
 function Logo({ text }: { text: string }) {
   return (
