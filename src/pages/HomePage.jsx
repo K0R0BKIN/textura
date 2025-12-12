@@ -1,5 +1,5 @@
-import Toolbar from "../components/Toolbar";
-import SearchBox from "../components/SearchBox";
+import Toolbar from '../components/Toolbar';
+import SearchBox from '../components/SearchBox';
 
 function Logo({ text }) {
   return (
@@ -13,7 +13,7 @@ export default function HomePage() {
   return (
     <div className="h-screen">
       <Toolbar />
-      <main className="flex h-full items-start pt-[300px] justify-center">
+      <main className="flex h-full items-start justify-center pt-[300px]">
         <div className="relative flex justify-center">
           <Logo text="Textura" />
           <SearchBox />

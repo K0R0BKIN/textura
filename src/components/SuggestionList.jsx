@@ -1,4 +1,4 @@
-import { ChevronRightIcon } from "@radix-ui/react-icons";
+import { ChevronRightIcon } from '@radix-ui/react-icons';
 
 function SuggestionItem({
   entry,
@@ -16,7 +16,7 @@ function SuggestionItem({
         onMouseEnter={() => onHover(index)}
         onMouseLeave={() => onHoverEnd()}
         className={`btn flex h-10 w-full items-center justify-between gap-1 rounded-xl px-4 text-left ${
-          isHighlighted && "bg-(--bg-2-hover)"
+          isHighlighted && 'bg-(--bg-2-hover)'
         }`}
       >
         <div className="text-ui-sm">

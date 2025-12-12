@@ -1,13 +1,13 @@
-@import "tailwindcss";
-@import "@radix-ui/colors/gray.css";
-@import "@radix-ui/colors/slate.css";
-@import "@radix-ui/colors/brown.css";
-@import "@radix-ui/colors/brown-alpha.css";
-@import "@radix-ui/colors/sand.css";
+@import 'tailwindcss';
+@import '@radix-ui/colors/gray.css';
+@import '@radix-ui/colors/slate.css';
+@import '@radix-ui/colors/brown.css';
+@import '@radix-ui/colors/brown-alpha.css';
+@import '@radix-ui/colors/sand.css';
 
 @theme {
-  --font-sans: "Inter Variable", sans-serif;
-  --font-serif: "Source Serif 4 Variable", serif;
+  --font-sans: 'Inter Variable', sans-serif;
+  --font-serif: 'Source Serif 4 Variable', serif;
 }
 
 @theme inline {

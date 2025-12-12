@@ -1,17 +1,17 @@
-import { useReducer } from "react";
-import SuggestionList from "./SuggestionList.jsx";
-import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
-import { ENTRIES } from "../data/entries.js";
+import { useReducer } from 'react';
+import SuggestionList from './SuggestionList.jsx';
+import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
+import { ENTRIES } from '../data/entries.js';
 
 const initialState = {
-  query: "",
+  query: '',
   isFocused: false,
   activeIndex: -1,
 };
 
 function searchBoxReducer(state, action) {
   switch (action.type) {
-    case "TYPE":
+    case 'TYPE':
       return {
         ...state,
         query: action.payload,
@@ -19,13 +19,13 @@ function searchBoxReducer(state, action) {
         isFocused: true,
       };
 
-    case "FOCUS":
+    case 'FOCUS':
       return { ...state, isFocused: true };
 
-    case "BLUR":
+    case 'BLUR':
       return { ...state, isFocused: false, activeIndex: -1 };
 
-    case "SELECT":
+    case 'SELECT':
       return {
         ...state,
         query: action.payload,
@@ -33,13 +33,13 @@ function searchBoxReducer(state, action) {
         activeIndex: -1,
       };
 
-    case "HIGHLIGHT":
+    case 'HIGHLIGHT':
       return { ...state, activeIndex: action.payload };
 
-    case "CLOSE":
+    case 'CLOSE':
       return { ...state, isFocused: false, activeIndex: -1 };
 
-    case "NAVIGATE": {
+    case 'NAVIGATE': {
       const { direction, listCount } = action.payload;
       if (listCount === 0) return state;
 
@@ -69,7 +69,7 @@ function SearchBar({ value, placeholder, ...props }) {
       />
       <button
         className="bg-brown-9 hover:bg-brown-10 btn btn-icon aspect-square h-full rounded-xl text-white"
-        disabled={value.trim() === ""}
+        disabled={value.trim() === ''}
       >
         <MagnifyingGlassIcon className="icon size-6" />
       </button>
@@ -96,24 +96,24 @@ export default function SearchBox() {
     isFocused && (isTyping ? suggestions.length > 0 : true);
 
   const handleKeyDown = (e) => {
-    if (e.key === "ArrowDown") {
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
       dispatch({
-        type: "NAVIGATE",
+        type: 'NAVIGATE',
         payload: { direction: 1, listCount: suggestions.length },
       });
-    } else if (e.key === "ArrowUp") {
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       dispatch({
-        type: "NAVIGATE",
+        type: 'NAVIGATE',
         payload: { direction: -1, listCount: suggestions.length },
       });
-    } else if (e.key === "Enter" && activeIndex >= 0) {
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
       e.preventDefault();
-      dispatch({ type: "SELECT", payload: suggestions[activeIndex].term });
-    } else if (e.key === "Escape") {
+      dispatch({ type: 'SELECT', payload: suggestions[activeIndex].term });
+    } else if (e.key === 'Escape') {
       e.preventDefault();
-      dispatch({ type: "CLOSE" });
+      dispatch({ type: 'CLOSE' });
     }
   };
 
@@ -122,9 +122,9 @@ export default function SearchBox() {
       <SearchBar
         value={query}
         placeholder="Look up definitions…"
-        onChange={(e) => dispatch({ type: "TYPE", payload: e.target.value })}
-        onFocus={() => dispatch({ type: "FOCUS" })}
-        onBlur={() => dispatch({ type: "BLUR" })}
+        onChange={(e) => dispatch({ type: 'TYPE', payload: e.target.value })}
+        onFocus={() => dispatch({ type: 'FOCUS' })}
+        onBlur={() => dispatch({ type: 'BLUR' })}
         onKeyDown={handleKeyDown}
       />
 
@@ -133,13 +133,13 @@ export default function SearchBox() {
           entries={suggestions}
           highlightedIndex={activeIndex}
           onSuggestionClick={(entry) =>
-            dispatch({ type: "SELECT", payload: entry.term })
+            dispatch({ type: 'SELECT', payload: entry.term })
           }
           onSuggestionHover={(index) =>
-            dispatch({ type: "HIGHLIGHT", payload: index })
+            dispatch({ type: 'HIGHLIGHT', payload: index })
           }
           onSuggestionHoverEnd={() =>
-            dispatch({ type: "HIGHLIGHT", payload: -1 })
+            dispatch({ type: 'HIGHLIGHT', payload: -1 })
           }
         />
       )}

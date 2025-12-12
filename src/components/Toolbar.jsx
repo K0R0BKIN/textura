@@ -1,5 +1,5 @@
-import { LanguageIcon } from "@heroicons/react/24/solid";
-import { SunIcon } from "@radix-ui/react-icons";
+import { LanguageIcon } from '@heroicons/react/24/solid';
+import { SunIcon } from '@radix-ui/react-icons';
 
 function ToolbarButton({ icon: Icon }) {
   return (
