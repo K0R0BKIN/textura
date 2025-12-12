@@ -1,7 +1,11 @@
 import { LanguageIcon } from '@heroicons/react/24/solid';
 import { SunIcon } from '@radix-ui/react-icons';
 
-function ToolbarButton({ icon: Icon }) {
+interface ToolbarButtonProps {
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+function ToolbarButton({ icon: Icon }: ToolbarButtonProps) {
   return (
     <button className="btn btn-icon rounded-full bg-transparent hover:bg-(--bg-2-hover)">
       <Icon className="icon" />

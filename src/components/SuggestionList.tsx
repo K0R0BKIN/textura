@@ -1,14 +1,25 @@
 import { ChevronRightIcon } from '@radix-ui/react-icons';
+import { type SuggestionEntry } from '../types';
+
+interface SuggestionItemProps {
+  entry: SuggestionEntry;
+  index: number;
+  icon?: React.ComponentType<{ className?: string }>;
+  isHighlighted: boolean;
+  onClick: (entry: SuggestionEntry) => void;
+  onHover: (index: number) => void;
+  onHoverEnd: () => void;
+}
 
 function SuggestionItem({
   entry,
   index,
-  icon: Icon = ChevronRightIcon,
   isHighlighted,
   onClick,
   onHover,
   onHoverEnd,
-}) {
+  icon: Icon = ChevronRightIcon,
+}: SuggestionItemProps) {
   return (
     <li>
       <button
@@ -21,7 +32,7 @@ function SuggestionItem({
       >
         <div className="text-ui-sm">
           <span>{entry.term}</span>
-          <span className="px-1 text-(--text-10)">⋅</span>
+          <span className="px-1 text-(--text-10)">·</span>
           <span className="text-(--text-10)">{entry.definition}</span>
         </div>
         <div>
@@ -32,13 +43,21 @@ function SuggestionItem({
   );
 }
 
+interface SuggestionListProps {
+  entries: SuggestionEntry[];
+  highlightedIndex: number | null;
+  onSuggestionClick: (entry: SuggestionEntry) => void;
+  onSuggestionHover: (index: number) => void;
+  onSuggestionHoverEnd: () => void;
+}
+
 export default function SuggestionList({
   entries,
   highlightedIndex,
   onSuggestionClick,
   onSuggestionHover,
   onSuggestionHoverEnd,
-}) {
+}: SuggestionListProps) {
   return (
     <div
       onMouseDown={(e) => e.preventDefault()}

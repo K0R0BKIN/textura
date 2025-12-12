@@ -1,4 +1,6 @@
-export const ENTRIES = [
+import { type SuggestionEntry } from '../types';
+
+export const ENTRIES: SuggestionEntry[] = [
   { term: 'Serendipity', definition: 'finding something good by happy chance' },
   {
     term: 'Eloquent',

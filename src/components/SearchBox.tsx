@@ -1,15 +1,34 @@
 import { useReducer } from 'react';
-import SuggestionList from './SuggestionList.jsx';
+import SuggestionList from './SuggestionList';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { ENTRIES } from '../data/entries.js';
+import { ENTRIES } from '../data/entries';
+import { type SuggestionEntry } from '../types';
 
-const initialState = {
+interface SearchBoxState {
+  query: string;
+  isFocused: boolean;
+  activeIndex: number;
+}
+
+type SearchBoxAction =
+  | { type: 'TYPE'; payload: string }
+  | { type: 'FOCUS' }
+  | { type: 'BLUR' }
+  | { type: 'SELECT'; payload: string }
+  | { type: 'HIGHLIGHT'; payload: number }
+  | { type: 'CLOSE' }
+  | { type: 'NAVIGATE'; payload: { direction: number; listCount: number } };
+
+const initialState: SearchBoxState = {
   query: '',
   isFocused: false,
   activeIndex: -1,
 };
 
-function searchBoxReducer(state, action) {
+function searchBoxReducer(
+  state: SearchBoxState,
+  action: SearchBoxAction,
+): SearchBoxState {
   switch (action.type) {
     case 'TYPE':
       return {
@@ -56,7 +75,15 @@ function searchBoxReducer(state, action) {
   }
 }
 
-function SearchBar({ value, placeholder, ...props }) {
+interface SearchBarProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'placeholder'
+> {
+  value: string;
+  placeholder: string;
+}
+
+function SearchBar({ value, placeholder, ...props }: SearchBarProps) {
   return (
     <div className="shadow-claude/6 hover:shadow-claude/8 focus-within:shadow-claude/8 flex h-15 w-xs items-center gap-2 rounded-[20px] border border-(--border-5) bg-white p-2 pl-4 shadow-neutral-950 transition-colors focus-within:border-(--border-6) hover:border-(--border-6) sm:w-lg">
       <input
@@ -95,7 +122,7 @@ export default function SearchBox() {
   const showSuggestions =
     isFocused && (isTyping ? suggestions.length > 0 : true);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       dispatch({
@@ -132,10 +159,10 @@ export default function SearchBox() {
         <SuggestionList
           entries={suggestions}
           highlightedIndex={activeIndex}
-          onSuggestionClick={(entry) =>
+          onSuggestionClick={(entry: SuggestionEntry) =>
             dispatch({ type: 'SELECT', payload: entry.term })
           }
-          onSuggestionHover={(index) =>
+          onSuggestionHover={(index: number) =>
             dispatch({ type: 'HIGHLIGHT', payload: index })
           }
           onSuggestionHoverEnd={() =>
