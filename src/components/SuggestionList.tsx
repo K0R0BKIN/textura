@@ -25,12 +25,15 @@ function SuggestionItem({
           isHighlighted ? 'bg-(--bg-2-hover)' : ''
         } ${className ?? ''}`}
       >
-        <div className="text-ui-sm">
+        <div className="text-ui-sm flex min-w-0 flex-1 items-baseline">
           <span>{entry.term}</span>
           <span className="px-1 text-(--text-10)">·</span>
-          <span className="text-(--text-10)">{entry.definition}</span>
+          <span className="min-w-0 flex-1 truncate leading-normal text-(--text-10)">
+            {entry.definition}
+          </span>
         </div>
-        <div>
+
+        <div className="flex-shrink-0">
           <Icon className="icon-sm text-(--text-10)"></Icon>
         </div>
       </button>

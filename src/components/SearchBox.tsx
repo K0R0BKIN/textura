@@ -2,29 +2,53 @@ import { useEffect, useState } from 'react';
 import { useCombobox } from 'downshift';
 import SuggestionList from './SuggestionList';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { ENTRIES } from '@/data/entries';
 import { type SuggestionEntry } from '@/types';
 
 const MAX_SUGGESTIONS = 6;
 const DEBOUNCE_MS = 200;
-const SIMULATED_NETWORK_MS = 120;
+const DATAMUSE_ENDPOINT = 'https://api.datamuse.com/words';
+const DEFAULT_DEFINITION = 'Definition unavailable';
 
-function sleep(ms: number, signal: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const timeout = window.setTimeout(() => resolve(), ms);
+interface DatamuseResponse {
+  word: string;
+  defs?: string[];
+}
 
-    const onAbort = () => {
-      window.clearTimeout(timeout);
-      reject(new DOMException('Aborted', 'AbortError'));
-    };
+interface DictionaryApiDefinition {
+  definition: string;
+}
 
-    if (signal.aborted) {
-      onAbort();
-      return;
-    }
+interface DictionaryApiMeaning {
+  definitions: DictionaryApiDefinition[];
+}
 
-    signal.addEventListener('abort', onAbort, { once: true });
-  });
+interface DictionaryApiEntry {
+  meanings: DictionaryApiMeaning[];
+}
+
+function extractDefinition(definitionTuple?: string) {
+  if (!definitionTuple) return DEFAULT_DEFINITION;
+  const [, definition = DEFAULT_DEFINITION] = definitionTuple.split('\t');
+  return definition.trim() || DEFAULT_DEFINITION;
+}
+
+async function fetchDictionaryApiDefinition(
+  word: string,
+  signal: AbortSignal,
+): Promise<string | null> {
+  const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(
+    word,
+  )}`;
+  const response = await fetch(url, { signal });
+
+  if (!response.ok) return null;
+
+  const data = (await response.json()) as DictionaryApiEntry[];
+  const fallbackDefinition =
+    data?.[0]?.meanings?.[0]?.definitions?.[0]?.definition;
+  return typeof fallbackDefinition === 'string'
+    ? fallbackDefinition.trim() || null
+    : null;
 }
 
 async function fetchPrefixSuggestions(
@@ -34,12 +58,46 @@ async function fetchPrefixSuggestions(
   const normalizedQuery = query.trim().toLowerCase();
   if (normalizedQuery.length === 0) return [];
 
-  await sleep(SIMULATED_NETWORK_MS, signal);
+  const url = new URL(DATAMUSE_ENDPOINT);
+  url.searchParams.set('sp', `${normalizedQuery}*`);
+  url.searchParams.set('md', 'd');
+  url.searchParams.set('max', '20');
 
-  return ENTRIES.filter((entry) => {
-    const term = entry.term.toLowerCase();
-    return term.startsWith(normalizedQuery) && term !== normalizedQuery;
-  }).slice(0, MAX_SUGGESTIONS);
+  const response = await fetch(url, { signal });
+  if (!response.ok) {
+    throw new Error('Failed to load suggestions');
+  }
+
+  const data = (await response.json()) as DatamuseResponse[];
+
+  const suggestions = data
+    .map((entry) => ({
+      term: entry.word,
+      definition: extractDefinition(entry.defs?.[0]),
+    }))
+    .filter((entry) => entry.term.toLowerCase() !== normalizedQuery)
+    .slice(0, MAX_SUGGESTIONS);
+
+  await Promise.all(
+    suggestions.map(async (entry) => {
+      if (entry.definition !== DEFAULT_DEFINITION) return;
+
+      try {
+        const fallbackDefinition = await fetchDictionaryApiDefinition(
+          entry.term,
+          signal,
+        );
+        if (fallbackDefinition && !signal.aborted) {
+          entry.definition = fallbackDefinition;
+        }
+      } catch (error) {
+        if (signal.aborted) return;
+        console.error(error);
+      }
+    }),
+  );
+
+  return suggestions;
 }
 
 function useDictionarySuggestions(query: string) {
