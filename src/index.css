@@ -1,8 +1,5 @@
 @import 'tailwindcss';
-@import '@radix-ui/colors/gray.css';
-@import '@radix-ui/colors/slate.css';
 @import '@radix-ui/colors/brown.css';
-@import '@radix-ui/colors/brown-alpha.css';
 @import '@radix-ui/colors/sand.css';
 
 @theme {
@@ -11,112 +8,60 @@
 }
 
 @theme inline {
-  --shadow-claude: 0px 4px 20px;
+  --accent-1: var(--brown-1);
+  --accent-2: var(--brown-2);
+  --accent-3: var(--brown-3);
+  --accent-4: var(--brown-4);
+  --accent-5: var(--brown-5);
+  --accent-6: var(--brown-6);
+  --accent-7: var(--brown-7);
+  --accent-8: var(--brown-8);
+  --accent-9: var(--brown-9);
+  --accent-10: var(--brown-10);
+  --accent-11: var(--brown-11);
+  --accent-12: var(--brown-12);
 
-  --color-gray-1: var(--gray-1);
-  --color-gray-2: var(--gray-2);
-  --color-gray-3: var(--gray-3);
-  --color-gray-4: var(--gray-4);
-  --color-gray-5: var(--gray-5);
-  --color-gray-6: var(--gray-6);
-  --color-gray-7: var(--gray-7);
-  --color-gray-8: var(--gray-8);
-  --color-gray-9: var(--gray-9);
-  --color-gray-10: var(--gray-10);
-  --color-gray-11: var(--gray-11);
-  --color-gray-12: var(--gray-12);
-
-  --color-slate-1: var(--slate-1);
-  --color-slate-2: var(--slate-2);
-  --color-slate-3: var(--slate-3);
-  --color-slate-4: var(--slate-4);
-  --color-slate-5: var(--slate-5);
-  --color-slate-6: var(--slate-6);
-  --color-slate-7: var(--slate-7);
-  --color-slate-8: var(--slate-8);
-  --color-slate-9: var(--slate-9);
-  --color-slate-10: var(--slate-10);
-  --color-slate-11: var(--slate-11);
-  --color-slate-12: var(--slate-12);
-
-  --color-brown-1: var(--brown-1);
-  --color-brown-2: var(--brown-2);
-  --color-brown-3: var(--brown-3);
-  --color-brown-4: var(--brown-4);
-  --color-brown-5: var(--brown-5);
-  --color-brown-6: var(--brown-6);
-  --color-brown-7: var(--brown-7);
-  --color-brown-8: var(--brown-8);
-  --color-brown-9: var(--brown-9);
-  --color-brown-10: var(--brown-10);
-  --color-brown-11: var(--brown-11);
-  --color-brown-12: var(--brown-12);
-
-  --color-brown-a1: var(--brown-a1);
-  --color-brown-a2: var(--brown-a2);
-  --color-brown-a3: var(--brown-a3);
-  --color-brown-a4: var(--brown-a4);
-  --color-brown-a5: var(--brown-a5);
-  --color-brown-a6: var(--brown-a6);
-  --color-brown-a7: var(--brown-a7);
-  --color-brown-a8: var(--brown-a8);
-  --color-brown-a9: var(--brown-a9);
-  --color-brown-a10: var(--brown-a10);
-  --color-brown-a11: var(--brown-a11);
-  --color-brown-a12: var(--brown-a12);
-
-  --color-sand-1: var(--sand-1);
-  --color-sand-2: var(--sand-2);
-  --color-sand-3: var(--sand-3);
-  --color-sand-4: var(--sand-4);
-  --color-sand-5: var(--sand-5);
-  --color-sand-6: var(--sand-6);
-  --color-sand-7: var(--sand-7);
-  --color-sand-8: var(--sand-8);
-  --color-sand-9: var(--sand-9);
-  --color-sand-10: var(--sand-10);
-  --color-sand-11: var(--sand-11);
-  --color-sand-12: var(--sand-12);
+  --gray-1: var(--sand-1);
+  --gray-2: var(--sand-2);
+  --gray-3: var(--sand-3);
+  --gray-4: var(--sand-4);
+  --gray-5: var(--sand-5);
+  --gray-6: var(--sand-6);
+  --gray-7: var(--sand-7);
+  --gray-8: var(--sand-8);
+  --gray-9: var(--sand-9);
+  --gray-10: var(--sand-10);
+  --gray-11: var(--sand-11);
+  --gray-12: var(--sand-12);
 }
 
 @theme inline {
-  --bg-2: var(--color-brown-2);
-  --bg-2-hover: --alpha(var(--color-brown-3) / 70%);
+  --accent-bg: var(--accent-2);
+  --accent-bg-hover: --alpha(var(--accent-3) / 70%);
 
-  --border-5: var(--color-sand-5);
-  --border-6: var(--color-sand-6);
+  --gray-border: var(--gray-5);
+  --gray-border-hover: var(--gray-6);
 
-  --text-10: var(--color-sand-10);
-  --text-11: var(--color-sand-11);
-  --text-12: var(--color-sand-12);
+  --accent-solid: var(--accent-9);
+  --accent-solid-hover: var(--accent-10);
+
+  --gray-text-inverted: var(--gray-1);
+  --gray-text-dim: var(--gray-10);
+  --gray-text-placeholder: var(--gray-11);
+  --gray-text-contrast: var(--gray-12);
+
+  --gray-shadow: var(--gray-12);
+  --shadow-panel: 0px 4px 20px;
 }
 
 @layer base {
   body {
-    @apply bg-(--bg-2) font-sans text-(--text-12);
+    @apply bg-(--accent-bg) font-sans font-light text-(--gray-text-contrast);
   }
 }
 
 @layer components {
-  .text-ui {
-    @apply text-base leading-none font-light;
-  }
-  .text-ui-sm {
-    @apply text-sm leading-none font-light;
-  }
-}
-
-@layer components {
-  .icon {
-    @apply size-5;
-  }
-  .icon-sm {
-    @apply size-4;
-  }
   .btn {
     @apply cursor-pointer disabled:pointer-events-none disabled:opacity-50;
-  }
-  .btn-icon {
-    @apply flex size-10 items-center justify-center;
   }
 }

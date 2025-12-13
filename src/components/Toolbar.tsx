@@ -1,14 +1,14 @@
 import { LanguageIcon } from '@heroicons/react/24/solid';
 import { SunIcon } from '@radix-ui/react-icons';
 
-interface ToolbarButtonProps {
+interface IconButtonProps {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-function ToolbarButton({ icon: Icon }: ToolbarButtonProps) {
+function IconButton({ icon: Icon }: IconButtonProps) {
   return (
-    <button className="btn btn-icon rounded-full bg-transparent hover:bg-(--bg-2-hover)">
-      <Icon className="icon" />
+    <button className="btn flex size-10 items-center justify-center rounded-full bg-transparent hover:bg-(--accent-bg-hover)">
+      <Icon className="size-5" />
     </button>
   );
 }
@@ -18,8 +18,8 @@ export default function Toolbar() {
     <div
       className={`fixed top-0 flex h-16 w-full items-center justify-end px-3`}
     >
-      <ToolbarButton icon={LanguageIcon} />
-      <ToolbarButton icon={SunIcon} />
+      <IconButton icon={LanguageIcon} />
+      <IconButton icon={SunIcon} />
     </div>
   );
 }
