@@ -85,20 +85,20 @@ interface SearchBarProps extends Omit<
 
 function SearchBar({ value, placeholder, ...props }: SearchBarProps) {
   return (
-    <div className="shadow-claude/6 hover:shadow-claude/8 focus-within:shadow-claude/8 flex h-15 w-xs items-center gap-2 rounded-[20px] border border-(--border-5) bg-white p-2 pl-4 shadow-neutral-950 transition-colors focus-within:border-(--border-6) hover:border-(--border-6) sm:w-lg">
+    <div className="shadow-panel/6 hover:shadow-panel/8 focus-within:shadow-panel/8 flex h-15 w-xs items-center gap-2 rounded-[20px] border border-(--gray-border) bg-(--gray-1) p-2 pl-4 shadow-(color:--gray-shadow) transition-shadow focus-within:border-(--gray-border-hover) hover:border-(--gray-border-hover) sm:w-lg">
       <input
         type="text"
         placeholder={placeholder}
         value={value}
-        className="text-ui w-full text-black outline-none placeholder:text-(--text-11)"
+        className="w-full text-black outline-none placeholder:text-(--gray-text-placeholder)"
         autoFocus
         {...props}
       />
       <button
-        className="bg-brown-9 hover:bg-brown-10 btn btn-icon aspect-square h-full rounded-xl text-white"
+        className="btn flex aspect-square size-10 h-full items-center justify-center rounded-xl bg-(--accent-solid) text-(--gray-text-inverted) hover:bg-(--accent-solid-hover)"
         disabled={value.trim() === ''}
       >
-        <MagnifyingGlassIcon className="icon size-6" />
+        <MagnifyingGlassIcon className="size-6" />
       </button>
     </div>
   );

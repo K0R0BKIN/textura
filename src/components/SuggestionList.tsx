@@ -27,16 +27,16 @@ function SuggestionItem({
         onMouseEnter={() => onHover(index)}
         onMouseLeave={() => onHoverEnd()}
         className={`btn flex h-10 w-full items-center justify-between gap-1 rounded-xl px-4 text-left ${
-          isHighlighted && 'bg-(--bg-2-hover)'
+          isHighlighted && 'bg-(--accent-bg-hover)'
         }`}
       >
-        <div className="text-ui-sm">
+        <div className="text-sm">
           <span>{entry.term}</span>
-          <span className="px-1 text-(--text-10)">·</span>
-          <span className="text-(--text-10)">{entry.definition}</span>
+          <span className="px-1 text-(--gray-text-dim)">·</span>
+          <span className="text-(--gray-text-dim)">{entry.definition}</span>
         </div>
         <div>
-          <Icon className="icon-sm text-(--text-10)"></Icon>
+          <Icon className="size-4 text-(--gray-text-dim)"></Icon>
         </div>
       </button>
     </li>
