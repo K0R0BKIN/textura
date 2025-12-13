@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useCombobox } from 'downshift';
 import SuggestionList from './SuggestionList';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { type SuggestionEntry } from '@/types';
+import { type SuggestionEntryWithStatus } from '@/types';
 
 const MAX_SUGGESTIONS = 6;
-const DEBOUNCE_MS = 200;
+const SUGGESTION_DEBOUNCE_MS = 700;
+const MAX_DEFINITION_CHARS = 58;
 const DATAMUSE_ENDPOINT = 'https://api.datamuse.com/words';
 const DEFAULT_DEFINITION = 'Definition unavailable';
 
@@ -14,47 +15,28 @@ interface DatamuseResponse {
   defs?: string[];
 }
 
-interface DictionaryApiDefinition {
-  definition: string;
+interface WordSuggestion {
+  term: string;
+  fallbackDefinition: string;
 }
 
-interface DictionaryApiMeaning {
-  definitions: DictionaryApiDefinition[];
-}
-
-interface DictionaryApiEntry {
-  meanings: DictionaryApiMeaning[];
-}
-
-function extractDefinition(definitionTuple?: string) {
+function normalizeDefinitionInput(definitionTuple?: string) {
   if (!definitionTuple) return DEFAULT_DEFINITION;
   const [, definition = DEFAULT_DEFINITION] = definitionTuple.split('\t');
   return definition.trim() || DEFAULT_DEFINITION;
 }
 
-async function fetchDictionaryApiDefinition(
-  word: string,
-  signal: AbortSignal,
-): Promise<string | null> {
-  const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(
-    word,
-  )}`;
-  const response = await fetch(url, { signal });
-
-  if (!response.ok) return null;
-
-  const data = (await response.json()) as DictionaryApiEntry[];
-  const fallbackDefinition =
-    data?.[0]?.meanings?.[0]?.definitions?.[0]?.definition;
-  return typeof fallbackDefinition === 'string'
-    ? fallbackDefinition.trim() || null
-    : null;
+function clampDefinition(text: string) {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= MAX_DEFINITION_CHARS) return normalized;
+  const truncated = normalized.slice(0, MAX_DEFINITION_CHARS - 1).trimEnd();
+  return `${truncated}…`;
 }
 
-async function fetchPrefixSuggestions(
+async function fetchWordSuggestions(
   query: string,
   signal: AbortSignal,
-): Promise<SuggestionEntry[]> {
+): Promise<WordSuggestion[]> {
   const normalizedQuery = query.trim().toLowerCase();
   if (normalizedQuery.length === 0) return [];
 
@@ -65,79 +47,114 @@ async function fetchPrefixSuggestions(
 
   const response = await fetch(url, { signal });
   if (!response.ok) {
-    throw new Error('Failed to load suggestions');
+    throw new Error('Failed to load word suggestions');
   }
 
   const data = (await response.json()) as DatamuseResponse[];
-
-  const suggestions = data
+  return data
     .map((entry) => ({
       term: entry.word,
-      definition: extractDefinition(entry.defs?.[0]),
+      fallbackDefinition: normalizeDefinitionInput(entry.defs?.[0]),
     }))
     .filter((entry) => entry.term.toLowerCase() !== normalizedQuery)
     .slice(0, MAX_SUGGESTIONS);
-
-  await Promise.all(
-    suggestions.map(async (entry) => {
-      if (entry.definition !== DEFAULT_DEFINITION) return;
-
-      try {
-        const fallbackDefinition = await fetchDictionaryApiDefinition(
-          entry.term,
-          signal,
-        );
-        if (fallbackDefinition && !signal.aborted) {
-          entry.definition = fallbackDefinition;
-        }
-      } catch (error) {
-        if (signal.aborted) return;
-        console.error(error);
-      }
-    }),
-  );
-
-  return suggestions;
 }
 
-function useDictionarySuggestions(query: string) {
-  const [suggestions, setSuggestions] = useState<SuggestionEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+async function fetchAiDefinitions(
+  terms: string[],
+  signal: AbortSignal,
+): Promise<Record<string, string>> {
+  if (terms.length === 0) return {};
+
+  const response = await fetch('/api/define', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ terms }),
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to load definitions from OpenAI');
+  }
+
+  const payload = (await response.json()) as {
+    definitions?: Record<string, string>;
+  };
+
+  return payload.definitions ?? {};
+}
+
+function useLiveSuggestions(query: string) {
+  const [suggestions, setSuggestions] = useState<SuggestionEntryWithStatus[]>(
+    [],
+  );
 
   useEffect(() => {
     const trimmedQuery = query.trim();
 
-    if (trimmedQuery.length === 0) {
+    if (trimmedQuery.length < 2) {
       setSuggestions([]);
-      setIsLoading(false);
       return;
     }
 
     const controller = new AbortController();
 
-    setIsLoading(true);
+    setSuggestions([]);
 
     const timeout = window.setTimeout(async () => {
       try {
-        const nextSuggestions = await fetchPrefixSuggestions(
+        const wordSuggestions = await fetchWordSuggestions(
           trimmedQuery,
           controller.signal,
         );
 
-        if (!controller.signal.aborted) {
-          setSuggestions(nextSuggestions);
+        if (wordSuggestions.length === 0) {
+          setSuggestions([]);
+          return;
         }
+
+        const initial = wordSuggestions.map((wordSuggestion) => ({
+          term: wordSuggestion.term,
+          definition: '',
+          definitionStatus: 'loading' as const,
+        }));
+
+        setSuggestions(initial);
+
+        let aiDefinitions: Record<string, string> = {};
+
+        try {
+          aiDefinitions = await fetchAiDefinitions(
+            wordSuggestions.map((wordSuggestion) => wordSuggestion.term),
+            controller.signal,
+          );
+        } catch (error) {
+          if (controller.signal.aborted) return;
+          console.error(error);
+        }
+
+        if (controller.signal.aborted) return;
+
+        setSuggestions((previous) =>
+          previous.map((entry) => {
+            const aiDefinition = aiDefinitions[entry.term];
+            const fallbackDefinition =
+              wordSuggestions.find(
+                (wordSuggestion) => wordSuggestion.term === entry.term,
+              )?.fallbackDefinition ?? DEFAULT_DEFINITION;
+
+            return {
+              ...entry,
+              definition: clampDefinition(aiDefinition ?? fallbackDefinition),
+              definitionStatus: 'ready',
+            };
+          }),
+        );
       } catch (error) {
         if (controller.signal.aborted) return;
-        if (error instanceof DOMException && error.name === 'AbortError')
-          return;
         console.error(error);
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
       }
-    }, DEBOUNCE_MS);
+    }, SUGGESTION_DEBOUNCE_MS);
 
     return () => {
       controller.abort();
@@ -145,7 +162,7 @@ function useDictionarySuggestions(query: string) {
     };
   }, [query]);
 
-  return { suggestions, isLoading };
+  return { suggestions };
 }
 
 interface SearchBarProps {
@@ -177,7 +194,7 @@ function SearchBar({ inputProps, isEmpty }: SearchBarProps) {
 
 export default function SearchBox() {
   const [query, setQuery] = useState('');
-  const { suggestions, isLoading } = useDictionarySuggestions(query);
+  const { suggestions } = useLiveSuggestions(query);
 
   const {
     isOpen,
@@ -185,7 +202,7 @@ export default function SearchBox() {
     getInputProps,
     getMenuProps,
     getItemProps,
-  } = useCombobox<SuggestionEntry>({
+  } = useCombobox<SuggestionEntryWithStatus>({
     items: suggestions,
     inputValue: query,
     itemToString: (item) => item?.term ?? '',
@@ -220,7 +237,7 @@ export default function SearchBox() {
   });
 
   const showSuggestions =
-    isOpen && query.trim().length > 0 && suggestions.length > 0 && !isLoading;
+    isOpen && query.trim().length > 0 && suggestions.length > 0;
 
   return (
     <div className="relative">

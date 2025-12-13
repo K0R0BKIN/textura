@@ -1,8 +1,8 @@
 import { ChevronRightIcon } from '@radix-ui/react-icons';
-import { type SuggestionEntry } from '@/types';
+import { type SuggestionEntryWithStatus } from '@/types';
 
 interface SuggestionItemProps {
-  entry: SuggestionEntry;
+  entry: SuggestionEntryWithStatus;
   icon?: React.ComponentType<{ className?: string }>;
   isHighlighted: boolean;
   buttonProps: React.ButtonHTMLAttributes<HTMLButtonElement>;
@@ -28,9 +28,15 @@ function SuggestionItem({
         <div className="text-ui-sm flex min-w-0 flex-1 items-baseline">
           <span>{entry.term}</span>
           <span className="px-1 text-(--text-10)">·</span>
-          <span className="min-w-0 flex-1 truncate leading-normal text-(--text-10)">
-            {entry.definition}
-          </span>
+          {entry.definitionStatus === 'loading' ? (
+            <span className="min-w-0 flex-1">
+              <span className="block h-3 max-w-[10rem] animate-pulse rounded-full bg-(--bg-2-hover) opacity-60"></span>
+            </span>
+          ) : (
+            <span className="min-w-0 flex-1 truncate leading-normal text-(--text-10)">
+              {entry.definition}
+            </span>
+          )}
         </div>
 
         <div className="flex-shrink-0">
@@ -42,12 +48,12 @@ function SuggestionItem({
 }
 
 interface SuggestionListProps {
-  entries: SuggestionEntry[];
+  entries: SuggestionEntryWithStatus[];
   highlightedIndex: number;
   isOpen: boolean;
   menuProps: React.HTMLAttributes<HTMLUListElement>;
   getItemProps: (options: {
-    item: SuggestionEntry;
+    item: SuggestionEntryWithStatus;
     index: number;
   }) => React.ButtonHTMLAttributes<HTMLButtonElement>;
 }
