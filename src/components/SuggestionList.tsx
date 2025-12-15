@@ -43,7 +43,7 @@ function SuggestionItem({
 
 interface SuggestionListProps {
   entries: SuggestionEntry[];
-  highlightedIndex: number | null;
+  highlightedIndex: number;
   onSuggestionClick: (entry: SuggestionEntry) => void;
   onSuggestionHover: (index: number) => void;
   onSuggestionHoverEnd: () => void;
