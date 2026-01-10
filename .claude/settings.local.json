@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:dictionaryapi.dev)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.dictionaryapi.dev)",
+      "Bash(git checkout:*)"
+    ]
+  }
+}
