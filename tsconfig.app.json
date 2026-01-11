@@ -14,9 +14,6 @@
       "DOM.Iterable"
     ],
     "module": "ESNext",
-    "types": [
-      "vite/client"
-    ],
     "skipLibCheck": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
@@ -43,7 +40,8 @@
   "include": [
     "src",
     "./dist/types/**/*.ts",
-    "./next-env.d.ts"
+    "./next-env.d.ts",
+    "postcss.config.mjs"
   ],
   "exclude": [
     "./node_modules"

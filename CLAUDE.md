@@ -38,6 +38,7 @@ npm run preview
 ### State Management
 
 The app uses React's `useReducer` for state management in the SearchBox component. The reducer pattern handles:
+
 - User input (`TYPE`)
 - Focus states (`FOCUS`, `BLUR`)
 - Selection (`SELECT`)
@@ -82,6 +83,7 @@ The app uses React's `useReducer` for state management in the SearchBox componen
 ### Design Tokens
 
 Semantic color tokens are defined as CSS custom properties:
+
 - `--accent-*` - Primary UI colors (brown scale)
 - `--gray-*` - Neutral colors (sand scale)
 - `--accent-bg`, `--accent-bg-hover` - Background states
