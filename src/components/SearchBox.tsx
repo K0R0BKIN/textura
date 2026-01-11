@@ -90,7 +90,7 @@ function SearchBar({ value, placeholder, ...props }: SearchBarProps) {
         type="text"
         placeholder={placeholder}
         value={value}
-        className="w-full text-black outline-none placeholder:text-(--gray-text-placeholder)"
+        className="w-full text-(--gray-text-contrast) outline-none placeholder:text-(--gray-text-placeholder)"
         autoFocus
         {...props}
       />

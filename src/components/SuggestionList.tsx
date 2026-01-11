@@ -4,7 +4,6 @@ import { type SuggestionEntry } from '@/types';
 interface SuggestionItemProps {
   entry: SuggestionEntry;
   index: number;
-  icon?: React.ComponentType<{ className?: string }>;
   isHighlighted: boolean;
   onClick: (entry: SuggestionEntry) => void;
   onHover: (index: number) => void;
@@ -18,7 +17,6 @@ function SuggestionItem({
   onClick,
   onHover,
   onHoverEnd,
-  icon: Icon = ChevronRightIcon,
 }: SuggestionItemProps) {
   return (
     <li>
@@ -36,7 +34,7 @@ function SuggestionItem({
           <span className="text-(--gray-text-dim)">{entry.definition}</span>
         </div>
         <div>
-          <Icon className="size-4 text-(--gray-text-dim)"></Icon>
+          <ChevronRightIcon className="size-4 text-(--gray-text-dim)" />
         </div>
       </button>
     </li>
@@ -45,7 +43,7 @@ function SuggestionItem({
 
 interface SuggestionListProps {
   entries: SuggestionEntry[];
-  highlightedIndex: number | null;
+  highlightedIndex: number;
   onSuggestionClick: (entry: SuggestionEntry) => void;
   onSuggestionHover: (index: number) => void;
   onSuggestionHoverEnd: () => void;
