@@ -38,18 +38,34 @@ npx prettier --write .
 - Example: `import Component from '@/app/components/Component'`
 
 ### Styling
-- Tailwind CSS 4 with utility-first approach
-- Dark mode support built-in
-- Geist font family loaded via `next/font/google`
+- **Tailwind CSS 4**: Utility-first CSS framework with inline theme configuration
+- **Dark Mode**: Implemented via next-themes with system preference detection
+- **Color System**: Radix Colors (Sand, Brown, Red) for accessible, semantic theming
+- **Fonts**: Geist Sans and Geist Mono loaded via `next/font/google`
 
 ### Code Quality
 - **ESLint**: Linting configured with Next.js and TypeScript rules
 - **Prettier**: Code formatter with single quotes and Tailwind class sorting
 - **prettier-plugin-tailwindcss**: Automatically sorts Tailwind utility classes for consistency
 
-### Planned Additions
-- shadcn/ui component library (to be added as needed)
-- Additional stack decisions (auth, database, etc.) will be made when features require them
+### Component Library
+- **shadcn/ui**: Copy-paste component library configured with CSS variables
+- **Location**: Components installed to `@/components/ui/`
+- **Customization**: Full ownership of component code for modifications
+- **Utilities**: `cn()` helper in `@/lib/utils.ts` for class merging
+
+### Theming
+- **Color Foundation**: Radix Colors providing 12-step semantic scales
+  - **Sand**: Warm neutral gray for backgrounds, borders, muted elements
+  - **Brown**: Accent color for primary buttons, links, focus states
+  - **Red**: Destructive actions and error states
+- **Dark Mode**: next-themes library manages theme state
+  - Automatic system preference detection
+  - `.dark` class applied to `<html>` element
+  - Radix Colors automatically provide dark variants
+- **CSS Variables**: All colors mapped to shadcn semantic tokens
+  - `--background`, `--foreground`, `--primary`, etc.
+  - Consistent theming across all components
 
 ## Deployment
 
