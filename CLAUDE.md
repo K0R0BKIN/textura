@@ -20,6 +20,9 @@ npm start
 
 # Run ESLint
 npm run lint
+
+# Format code with Prettier
+npx prettier --write .
 ```
 
 ## Architecture
@@ -38,6 +41,11 @@ npm run lint
 - Tailwind CSS 4 with utility-first approach
 - Dark mode support built-in
 - Geist font family loaded via `next/font/google`
+
+### Code Quality
+- **ESLint**: Linting configured with Next.js and TypeScript rules
+- **Prettier**: Code formatter with single quotes and Tailwind class sorting
+- **prettier-plugin-tailwindcss**: Automatically sorts Tailwind utility classes for consistency
 
 ### Planned Additions
 - shadcn/ui component library (to be added as needed)
