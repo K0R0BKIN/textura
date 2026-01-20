@@ -35,6 +35,7 @@ export function Composer() {
       <InputGroupInput
         className="px-[16px]"
         placeholder="Look up definitions..."
+        autoFocus
       />
       <InputGroupAddon
         className="pr-[8px] has-[>button]:mr-0"
