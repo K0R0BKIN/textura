@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -10,6 +11,9 @@ import {
 } from '@/components/ui/input-group';
 
 export function Composer() {
+  const [inputValue, setInputValue] = useState('');
+  const isSearchDisabled = inputValue.trim().length === 0;
+
   return (
     <InputGroup
       className={cn(
@@ -36,6 +40,8 @@ export function Composer() {
         className="px-[16px]"
         placeholder="Look up definitions..."
         autoFocus
+        value={inputValue}
+        onChange={(e) => setInputValue(e.currentTarget.value)}
       />
       <InputGroupAddon
         className="pr-[8px] has-[>button]:mr-0"
@@ -45,6 +51,7 @@ export function Composer() {
           variant="default"
           size="icon-lg"
           className="dark:bg-(--brown-8) dark:hover:bg-(--brown-9)"
+          disabled={isSearchDisabled}
         >
           <Search />
         </InputGroupButton>
