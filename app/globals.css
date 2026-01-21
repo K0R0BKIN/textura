@@ -5,6 +5,8 @@
 @import '@radix-ui/colors/sand-dark.css';
 @import '@radix-ui/colors/brown.css';
 @import '@radix-ui/colors/brown-dark.css';
+@import '@radix-ui/colors/brown-alpha.css';
+@import '@radix-ui/colors/brown-dark-alpha.css';
 @import '@radix-ui/colors/red.css';
 @import '@radix-ui/colors/red-dark.css';
 
@@ -40,6 +42,7 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-focus: var(--focus);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -74,6 +77,7 @@
   --border: var(--sand-6);
   --input: var(--sand-7);
   --ring: var(--brown-8);
+  --focus: var(--brown-a5);
   --chart-1: var(--brown-9);
   --chart-2: var(--brown-7);
   --chart-3: var(--brown-5);
@@ -109,6 +113,7 @@
   --border: var(--sand-6);
   --input: var(--sand-7);
   --ring: var(--brown-8);
+  --focus: var(--brown-a5);
   --chart-1: var(--brown-9);
   --chart-2: var(--brown-7);
   --chart-3: var(--brown-5);
