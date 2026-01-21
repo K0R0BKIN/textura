@@ -28,33 +28,39 @@ npx prettier --write .
 ## Architecture
 
 ### Next.js 16 App Router
+
 - Uses `/app` directory structure
 - Server Components by default (use `'use client'` sparingly for interactivity)
 - File-based routing in `/app`
 
 ### TypeScript
+
 - Strict mode enabled
 - Path alias configured: `@/*` maps to project root
 - Example: `import Component from '@/app/components/Component'`
 
 ### Styling
+
 - **Tailwind CSS 4**: Utility-first CSS framework with inline theme configuration
 - **Dark Mode**: Implemented via next-themes with system preference detection
 - **Color System**: Radix Colors (Sand, Brown, Red) for accessible, semantic theming
 - **Fonts**: Geist Sans and Geist Mono loaded via `next/font/google`
 
 ### Code Quality
+
 - **ESLint**: Linting configured with Next.js and TypeScript rules
 - **Prettier**: Code formatter with single quotes and Tailwind class sorting
 - **prettier-plugin-tailwindcss**: Automatically sorts Tailwind utility classes for consistency
 
 ### Component Library
+
 - **shadcn/ui**: Copy-paste component library configured with CSS variables
 - **Location**: Components installed to `@/components/ui/`
 - **Customization**: Full ownership of component code for modifications
 - **Utilities**: `cn()` helper in `@/lib/utils.ts` for class merging
 
 ### Theming
+
 - **Color Foundation**: Radix Colors providing 12-step semantic scales
   - **Sand**: Warm neutral gray for backgrounds, borders, muted elements
   - **Brown**: Accent color for primary buttons, links, focus states
