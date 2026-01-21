@@ -22,7 +22,7 @@ npm start
 npm run lint
 
 # Format code with Prettier
-npx prettier --write .
+npm run format
 ```
 
 ## Architecture
@@ -44,12 +44,17 @@ npx prettier --write .
 - **Tailwind CSS 4**: Utility-first CSS framework with inline theme configuration
 - **Dark Mode**: Implemented via next-themes with system preference detection
 - **Color System**: Radix Colors (Sand, Brown, Red) for accessible, semantic theming
-- **Fonts**: Geist Sans and Geist Mono loaded via `next/font/google`
+- **Fonts**:
+  - **Inter** (variable): Primary sans-serif font loaded via `next/font/google`
+  - **Source Serif 4**: Serif font for enhanced typography
+  - CSS variables: `--font-inter` and `--font-source-serif`
 
 ### Code Quality
 
 - **ESLint**: Linting configured with Next.js and TypeScript rules
-- **Prettier**: Code formatter with single quotes and Tailwind class sorting
+- **Prettier**: Code formatter configured with:
+  - Single quotes for JavaScript/TypeScript
+  - Tailwind class sorting via prettier-plugin-tailwindcss
 - **prettier-plugin-tailwindcss**: Automatically sorts Tailwind utility classes for consistency
 
 ### Component Library
