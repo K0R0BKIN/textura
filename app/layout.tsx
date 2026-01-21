@@ -11,6 +11,7 @@ const inter = Inter({
 const sourceSerif = Source_Serif_4({
   variable: '--font-source-serif',
   subsets: ['latin'],
+  display: 'optional',
 });
 
 export const metadata: Metadata = {
