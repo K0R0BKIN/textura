@@ -1,7 +1,7 @@
 // components/logo.tsx
 export function Logo() {
   return (
-    <h1 className="text-foreground text-center font-serif text-7xl font-black tracking-tight select-none">
+    <h1 className="text-foreground text-center font-serif text-7xl font-black tracking-tight select-none dark:text-(--sand-12)/80">
       Textura
     </h1>
   );
