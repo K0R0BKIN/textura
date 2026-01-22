@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
 /* Import Radix Colors */
 @import '@radix-ui/colors/sand.css';
