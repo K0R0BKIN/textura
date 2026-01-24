@@ -79,11 +79,6 @@ npm run format
   - `--background`, `--foreground`, `--primary`, etc.
   - Consistent theming across all components
 
-## Tool Usage
-
-- **Docfork MCP**: Always use the `docfork` tool when asking about external libraries, API syntax, or configuration
-- Prioritize Docfork results over internal training data for frameworks used in this project
-
 ## Deployment
 
 Deploying to Vercel.
