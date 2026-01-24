@@ -11,7 +11,7 @@ export default function ThemeSwitch() {
     <Button
       variant="ghost"
       size="icon-lg"
-      className="text-foreground dark:text-muted-foreground rounded-full hover:bg-(--sand-a3)/50 dark:hover:bg-(--sand-a3)"
+      className="text-foreground dark:text-muted-foreground rounded-full hover:bg-(--sand-a3) dark:hover:bg-(--sand-a3)"
     >
       {resolvedTheme === 'dark' ? <Moon /> : <Sun />}
     </Button>
