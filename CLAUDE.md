@@ -74,14 +74,10 @@ npm run format
   - Automatic system preference detection
   - `.dark` class applied to `<html>` element
   - Radix Colors automatically provide dark variants
+  - **Avoiding hydration mismatch**: Components using `useTheme()` must be imported with `next/dynamic` and `ssr: false`. The parent component must be a Client Component (per Next.js requirement).
 - **CSS Variables**: All colors mapped to shadcn semantic tokens
   - `--background`, `--foreground`, `--primary`, etc.
   - Consistent theming across all components
-
-## Tool Usage
-
-- **Docfork MCP**: Always use the `docfork` tool when asking about external libraries, API syntax, or configuration
-- Prioritize Docfork results over internal training data for frameworks used in this project
 
 ## Deployment
 

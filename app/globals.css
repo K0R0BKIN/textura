@@ -5,6 +5,8 @@
 /* Import Radix Colors */
 @import '@radix-ui/colors/sand.css';
 @import '@radix-ui/colors/sand-dark.css';
+@import '@radix-ui/colors/sand-alpha.css';
+@import '@radix-ui/colors/sand-dark-alpha.css';
 @import '@radix-ui/colors/brown.css';
 @import '@radix-ui/colors/brown-dark.css';
 @import '@radix-ui/colors/brown-alpha.css';
