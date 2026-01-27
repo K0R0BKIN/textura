@@ -59,7 +59,7 @@ npm run format
 
 ### Component Library
 
-- **shadcn/ui**: Copy-paste component library configured with CSS variables
+- **shadcn/ui**: Copy-paste component library using Base UI primitives (`style: "base-vega"`)
 - **Location**: Components installed to `@/components/ui/`
 - **Customization**: Full ownership of component code for modifications
 - **Utilities**: `cn()` helper in `@/lib/utils.ts` for class merging
