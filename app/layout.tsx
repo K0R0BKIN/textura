@@ -7,12 +7,14 @@ import './globals.css';
 const inter = Inter({
   variable: '--font-inter',
   subsets: ['latin'],
+  display: 'block',
 });
 
 const sourceSerif = Source_Serif_4({
   variable: '--font-source-serif',
   subsets: ['latin'],
-  display: 'optional',
+  display: 'block',
+  preload: true,
 });
 
 export const metadata: Metadata = {
