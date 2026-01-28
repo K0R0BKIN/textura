@@ -1,6 +1,6 @@
 # Textura
 
-AI-powered dictionary application.
+AI-powered dictionary application in early development.
 
 ## Tech Stack
 
@@ -8,7 +8,7 @@ AI-powered dictionary application.
 - React 19
 - TypeScript
 - Tailwind CSS 4
-- Base UI (shadcn)
+- shadcn (Base UI)
 - Radix Colors
 - next-themes
 
@@ -24,14 +24,4 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm start` | Run production server |
-| `npm run lint` | Run ESLint |
-| `npm run format` | Format with Prettier |
+Open [http://localhost:3000](http://localhost:3000).
