@@ -17,7 +17,7 @@ export function Composer() {
   return (
     <InputGroup
       className={cn(
-        'h-[56px] rounded-[20px] border-(--sand-6) bg-(--sand-1) shadow-[0_4px_20px_rgba(32,32,32,0.06)] transition-colors',
+        'h-[56px] rounded-[20px] border-(--sand-7) bg-(--sand-1) shadow-[0_4px_20px_rgba(32,32,32,0.06)] transition-colors',
 
         // Hover state
         'hover:border-(--sand-8)',
@@ -32,6 +32,7 @@ export function Composer() {
         'dark:bg-(--sand-3)',
 
         // Dark mode interactions
+        'dark:border-(--sand-6)',
         'dark:hover:border-(--sand-7)',
         'dark:has-[[data-slot=input-group-control]:focus-visible]:border-(--sand-7)',
       )}
