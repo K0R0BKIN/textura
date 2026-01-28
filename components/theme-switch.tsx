@@ -23,7 +23,7 @@ export default function ThemeSwitch() {
           <Button
             variant="ghost"
             size="icon-lg"
-            className="text-foreground dark:text-muted-foreground rounded-full hover:bg-(--sand-a3) aria-expanded:bg-transparent aria-expanded:hover:bg-(--sand-a3) dark:hover:bg-(--sand-1)"
+            className="text-foreground rounded-full hover:bg-(--sand-a3) aria-expanded:bg-transparent aria-expanded:hover:bg-(--sand-a3) dark:text-(--sand-11) dark:hover:bg-(--sand-4) aria-expanded:dark:hover:bg-(--sand-4)"
           >
             {resolvedTheme === 'dark' ? <Moon /> : <Sun />}
           </Button>
@@ -32,7 +32,7 @@ export default function ThemeSwitch() {
       <DropdownMenuContent
         align="end"
         className={cn(
-          'rounded-[12px] border-[0.5px] border-(--sand-6) bg-(--sand-1) shadow-[0px_2px_8px_0px_rgba(0,0,0,0.08)] ring-0 **:data-[slot=dropdown-menu-radio-item]:rounded-[8px] **:data-[slot=dropdown-menu-radio-item]:focus:bg-(--sand-3) dark:bg-(--sand-3) dark:shadow-[0px_2px_8px_0px_rgba(0,0,0,0.24)] **:data-[slot=dropdown-menu-radio-item]:dark:focus:bg-(--sand-2)',
+          'rounded-[12px] border-[0.5px] border-(--sand-6) bg-(--sand-1) shadow-[0px_2px_8px_0px_rgba(0,0,0,0.08)] ring-0 **:data-[slot=dropdown-menu-radio-item]:rounded-[8px] **:data-[slot=dropdown-menu-radio-item]:focus:bg-(--sand-3) dark:bg-(--sand-3) dark:shadow-[0px_2px_8px_0px_rgba(0,0,0,0.24)] **:data-[slot=dropdown-menu-radio-item]:dark:focus:bg-(--sand-5)',
         )}
       >
         <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
