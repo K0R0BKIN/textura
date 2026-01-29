@@ -40,6 +40,7 @@ export function Composer() {
       <InputGroupInput
         className="px-[16px]"
         placeholder="Look up definitions..."
+        aria-label="Search query"
         autoFocus
         value={inputValue}
         onChange={(e) => setInputValue(e.currentTarget.value)}
@@ -53,6 +54,7 @@ export function Composer() {
           size="icon-lg"
           className="dark:bg-(--brown-8) dark:hover:bg-(--brown-9)"
           disabled={isSearchDisabled}
+          aria-label="Search"
         >
           <Search />
         </InputGroupButton>
