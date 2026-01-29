@@ -23,9 +23,14 @@ export default function ThemeSwitch() {
           <Button
             variant="ghost"
             size="icon-lg"
+            aria-label="Change theme"
             className="text-foreground rounded-full hover:bg-(--sand-a3) aria-expanded:bg-transparent aria-expanded:hover:bg-(--sand-a3) dark:text-(--sand-11) dark:hover:bg-(--sand-4) aria-expanded:dark:hover:bg-(--sand-4)"
           >
-            {resolvedTheme === 'dark' ? <Moon /> : <Sun />}
+            {resolvedTheme === 'dark' ? (
+              <Moon aria-hidden="true" />
+            ) : (
+              <Sun aria-hidden="true" />
+            )}
           </Button>
         }
       />
