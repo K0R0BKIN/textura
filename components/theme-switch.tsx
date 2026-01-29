@@ -32,7 +32,7 @@ export default function ThemeSwitch() {
       <DropdownMenuContent
         align="end"
         className={cn(
-          'rounded-[12px] border-[0.5px] border-(--sand-6) bg-(--sand-1) shadow-[0px_2px_8px_0px_rgba(0,0,0,0.08)] ring-0 **:data-[slot=dropdown-menu-radio-item]:rounded-[8px] **:data-[slot=dropdown-menu-radio-item]:focus:bg-(--sand-3) dark:bg-(--sand-3) dark:shadow-[0px_2px_8px_0px_rgba(0,0,0,0.24)] **:data-[slot=dropdown-menu-radio-item]:dark:focus:bg-(--sand-5)',
+          'data-open:animate-none data-closed:animate-none duration-0 rounded-[12px] border-[0.5px] border-(--sand-6) bg-(--sand-1) shadow-[0px_2px_8px_0px_rgba(0,0,0,0.08)] ring-0 **:data-[slot=dropdown-menu-radio-item]:rounded-[8px] **:data-[slot=dropdown-menu-radio-item]:focus:bg-(--sand-3) dark:bg-(--sand-3) dark:shadow-[0px_2px_8px_0px_rgba(0,0,0,0.24)] **:data-[slot=dropdown-menu-radio-item]:dark:focus:bg-(--sand-5)',
         )}
       >
         <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
