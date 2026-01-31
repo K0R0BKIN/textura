@@ -17,28 +17,11 @@ export function Composer() {
   return (
     <InputGroup
       className={cn(
-        'h-[56px] rounded-[20px] border-(--sand-7) bg-(--sand-1) shadow-[0_4px_20px_rgba(32,32,32,0.06)] transition-colors',
-
-        // Hover state
-        'hover:border-(--sand-8)',
-        'hover:shadow-[0_4px_20px_rgba(32,32,32,0.08)]',
-
-        // Focus state
-        'has-[[data-slot=input-group-control]:focus-visible]:border-(--sand-8)',
-        'has-[[data-slot=input-group-control]:focus-visible]:ring-0',
-        'has-[[data-slot=input-group-control]:focus-visible]:shadow-[0_4px_20px_rgba(32,32,32,0.08)]',
-
-        // Dark mode
-        'dark:bg-(--sand-3)',
-
-        // Dark mode interactions
-        'dark:border-(--sand-6)',
-        'dark:hover:border-(--sand-7)',
-        'dark:has-[[data-slot=input-group-control]:focus-visible]:border-(--sand-7)',
+        'h-[56px] rounded-[20px] border-(--sand-7) bg-(--sand-1) transition-colors dark:bg-(--gray-5)',
       )}
     >
       <InputGroupInput
-        className="px-[16px]"
+        className="px-[16px] placeholder:text-(--sand-9) dark:placeholder:text-(--gray-10)"
         placeholder="Look up definitions..."
         aria-label="Search query"
         autoFocus
@@ -52,7 +35,7 @@ export function Composer() {
         <InputGroupButton
           variant="default"
           size="icon-lg"
-          className="dark:bg-(--brown-8) dark:hover:bg-(--brown-9)"
+          className="bg-(--brown-9) text-(--sand-1) hover:bg-(--brown-10) dark:bg-(--brown-9)/80 dark:text-(--sand-12) dark:hover:bg-(--brown-9)"
           disabled={isSearchDisabled}
           aria-label="Search"
         >

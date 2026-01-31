@@ -3,6 +3,8 @@
 @import 'shadcn/tailwind.css';
 
 /* Import Radix Colors */
+@import '@radix-ui/colors/gray.css';
+@import '@radix-ui/colors/gray-dark.css';
 @import '@radix-ui/colors/sand.css';
 @import '@radix-ui/colors/sand-dark.css';
 @import '@radix-ui/colors/sand-alpha.css';
@@ -46,7 +48,6 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
-  --color-focus: var(--focus);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -81,7 +82,6 @@
   --border: var(--sand-6);
   --input: var(--sand-7);
   --ring: var(--brown-8);
-  --focus: var(--brown-a5);
   --chart-1: var(--brown-9);
   --chart-2: var(--brown-7);
   --chart-3: var(--brown-5);
@@ -98,7 +98,7 @@
 }
 
 .dark {
-  --background: var(--sand-2);
+  --background: var(--gray-3);
   --foreground: var(--sand-12);
   --card: var(--sand-1);
   --card-foreground: var(--sand-12);
@@ -117,7 +117,6 @@
   --border: var(--sand-6);
   --input: var(--sand-7);
   --ring: var(--brown-8);
-  --focus: var(--brown-a5);
   --chart-1: var(--brown-9);
   --chart-2: var(--brown-7);
   --chart-3: var(--brown-5);
