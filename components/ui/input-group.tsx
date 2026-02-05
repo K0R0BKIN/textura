@@ -32,12 +32,13 @@ const inputGroupVariants = cva(
 function InputGroup({
   className,
   variant,
-  size,
+  size = 'default',
   ...props
 }: React.ComponentProps<'div'> & VariantProps<typeof inputGroupVariants>) {
   return (
     <div
       data-slot="input-group"
+      data-size={size}
       role="group"
       className={cn(inputGroupVariants({ variant, size }), className)}
       {...props}
@@ -50,18 +51,43 @@ const inputGroupAddonVariants = cva(
   {
     variants: {
       align: {
-        'inline-start':
-          'pl-2 has-[>button]:ml-[-0.25rem] has-[>kbd]:ml-[-0.15rem] order-first',
-        'inline-end':
-          'pr-2 has-[>button]:mr-[-0.25rem] has-[>kbd]:mr-[-0.15rem] order-last',
+        'inline-start': 'order-first',
+        'inline-end': 'order-last',
         'block-start':
           'px-2.5 pt-2 group-has-[>input]/input-group:pt-2 [.border-b]:pb-2 order-first w-full justify-start',
         'block-end':
           'px-2.5 pb-2 group-has-[>input]/input-group:pb-2 [.border-t]:pt-2 order-last w-full justify-start',
       },
+      size: {
+        default: '',
+        lg: '',
+      },
     },
+    compoundVariants: [
+      {
+        align: 'inline-start',
+        size: 'default',
+        className: 'pl-2 has-[>button]:ml-[-0.25rem] has-[>kbd]:ml-[-0.15rem]',
+      },
+      {
+        align: 'inline-end',
+        size: 'default',
+        className: 'pr-2 has-[>button]:mr-[-0.25rem] has-[>kbd]:mr-[-0.15rem]',
+      },
+      {
+        align: 'inline-start',
+        size: 'lg',
+        className: 'pl-4 has-[>button]:ml-[-0.5rem] has-[>kbd]:ml-[-0.3rem]',
+      },
+      {
+        align: 'inline-end',
+        size: 'lg',
+        className: 'pr-4 has-[>button]:mr-[-0.5rem] has-[>kbd]:mr-[-0.3rem]',
+      },
+    ],
     defaultVariants: {
       align: 'inline-start',
+      size: 'default',
     },
   },
 );
@@ -69,6 +95,7 @@ const inputGroupAddonVariants = cva(
 function InputGroupAddon({
   className,
   align = 'inline-start',
+  size = 'default',
   ...props
 }: React.ComponentProps<'div'> & VariantProps<typeof inputGroupAddonVariants>) {
   return (
@@ -76,7 +103,7 @@ function InputGroupAddon({
       role="group"
       data-slot="input-group-addon"
       data-align={align}
-      className={cn(inputGroupAddonVariants({ align }), className)}
+      className={cn(inputGroupAddonVariants({ align, size }), className)}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('button')) {
           return;
