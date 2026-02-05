@@ -16,7 +16,7 @@ export function SearchBox() {
         autoFocus
       />
       <InputGroupAddon align="inline-end">
-        <InputGroupButton aria-label="Search">
+        <InputGroupButton aria-label="Search" variant="default" size="icon-lg">
           <Search />
         </InputGroupButton>
       </InputGroupAddon>
