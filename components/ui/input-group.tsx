@@ -15,7 +15,7 @@ const inputGroupVariants = cva(
       variant: {
         field:
           'dark:bg-input/30 border-input has-[[data-slot][aria-invalid=true]]:ring-destructive/20 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40 has-[[data-slot][aria-invalid=true]]:ring-[3px]',
-        search: 'bg-search',
+        card: 'bg-card',
       },
       size: {
         default: 'h-9 rounded-md',

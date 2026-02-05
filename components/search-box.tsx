@@ -2,7 +2,7 @@ import { InputGroup, InputGroupInput } from '@/components/ui/input-group';
 
 export function SearchBox() {
   return (
-    <InputGroup variant="search" size="lg" className="w-lg">
+    <InputGroup variant="card" size="lg" className="w-lg">
       <InputGroupInput
         type="search"
         name="query"
