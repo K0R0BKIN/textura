@@ -1,6 +1,6 @@
 export function Logo() {
   return (
-    <h1 className="text-foreground font-serif text-7xl leading-none font-black tracking-tight select-none">
+    <h1 className="text-foreground dark:text-secondary-foreground font-serif text-7xl leading-none font-black tracking-tight select-none">
       Textura
     </h1>
   );
