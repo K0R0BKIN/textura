@@ -9,12 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 const inputGroupVariants = cva(
-  'group/input-group relative flex w-full min-w-0 items-center border shadow-xs transition-[color,box-shadow] outline-none has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>textarea]:h-auto has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5 [[data-slot=combobox-content]_&]:focus-within:border-inherit [[data-slot=combobox-content]_&]:focus-within:ring-0',
+  'group/input-group relative flex w-full min-w-0 items-center border shadow-xs transition-[color,box-shadow] has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>textarea]:h-auto has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5 [[data-slot=combobox-content]_&]:focus-within:border-inherit [[data-slot=combobox-content]_&]:focus-within:ring-0',
   {
     variants: {
       variant: {
         field:
-          'dark:bg-input/30 border-input has-[[data-slot][aria-invalid=true]]:ring-destructive/20 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40 has-[[data-slot][aria-invalid=true]]:ring-[3px]',
+          'dark:bg-input/30 border-input has-[[data-slot=input-group-control]:focus]:outline-ring has-[[data-slot=input-group-control]:focus]:outline-2 has-[[data-slot=input-group-control]:focus]:outline-offset-2 has-[[data-slot][aria-invalid=true]]:outline-destructive has-[[data-slot][aria-invalid=true]]:outline-2',
         card: 'bg-card',
       },
       size: {
@@ -172,7 +172,7 @@ function InputGroupInput({
     <Input
       data-slot="input-group-control"
       className={cn(
-        'flex-1 rounded-none border-0 bg-transparent shadow-none ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent',
+        'flex-1 rounded-none border-0 bg-transparent shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:outline-none aria-invalid:ring-0 aria-invalid:outline-none dark:bg-transparent',
         className,
       )}
       {...props}
@@ -188,7 +188,7 @@ function InputGroupTextarea({
     <Textarea
       data-slot="input-group-control"
       className={cn(
-        'flex-1 resize-none rounded-none border-0 bg-transparent py-2 shadow-none ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent',
+        'flex-1 resize-none rounded-none border-0 bg-transparent py-2 shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:outline-none aria-invalid:ring-0 aria-invalid:outline-none dark:bg-transparent',
         className,
       )}
       {...props}
