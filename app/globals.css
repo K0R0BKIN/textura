@@ -144,7 +144,7 @@
     @apply bg-selection text-selection-foreground;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background font-sans text-foreground;
   }
 
   /* See https://tailwindcss.com/docs/upgrade-guide#buttons-use-the-default-cursor */
