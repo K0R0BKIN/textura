@@ -10,19 +10,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Start development server at http://localhost:3000
-npm run dev
+pnpm dev
 
 # Create production build
-npm run build
+pnpm build
 
 # Start production server
-npm start
+pnpm start
 
 # Run ESLint
-npm run lint
+pnpm lint
 
 # Format code with Prettier
-npm run format
+pnpm format
 ```
 
 ## Architecture
