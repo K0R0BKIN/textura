@@ -2,7 +2,7 @@
 
 AI-powered dictionary application in early development.
 
-## Tech Stack
+## Tech stack
 
 - Next.js 16 (App Router)
 - React 19
@@ -12,16 +12,11 @@ AI-powered dictionary application in early development.
 - Radix Colors
 - next-themes
 
-## Getting Started
+## Getting started
 
 ```bash
-# Clone and install
 git clone https://github.com/K0R0BKIN/textura.git
 cd textura
-npm install
-
-# Run development server
-npm run dev
+pnpm install
+pnpm dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000).
