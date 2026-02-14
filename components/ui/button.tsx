@@ -12,6 +12,8 @@ const buttonVariants = cva(
       variant: {
         default:
           'bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-primary/80 dark:hover:bg-primary/90',
+        ghost:
+          'text-foreground hover:bg-accent hover:text-accent-foreground dark:text-secondary-foreground dark:hover:text-accent-foreground',
       },
       size: {
         'icon-lg':

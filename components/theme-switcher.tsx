@@ -10,7 +10,7 @@ export default function ThemeSwitcher() {
   const isDarkTheme = resolvedTheme === 'dark';
 
   return (
-    <Button variant="default" size="icon-lg">
+    <Button variant="ghost" size="icon-lg">
       {isDarkTheme ? <Moon aria-hidden="true" /> : <Sun aria-hidden="true" />}
     </Button>
   );
