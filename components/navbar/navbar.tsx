@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 
-const ThemeSwitcher = dynamic(() => import('@/components/theme-switcher'), {
+const ThemeSwitcher = dynamic(() => import('./theme-switcher'), {
   ssr: false,
 });
 

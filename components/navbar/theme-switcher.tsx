@@ -2,7 +2,7 @@
 
 import { useTheme } from 'next-themes';
 
-import { Button } from '@/components/ui/button';
+import { NavbarButton } from '@/components/navbar/navbar-button';
 import { Moon, Sun } from 'lucide-react';
 
 export default function ThemeSwitcher() {
@@ -10,8 +10,8 @@ export default function ThemeSwitcher() {
   const isDarkTheme = resolvedTheme === 'dark';
 
   return (
-    <Button variant="ghost" size="icon-lg">
+    <NavbarButton>
       {isDarkTheme ? <Moon aria-hidden="true" /> : <Sun aria-hidden="true" />}
-    </Button>
+    </NavbarButton>
   );
 }
