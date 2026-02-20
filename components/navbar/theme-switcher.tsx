@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NavbarButton } from '@/components/navbar/navbar-button';
-import { cn } from '@/lib/utils';
 
 export default function ThemeSwitcher() {
   const { theme, resolvedTheme, setTheme } = useTheme();
@@ -29,13 +28,7 @@ export default function ThemeSwitcher() {
           </NavbarButton>
         }
       />
-      <DropdownMenuContent
-        align="end"
-        className={cn(
-          'rounded-md border border-border bg-card shadow-lg ring-0',
-          '**:data-[slot=dropdown-menu-radio-item]:rounded-sm',
-        )}
-      >
+      <DropdownMenuContent align="end">
         <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
           <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
