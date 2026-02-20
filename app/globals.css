@@ -5,12 +5,6 @@
 @import '@radix-ui/colors/gray.css';
 @import '@radix-ui/colors/gray-dark.css';
 
-@import '@radix-ui/colors/blue.css';
-@import '@radix-ui/colors/blue-dark.css';
-
-@import '@radix-ui/colors/red.css';
-@import '@radix-ui/colors/red-dark.css';
-
 @import '@radix-ui/colors/sand.css';
 @import '@radix-ui/colors/sand-dark.css';
 @import '@radix-ui/colors/sand-alpha.css';
@@ -20,6 +14,9 @@
 @import '@radix-ui/colors/brown-dark.css';
 @import '@radix-ui/colors/brown-alpha.css';
 @import '@radix-ui/colors/brown-dark-alpha.css';
+
+@import '@radix-ui/colors/red.css';
+@import '@radix-ui/colors/red-dark.css';
 
 @custom-variant dark (&:is(.dark *));
 
