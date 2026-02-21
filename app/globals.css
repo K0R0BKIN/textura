@@ -43,7 +43,7 @@
   --input: var(--border);
   --ring: var(--brown-8);
 
-  --selection: var(--brown-a5);
+  --selection: var(--brown-a6);
   --selection-foreground: var(--foreground);
 
   --shadow-md: 0px 2px 8px rgb(0 0 0 / 0.08);
