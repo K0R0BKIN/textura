@@ -36,30 +36,13 @@ Colors flow through two distinct layers in `app/globals.css`:
 
 Dark mode uses `next-themes` with `attribute="class"`. The CSS custom variant is declared as `@custom-variant dark (&:is(.dark *))`.
 
-### Font stack
-
-Two Google fonts are loaded in `app/layout.tsx` as CSS variable references:
-
-- `--font-inter` → Tailwind `font-sans`
-- `--font-source-serif` → Tailwind `font-serif`
-
 ### ThemeSwitcher hydration pattern
 
 `components/navbar/navbar.tsx` dynamically imports `ThemeSwitcher` with `{ ssr: false }` to avoid hydration mismatches, since `next-themes` needs client-side access to determine the resolved theme.
 
-### Styling utilities
-
-- `lib/utils.ts` exports `cn()` (clsx + tailwind-merge)
-- CVA (`class-variance-authority`) is used for component variants (Button, InputGroup, etc.)
-- Prettier is configured with `prettier-plugin-tailwindcss` and sorts classes inside `cva`, `clsx`, and `cn` calls
-
 ### Path aliases
 
-`@/` maps to the repo root. Key paths:
-
-- `@/components/ui` — shadcn UI primitives
-- `@/components/navbar` — navbar and theme switcher
-- `@/lib/utils` — `cn()` helper
+`@/` maps to the repo root.
 
 ### Testing
 
