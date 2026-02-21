@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { Inter, Source_Serif_4 } from 'next/font/google';
-import { ThemeProvider } from '@/components/theme-provider';
-import Navbar from '@/components/navbar';
 import './globals.css';
+
+import { ThemeProvider } from '@/components/theme-provider';
+import { Navbar } from '@/components/navbar/navbar';
 
 const inter = Inter({
   variable: '--font-inter',

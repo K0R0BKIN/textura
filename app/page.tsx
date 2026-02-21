@@ -1,12 +1,12 @@
 import { Logo } from '@/components/logo';
-import { Composer } from '@/components/composer';
+import { SearchBox } from '@/components/search-box';
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-start justify-center pt-72">
-      <div className="flex w-full max-w-lg flex-col gap-4">
-        <Logo></Logo>
-        <Composer />
+    <div className="flex min-h-screen items-start justify-center pt-[25vh]">
+      <div className="flex flex-col items-center gap-3">
+        <Logo />
+        <SearchBox />
       </div>
     </div>
   );
