@@ -2,83 +2,65 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project
-
-**Textura** is an AI-powered dictionary application built as a portfolio project. This is production-quality code intended for deployment and resume demonstration.
-
-## Development Commands
+## Commands
 
 ```bash
-# Start development server at http://localhost:3000
-pnpm dev
-
-# Create production build
-pnpm build
-
-# Start production server
-pnpm start
-
-# Run ESLint
-pnpm lint
-
-# Format code with Prettier
-pnpm format
+pnpm dev        # Start dev server (uses webpack explicitly, not Turbopack)
+pnpm build      # Production build
+pnpm lint       # ESLint
+pnpm format     # Prettier (writes in place)
+pnpm exec playwright test              # Run all Playwright e2e tests
+pnpm exec playwright test --project=chromium  # Run tests in a single browser
 ```
 
 ## Architecture
 
-### Next.js 16 App Router
+**Textura** is an AI-powered dictionary app in early development. Next.js 16 App Router, React 19, TypeScript, Tailwind CSS 4.
 
-- Uses `/app` directory structure
-- Server Components by default (use `'use client'` sparingly for interactivity)
-- File-based routing in `/app`
+### Component library: shadcn with Base UI (not Radix UI)
 
-### TypeScript
+`components.json` sets `style: "base-vega"`, which means shadcn generates components backed by **`@base-ui/react`** primitives instead of the standard `@radix-ui/*` packages. For example:
 
-- Strict mode enabled
-- Path alias configured: `@/*` maps to project root
-- Example: `import Component from '@/app/components/Component'`
+- `DropdownMenu` uses `@base-ui/react/menu` → `MenuPrimitive.Root`, `MenuPrimitive.Popup`, etc.
+- `Button` uses `@base-ui/react/button` → `ButtonPrimitive`
 
-### Styling
+This is not the default shadcn style — do not reference `@radix-ui/react-*` component imports.
 
-- **Tailwind CSS 4**: Utility-first CSS framework with inline theme configuration
-- **Dark Mode**: Implemented via next-themes with system preference detection
-- **Color System**: Radix Colors (Sand, Brown, Red) for accessible, semantic theming
-- **Fonts**:
-  - **Inter** (variable): Primary sans-serif font loaded via `next/font/google`
-  - **Source Serif 4**: Serif font for enhanced typography
-  - CSS variables: `--font-inter` and `--font-source-serif`
+### CSS theming: two-layer system
 
-### Code Quality
+Colors flow through two distinct layers in `app/globals.css`:
 
-- **ESLint**: Linting configured with Next.js and TypeScript rules
-- **Prettier**: Code formatter configured with:
-  - Single quotes for JavaScript/TypeScript
-  - Tailwind class sorting via prettier-plugin-tailwindcss
-- **prettier-plugin-tailwindcss**: Automatically sorts Tailwind utility classes for consistency
+1. **Radix Colors** (`@radix-ui/colors`) provides atomic CSS vars like `--brown-9`, `--sand-12`, `--gray-3`
+2. **Semantic tokens** (`:root` and `.dark` blocks) map those to named vars like `--background`, `--foreground`, `--primary`
+3. **`@theme inline`** maps the semantic tokens into Tailwind utility classes: `bg-background`, `text-foreground`, `text-primary`, etc.
 
-### Component Library
+Dark mode uses `next-themes` with `attribute="class"`. The CSS custom variant is declared as `@custom-variant dark (&:is(.dark *))`.
 
-- **shadcn/ui**: Copy-paste component library using Base UI primitives (`style: "base-vega"`)
-- **Location**: Components installed to `@/components/ui/`
-- **Customization**: Full ownership of component code for modifications
-- **Utilities**: `cn()` helper in `@/lib/utils.ts` for class merging
+### Font stack
 
-### Theming
+Two Google fonts are loaded in `app/layout.tsx` as CSS variable references:
 
-- **Color Foundation**: Radix Colors providing 12-step semantic scales
-  - **Sand**: Warm neutral gray for backgrounds, borders, muted elements
-  - **Brown**: Accent color for primary buttons, links, focus states
-  - **Red**: Destructive actions and error states
-- **Dark Mode**: next-themes library manages theme state
-  - Automatic system preference detection
-  - `.dark` class applied to `<html>` element
-  - Radix Colors automatically provide dark variants
-  - **Avoiding hydration mismatch**: Components using `useTheme()` must be imported with `next/dynamic` and `ssr: false`. The parent component must be a Client Component (per Next.js requirement).
-- **CSS Variables**: All colors mapped to shadcn semantic tokens
-  - `--background`, `--foreground`, `--primary`, etc.
-  - Consistent theming across all components
+- `--font-inter` → Tailwind `font-sans`
+- `--font-source-serif` → Tailwind `font-serif`
 
-## Deployment
+### ThemeSwitcher hydration pattern
 
-Deploying to Vercel.
+`components/navbar/navbar.tsx` dynamically imports `ThemeSwitcher` with `{ ssr: false }` to avoid hydration mismatches, since `next-themes` needs client-side access to determine the resolved theme.
+
+### Styling utilities
+
+- `lib/utils.ts` exports `cn()` (clsx + tailwind-merge)
+- CVA (`class-variance-authority`) is used for component variants (Button, InputGroup, etc.)
+- Prettier is configured with `prettier-plugin-tailwindcss` and sorts classes inside `cva`, `clsx`, and `cn` calls
+
+### Path aliases
+
+`@/` maps to the repo root. Key paths:
+
+- `@/components/ui` — shadcn UI primitives
+- `@/components/navbar` — navbar and theme switcher
+- `@/lib/utils` — `cn()` helper
+
+### Testing
+
+Playwright e2e tests live in `tests/` (directory doesn't exist yet — it's a fresh project). Config targets Chromium, Firefox, and WebKit.
