@@ -31,6 +31,7 @@
   --popover-foreground: var(--foreground);
   --primary: var(--brown-9);
   --primary-foreground: var(--color-white);
+  --secondary-foreground: var(--sand-11);
   --muted: var(--accent);
   --muted-foreground: var(--sand-9);
   --accent: var(--brown-3);
@@ -101,6 +102,11 @@
 
   --color-selection: var(--selection);
   --color-selection-foreground: var(--selection-foreground);
+}
+
+@counter-style bare-decimal {
+  system: extends decimal;
+  suffix: '\2002'; /* en space */
 }
 
 @layer base {
