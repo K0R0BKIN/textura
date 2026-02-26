@@ -20,7 +20,7 @@ export function SearchBox() {
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const term = query.trim();
-    if (term) router.push('/word/' + encodeURIComponent(term));
+    if (term) router.push('/article/' + encodeURIComponent(term));
   }
 
   return (
