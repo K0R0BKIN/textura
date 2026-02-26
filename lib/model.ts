@@ -1,28 +1,20 @@
+export type Article = {
+  headword: string;
+  etymons: Etymon[];
+};
+
+export type Etymon = {
+  lexemes: Lexeme[];
+};
+
 export type Lexeme = {
-  partOfSpeech: PartOfSpeech;
+  lexicalCategory: LexicalCategory;
   pronunciation: string;
-  etymon: Etymon;
   senses: Sense[];
 };
 
 export type Sense = {
   definition: string;
-  example?: string;
 };
 
-export type Etymon = {
-  language: string;
-  word: string;
-  meaning: string;
-};
-
-export type PartOfSpeech =
-  | 'noun'
-  | 'verb'
-  | 'adjective'
-  | 'adverb'
-  | 'pronoun'
-  | 'preposition'
-  | 'conjunction'
-  | 'interjection'
-  | 'determiner';
+export type LexicalCategory = 'noun' | 'verb' | 'adjective' | 'adverb';
