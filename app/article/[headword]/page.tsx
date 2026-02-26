@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getArticle } from '@/lib/mock';
+import { generateArticle } from '@/lib/ai';
 
 export default async function ArticlePage({
   params,
@@ -7,7 +7,7 @@ export default async function ArticlePage({
   params: Promise<{ headword: string }>;
 }) {
   const { headword } = await params;
-  const article = getArticle(decodeURIComponent(headword));
+  const article = await generateArticle(decodeURIComponent(headword));
 
   if (!article) notFound();
 
