@@ -7,19 +7,25 @@ const bank: Article = {
       lexemes: [
         {
           lexicalCategory: 'noun',
-          pronunciation: '/bæŋk/',
+          pronunciation: 'bæŋk',
           senses: [
             {
               definition:
-                'Where you keep your money — a company that manages money for people.',
+                'A company that holds and lends money — most people use one for savings, payments, and loans.',
             },
-            { definition: 'A building where people go to do their banking.' },
+            {
+              definition: 'The building or office where a bank operates.',
+            },
           ],
         },
         {
           lexicalCategory: 'verb',
-          pronunciation: '/bæŋk/',
-          senses: [{ definition: 'To keep your money at a bank.' }],
+          pronunciation: 'bæŋk',
+          senses: [
+            {
+              definition: 'To deposit or keep money in a bank.',
+            },
+          ],
         },
       ],
     },
@@ -27,9 +33,12 @@ const bank: Article = {
       lexemes: [
         {
           lexicalCategory: 'noun',
-          pronunciation: '/bæŋk/',
+          pronunciation: 'bæŋk',
           senses: [
-            { definition: 'The ground along the edge of a river or stream.' },
+            {
+              definition:
+                'The raised ground along the edge of a river or stream.',
+            },
           ],
         },
       ],

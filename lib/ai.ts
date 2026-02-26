@@ -9,7 +9,9 @@ const articleSchema = z.object({
       lexemes: z.array(
         z.object({
           lexicalCategory: z.enum(['noun', 'verb', 'adjective', 'adverb']),
-          pronunciation: z.string(),
+          pronunciation: z
+            .string()
+            .describe('IPA transcription without slashes'),
           senses: z.array(
             z.object({
               definition: z.string(),
@@ -21,11 +23,18 @@ const articleSchema = z.object({
   ),
 });
 
+const prompt = `Generate a dictionary article for the given word.
+
+Definitions should lead with what's most recognizable about the meaning, then add substance. Use clear, direct language at CEFR B2 level. Do not address the reader.
+
+Group lexemes by etymological origin. Cover common senses without being exhaustive. Order etymon groups and senses from most common to most specialized. Use IPA for pronunciation.`;
+
 export async function generateArticle(headword: string) {
   const { output } = await generateText({
     model: openai('gpt-4o'),
     output: Output.object({ schema: articleSchema }),
-    prompt: `Define the English word "${headword}". Group lexemes by shared etymological origin.`,
+    system: prompt,
+    prompt: headword,
   });
 
   return output;

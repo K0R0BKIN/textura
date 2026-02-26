@@ -34,7 +34,7 @@ export default async function ArticlePage({
               <h3 className="text-lg text-secondary-foreground">
                 <span className="font-semibold">{lexeme.lexicalCategory}</span>
                 <span className="ml-2 text-muted-foreground">
-                  {lexeme.pronunciation}
+                  /{lexeme.pronunciation}/
                 </span>
               </h3>
               <ol className="mt-2 list-[bare-decimal] space-y-2 pl-0 marker:text-muted-foreground">
