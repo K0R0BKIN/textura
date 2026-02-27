@@ -33,7 +33,7 @@ export async function generateArticle(headword: string) {
   'use cache';
 
   const { output } = await generateText({
-    model: openai('gpt-4o'),
+    model: openai('gpt-5-mini'),
     output: Output.object({ schema: articleSchema }),
     system: prompt,
     prompt: headword,
