@@ -32,9 +32,11 @@ export default async function ArticlePage({
               className={lexemeIndex === 0 ? 'mt-4' : 'mt-8'}
             >
               <h3 className="text-lg text-secondary-foreground">
-                <span className="font-semibold">{lexeme.lexicalCategory}</span>
-                <span className="ml-2 text-muted-foreground">
-                  /{lexeme.pronunciation}/
+                <span className="font-semibold select-none">
+                  {lexeme.lexicalCategory}
+                </span>
+                <span className="ml-2 text-muted-foreground before:content-['/'] after:content-['/']">
+                  {lexeme.pronunciation}
                 </span>
               </h3>
               <ol className="mt-2 list-[bare-decimal] space-y-2 pl-[calc(1ch+0.5em)] marker:text-muted-foreground">
