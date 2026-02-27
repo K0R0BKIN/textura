@@ -30,6 +30,8 @@ Definitions should lead with what's most recognizable about the meaning, then ad
 Group lexemes by etymological origin. Cover common senses without being exhaustive. Order etymon groups and senses from most common to most specialized. Use IPA for pronunciation.`;
 
 export async function generateArticle(headword: string) {
+  'use cache';
+
   const { output } = await generateText({
     model: openai('gpt-4o'),
     output: Output.object({ schema: articleSchema }),
