@@ -37,7 +37,7 @@ export default async function ArticlePage({
                   /{lexeme.pronunciation}/
                 </span>
               </h3>
-              <ol className="mt-2 list-[bare-decimal] space-y-2 pl-0 marker:text-muted-foreground">
+              <ol className="mt-2 list-[bare-decimal] space-y-2 pl-[calc(1ch+0.5em)] marker:text-muted-foreground">
                 {lexeme.senses.map((sense, senseIndex) => (
                   <li key={senseIndex}>{sense.definition}</li>
                 ))}
