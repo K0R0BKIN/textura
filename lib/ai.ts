@@ -1,5 +1,6 @@
 import { generateText, Output } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { cacheLife } from 'next/cache';
 import { z } from 'zod';
 
 const articleSchema = z.object({
@@ -31,6 +32,7 @@ Group lexemes by etymological origin. Cover common senses without being exhausti
 
 export async function generateArticle(headword: string) {
   'use cache';
+  cacheLife('max');
 
   const { output } = await generateText({
     model: openai('gpt-5-mini'),
