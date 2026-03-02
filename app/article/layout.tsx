@@ -13,7 +13,7 @@ export default function ArticleLayout({
     <>
       <Navbar>
         <Navbar.Start>
-          <Link href="/" className="ml-3">
+          <Link href="/" className="ml-2">
             <Logo variant="nav" />
           </Link>
         </Navbar.Start>
