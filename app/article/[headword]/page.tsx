@@ -69,7 +69,7 @@ export default function ArticlePage({
   const headword = params.then((p) => decodeURIComponent(p.headword));
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pt-24">
+    <div className="mx-auto max-w-2xl px-4 py-24">
       <Suspense fallback={<ArticleSkeleton />}>
         <ArticleContent headword={headword} />
       </Suspense>
