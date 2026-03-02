@@ -1,6 +1,19 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { generateArticle } from '@/lib/ai';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ headword: string }>;
+}): Promise<Metadata> {
+  const { headword } = await params;
+
+  return {
+    title: decodeURIComponent(headword),
+  };
+}
 
 function ArticleSkeleton() {
   return (
