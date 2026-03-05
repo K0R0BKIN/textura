@@ -2,8 +2,7 @@ import { generateText, Output } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { cacheLife, cacheTag } from 'next/cache';
 import { ArticleSchema } from './schemas';
-
-const prompt = `Generate a dictionary article.`;
+import { systemPrompt } from './ai/prompts';
 
 export async function generateArticle(headword: string) {
   'use cache';
@@ -11,11 +10,11 @@ export async function generateArticle(headword: string) {
   cacheTag('articles');
 
   const { output } = await generateText({
-    model: openai('gpt-5-mini'),
     model: openai('gpt-5.2'),
     output: Output.object({ schema: ArticleSchema }),
-    system: prompt,
-    prompt: headword,
+    temperature: 0,
+    system: systemPrompt,
+    prompt: `Generate a dictionary article for: ${headword}`,
   });
 
   return output;

@@ -31,9 +31,7 @@ export const LexemeSchema = z.object({
 export type Lexeme = z.infer<typeof LexemeSchema>;
 
 export const EtymonSchema = z.object({
-  origin: z
-    .string()
-    .describe('Etymology tracing the immediate source language and root form.'),
+  origin: z.string().describe('Concise etymology.'),
   lexemes: z.array(LexemeSchema),
 });
 export type Etymon = z.infer<typeof EtymonSchema>;
