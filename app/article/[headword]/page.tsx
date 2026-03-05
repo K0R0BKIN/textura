@@ -48,7 +48,7 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
               </sup>
             )}
           </h2>
-          <p className="mt-2 text-sm text-secondary-foreground">
+          <p className="mt-2 font-serif text-muted-foreground">
             {etymon.origin}
           </p>
           {etymon.lexemes?.map((lexeme, lexemeIndex) => (
@@ -67,7 +67,7 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
               <ol className="mt-2 list-[bare-decimal] space-y-2 pl-[calc(1ch+0.5em)] marker:text-muted-foreground">
                 {lexeme.senses.map((sense, senseIndex) => (
                   <li key={senseIndex} className="font-serif">
-                    {sense.definition}
+                    <span className="font-medium">{sense.definition}</span>
                     <span className="ml-1 text-muted-foreground italic">
                       {sense.example}
                     </span>
