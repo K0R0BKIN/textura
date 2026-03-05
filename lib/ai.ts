@@ -1,34 +1,9 @@
 import { generateText, Output } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { cacheLife } from 'next/cache';
-import { z } from 'zod';
+import { ArticleSchema } from './schemas';
 
-const articleSchema = z.object({
-  headword: z.string(),
-  etymons: z.array(
-    z.object({
-      lexemes: z.array(
-        z.object({
-          lexicalCategory: z.enum(['noun', 'verb', 'adjective', 'adverb']),
-          pronunciation: z
-            .string()
-            .describe('IPA transcription without slashes'),
-          senses: z.array(
-            z.object({
-              definition: z.string(),
-            }),
-          ),
-        }),
-      ),
-    }),
-  ),
-});
-
-const prompt = `Generate a dictionary article for the given word.
-
-Definitions should lead with what's most recognizable about the meaning, then add substance. Use clear, direct language at CEFR B2 level. Do not address the reader.
-
-Group lexemes by etymological origin. Cover common senses without being exhaustive. Order etymon groups and senses from most common to most specialized. Use IPA for pronunciation.`;
+const prompt = `Generate a dictionary article.`;
 
 export async function generateArticle(headword: string) {
   'use cache';
@@ -36,7 +11,7 @@ export async function generateArticle(headword: string) {
 
   const { output } = await generateText({
     model: openai('gpt-5-mini'),
-    output: Output.object({ schema: articleSchema }),
+    output: Output.object({ schema: ArticleSchema }),
     system: prompt,
     prompt: headword,
   });

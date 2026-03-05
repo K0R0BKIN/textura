@@ -48,7 +48,7 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
               </sup>
             )}
           </h2>
-          {etymon.lexemes.map((lexeme, lexemeIndex) => (
+          {etymon.lexemes?.map((lexeme, lexemeIndex) => (
             <div
               key={lexemeIndex}
               className={lexemeIndex === 0 ? 'mt-4' : 'mt-8'}
