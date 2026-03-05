@@ -8,6 +8,7 @@ const inter = Inter({
   variable: '--font-inter',
   subsets: ['latin'],
   display: 'block',
+  style: ['normal', 'italic'],
 });
 
 const sourceSerif = Source_Serif_4({
@@ -15,6 +16,7 @@ const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
   display: 'block',
   preload: true,
+  style: ['normal', 'italic'],
 });
 
 export const metadata: Metadata = {
