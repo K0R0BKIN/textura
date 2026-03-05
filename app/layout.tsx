@@ -3,12 +3,12 @@ import { Inter, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 
 import { ThemeProvider } from '@/components/theme-provider';
-import { Navbar } from '@/components/navbar/navbar';
 
 const inter = Inter({
   variable: '--font-inter',
   subsets: ['latin'],
   display: 'block',
+  style: ['normal', 'italic'],
 });
 
 const sourceSerif = Source_Serif_4({
@@ -16,6 +16,7 @@ const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
   display: 'block',
   preload: true,
+  style: ['normal', 'italic'],
 });
 
 export const metadata: Metadata = {
@@ -37,7 +38,6 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
           <main>{children}</main>
         </ThemeProvider>
       </body>

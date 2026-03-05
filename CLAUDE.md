@@ -9,8 +9,6 @@ pnpm dev        # Start dev server (uses webpack explicitly, not Turbopack)
 pnpm build      # Production build
 pnpm lint       # ESLint
 pnpm format     # Prettier (writes in place)
-pnpm exec playwright test              # Run all Playwright e2e tests
-pnpm exec playwright test --project=chromium  # Run tests in a single browser
 ```
 
 ## Architecture
@@ -44,6 +42,10 @@ Dark mode uses `next-themes` with `attribute="class"`. The CSS custom variant is
 
 `@/` maps to the repo root.
 
-### Testing
+### AI
 
-Playwright e2e tests live in `tests/` (directory doesn't exist yet — it's a fresh project). Config targets Chromium, Firefox, and WebKit.
+`lib/ai.ts` generates articles using the Vercel AI SDK with structured output (`Output.object`). The function is cached with `'use cache'` + `cacheTag('articles')`.
+
+**Caching**: Articles cache indefinitely (`cacheLife('max')`) and never regenerate automatically — only via explicit `updateTag('articles')`. `lib/actions.ts` exports `revalidateArticles` for this. Note: `updateTag` invalidates immediately (same request sees fresh data); `revalidateTag` is background revalidation (next request sees fresh data). We use `updateTag` so the page refreshes immediately after clicking the button.
+
+**Few-shot examples**: `lib/ai/prompts.ts` defines the system prompt and exports typed `Article` constants used as few-shot examples via `JSON.stringify`. If the schema changes, TypeScript will flag broken examples at compile time.

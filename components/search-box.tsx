@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { type SubmitEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import {
   InputGroup,
@@ -14,26 +15,36 @@ import { Search } from 'lucide-react';
 export function SearchBox() {
   const [query, setQuery] = useState('');
   const hasQuery = query.trim().length > 0;
+  const router = useRouter();
+
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const term = query.trim();
+    if (term) router.push('/article/' + encodeURIComponent(term));
+  }
 
   return (
-    <InputGroup variant="card" size="lg" className="w-lg">
-      <InputGroupInput
-        placeholder="Look up definitions…"
-        aria-label="Search query"
-        autoFocus
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-      />
-      <InputGroupAddon align="inline-end" size="lg">
-        <InputGroupButton
-          aria-label="Search"
-          variant="default"
-          size="icon-lg"
-          disabled={!hasQuery}
-        >
-          <Search />
-        </InputGroupButton>
-      </InputGroupAddon>
-    </InputGroup>
+    <form onSubmit={handleSubmit}>
+      <InputGroup variant="card" size="lg" className="w-lg">
+        <InputGroupInput
+          placeholder="Look up definitions…"
+          aria-label="Search query"
+          autoFocus
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <InputGroupAddon align="inline-end" size="lg">
+          <InputGroupButton
+            type="submit"
+            aria-label="Search"
+            variant="default"
+            size="icon-lg"
+            disabled={!hasQuery}
+          >
+            <Search />
+          </InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
+    </form>
   );
 }
