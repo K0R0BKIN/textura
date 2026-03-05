@@ -12,6 +12,7 @@ export async function generateArticle(headword: string) {
 
   const { output } = await generateText({
     model: openai('gpt-5-mini'),
+    model: openai('gpt-5.2'),
     output: Output.object({ schema: ArticleSchema }),
     system: prompt,
     prompt: headword,
