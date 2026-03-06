@@ -9,6 +9,8 @@ pnpm dev        # Start dev server (uses webpack explicitly, not Turbopack)
 pnpm build      # Production build
 pnpm lint       # ESLint
 pnpm format     # Prettier (writes in place)
+pnpm db:push    # Push schema changes to Neon (dev only)
+pnpm db:studio  # Open Drizzle Studio to browse/edit DB
 ```
 
 ## Architecture
@@ -46,6 +48,10 @@ Dark mode uses `next-themes` with `attribute="class"`. The CSS custom variant is
 
 `lib/ai.ts` generates articles using the Vercel AI SDK with structured output (`Output.object`). The function is cached with `'use cache'` + `cacheTag('articles')`.
 
-**Caching**: Articles cache indefinitely (`cacheLife('max')`) and never regenerate automatically — only via explicit `updateTag('articles')`. `lib/actions.ts` exports `revalidateArticles` for this. Note: `updateTag` invalidates immediately (same request sees fresh data); `revalidateTag` is background revalidation (next request sees fresh data). We use `updateTag` so the page refreshes immediately after clicking the button.
+**Persistence**: Articles are stored in Neon Postgres via Drizzle ORM (`lib/db/`). `generateArticle` checks the DB before calling the AI and saves the result after generation. This survives deployments and dev server restarts — no regeneration cost on Vercel preview visits.
+
+**Caching**: `'use cache'` + `cacheLife('max')` + `cacheTag('articles')` sits on top of the DB layer. Within a deployment session, repeated requests hit the Next.js cache and skip the DB lookup entirely.
+
+**Invalidation**: `revalidateArticles` in `lib/actions.ts` deletes all DB entries then calls `updateTag('articles')` to clear the Next.js cache. The regenerate button (dev only) triggers this. Next visit to any article page generates fresh content and saves it back to DB. To regenerate a single article, delete its row via `pnpm db:studio`.
 
 **Few-shot examples**: `lib/ai/prompts.ts` defines the system prompt and exports typed `Article` constants used as few-shot examples via `JSON.stringify`. If the schema changes, TypeScript will flag broken examples at compile time.
