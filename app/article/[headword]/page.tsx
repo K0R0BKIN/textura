@@ -44,6 +44,25 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
   return (
     <>
       <main className="col-start-2">
+        {illustration && (
+          <Image
+            src={illustration}
+            alt=""
+            width={1024}
+            height={1024}
+            unoptimized
+            style={{
+              float: 'right',
+              shapeOutside: `url(${illustration})`,
+              shapeMargin: '1.5rem',
+              width: '22rem',
+              height: 'auto',
+              marginLeft: '2rem',
+              marginBottom: '1rem',
+            }}
+            className="dark:invert"
+          />
+        )}
         <h1 className="sr-only">{article.headword}</h1>
         {article.etymons.map((etymon, etymonIndex) => (
           <section key={etymonIndex} className={etymonIndex > 0 ? 'mt-12' : ''}>
@@ -86,18 +105,7 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
           </section>
         ))}
       </main>
-      <aside className="col-start-3">
-        {illustration && (
-          <Image
-            src={illustration}
-            alt=""
-            width={1024}
-            height={1024}
-            unoptimized
-            className="h-auto w-full max-w-lg min-w-xs dark:invert"
-          />
-        )}
-      </aside>
+      <aside className="col-start-3" />
     </>
   );
 }
