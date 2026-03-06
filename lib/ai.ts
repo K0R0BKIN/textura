@@ -10,9 +10,11 @@ export async function generateArticle(headword: string) {
   cacheTag('articles');
 
   const { output } = await generateText({
-    model: openai('gpt-5.2'),
+    model: openai('gpt-5.4'),
     output: Output.object({ schema: ArticleSchema }),
-    temperature: 0,
+    providerOptions: {
+      openai: { reasoningEffort: 'low' },
+    },
     system: systemPrompt,
     prompt: `Generate a dictionary article for: ${headword}`,
   });
