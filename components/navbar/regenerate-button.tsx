@@ -6,7 +6,7 @@ import { revalidateArticles } from '@/lib/actions';
 
 export default function RegenerateButton() {
   return (
-    <NavbarButton onClick={() => revalidateArticles()}>
+    <NavbarButton tooltip="Regenerate" onClick={() => revalidateArticles()}>
       <RotateCw />
     </NavbarButton>
   );
