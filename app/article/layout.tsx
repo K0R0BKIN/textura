@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
 import { Logo } from '@/components/logo';
+import { SearchBox } from '@/components/search-box';
 
 const RegenerateButton =
   process.env.NODE_ENV === 'development'
@@ -30,7 +31,10 @@ export default function ArticleLayout({
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
-      {children}
+      <div className="pb-32">{children}</div>
+      <div className="fixed inset-x-0 bottom-0 flex justify-center pb-4">
+        <SearchBox />
+      </div>
     </>
   );
 }
