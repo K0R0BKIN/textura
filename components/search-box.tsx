@@ -3,7 +3,7 @@
 import { type SubmitEvent, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { useHotkey } from '@tanstack/react-hotkeys';
+import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 
 import {
   InputGroup,
@@ -83,7 +83,7 @@ export function SearchBox({
               <Search />
             </InputGroupButton>
           ) : (
-            <Kbd>⌘K</Kbd>
+            <Kbd>{formatForDisplay('Mod+K')}</Kbd>
           )}
         </InputGroupAddon>
       </InputGroup>
