@@ -1,6 +1,6 @@
 'use client';
 
-import { type SubmitEvent, useRef, useState } from 'react';
+import { type SubmitEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
@@ -34,6 +34,10 @@ export function SearchBox({
   const showButton = variant === 'home' || focused || hasQuery;
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (variant === 'home') inputRef.current?.focus();
+  }, [variant]);
 
   useHotkey(
     'Mod+K',
@@ -70,7 +74,6 @@ export function SearchBox({
           placeholder="Look up definitions…"
           aria-label="Search query"
           autoComplete="off"
-          autoFocus
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setFocused(true)}
