@@ -9,7 +9,6 @@ const logoVariants = cva(
         nav: 'text-2xl transition-colors dark:hover:text-foreground',
       },
     },
-    defaultVariants: { variant: 'hero' },
   },
 );
 
