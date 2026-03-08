@@ -2,6 +2,7 @@
 
 import { type SubmitEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { cva, type VariantProps } from 'class-variance-authority';
 
 import {
   InputGroup,
@@ -12,7 +13,18 @@ import {
 
 import { Search } from 'lucide-react';
 
-export function SearchBox() {
+const searchBoxVariants = cva('', {
+  variants: {
+    variant: {
+      home: 'w-lg',
+      article: 'w-2xl shadow-md',
+    },
+  },
+});
+
+export function SearchBox({
+  variant = 'home',
+}: VariantProps<typeof searchBoxVariants>) {
   const [query, setQuery] = useState('');
   const hasQuery = query.trim().length > 0;
   const router = useRouter();
@@ -25,7 +37,11 @@ export function SearchBox() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <InputGroup variant="card" size="lg" className="w-lg">
+      <InputGroup
+        variant="card"
+        size="lg"
+        className={searchBoxVariants({ variant })}
+      >
         <InputGroupInput
           placeholder="Look up definitions…"
           aria-label="Search query"
