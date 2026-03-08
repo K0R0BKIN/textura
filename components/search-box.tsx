@@ -11,6 +11,7 @@ import {
   InputGroupAddon,
   InputGroupButton,
 } from '@/components/ui/input-group';
+import { Kbd } from '@/components/ui/kbd';
 
 import { Search } from 'lucide-react';
 
@@ -27,7 +28,9 @@ export function SearchBox({
   variant = 'home',
 }: VariantProps<typeof searchBoxVariants>) {
   const [query, setQuery] = useState('');
+  const [focused, setFocused] = useState(false);
   const hasQuery = query.trim().length > 0;
+  const showButton = variant === 'home' || focused || hasQuery;
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -65,17 +68,23 @@ export function SearchBox({
           autoFocus
           value={query}
           onChange={(event) => setQuery(event.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
         />
         <InputGroupAddon align="inline-end" size="lg">
-          <InputGroupButton
-            type="submit"
-            aria-label="Search"
-            variant="default"
-            size="icon-lg"
-            disabled={!hasQuery}
-          >
-            <Search />
-          </InputGroupButton>
+          {showButton ? (
+            <InputGroupButton
+              type="submit"
+              aria-label="Search"
+              variant="default"
+              size="icon-lg"
+              disabled={!hasQuery}
+            >
+              <Search />
+            </InputGroupButton>
+          ) : (
+            <Kbd>⌘K</Kbd>
+          )}
         </InputGroupAddon>
       </InputGroup>
     </form>
