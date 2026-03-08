@@ -29,6 +29,7 @@ export function SearchBox() {
         <InputGroupInput
           placeholder="Look up definitions…"
           aria-label="Search query"
+          autoComplete="off"
           autoFocus
           value={query}
           onChange={(event) => setQuery(event.target.value)}
