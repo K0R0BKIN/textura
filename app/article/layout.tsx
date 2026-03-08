@@ -2,6 +2,8 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useHotkey } from '@tanstack/react-hotkeys';
 import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
 import { Logo } from '@/components/logo';
 import { SearchBox } from '@/components/search-box';
@@ -18,6 +20,9 @@ export default function ArticleLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  useHotkey('Mod+Shift+O', () => router.push('/'));
+
   return (
     <>
       <Navbar>
