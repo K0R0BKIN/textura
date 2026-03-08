@@ -51,7 +51,7 @@ const inputGroupAddonVariants = cva('flex h-auto items-center select-none', {
     {
       align: 'inline-end',
       size: 'lg',
-      className: 'pr-4 has-[>button]:-mr-2 has-[>kbd]:mr-1',
+      className: 'pr-4 has-[button]:-mr-2 has-[kbd]:mr-1',
     },
   ],
 });

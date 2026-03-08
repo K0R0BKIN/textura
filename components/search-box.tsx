@@ -12,6 +12,7 @@ import {
   InputGroupButton,
 } from '@/components/ui/input-group';
 import { Kbd } from '@/components/ui/kbd';
+import { AnimatePresence, motion } from 'motion/react';
 
 import { Search } from 'lucide-react';
 
@@ -72,19 +73,51 @@ export function SearchBox({
           onBlur={() => setFocused(false)}
         />
         <InputGroupAddon align="inline-end" size="lg">
-          {showButton ? (
-            <InputGroupButton
-              type="submit"
-              aria-label="Search"
-              variant="default"
-              size="icon-lg"
-              disabled={!hasQuery}
-            >
-              <Search />
-            </InputGroupButton>
-          ) : (
-            <Kbd>{formatForDisplay('Mod+K')}</Kbd>
-          )}
+          <AnimatePresence mode="wait" initial={false}>
+            {showButton ? (
+              <motion.div
+                key="button"
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                  transition: { duration: 0.12, ease: 'easeOut' },
+                }}
+                exit={{
+                  opacity: 0,
+                  scale: 0.85,
+                  transition: { duration: 0.08, ease: 'easeIn' },
+                }}
+              >
+                <InputGroupButton
+                  type="submit"
+                  aria-label="Search"
+                  variant="default"
+                  size="icon-lg"
+                  disabled={!hasQuery}
+                >
+                  <Search />
+                </InputGroupButton>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="kbd"
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                  transition: { duration: 0.12, ease: 'easeOut' },
+                }}
+                exit={{
+                  opacity: 0,
+                  scale: 0.85,
+                  transition: { duration: 0.08, ease: 'easeIn' },
+                }}
+              >
+                <Kbd>{formatForDisplay('Mod+K')}</Kbd>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </InputGroupAddon>
       </InputGroup>
     </form>
