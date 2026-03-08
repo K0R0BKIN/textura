@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const ThemeSwitcher = dynamic(() => import('./theme-switcher'), {
   ssr: false,
@@ -8,9 +9,11 @@ const ThemeSwitcher = dynamic(() => import('./theme-switcher'), {
 
 export function Navbar({ children }: { children?: React.ReactNode }) {
   return (
-    <header className="fixed top-0 grid h-14 w-full grid-cols-[1fr_1fr] items-center px-2">
-      {children}
-    </header>
+    <TooltipProvider>
+      <header className="fixed top-0 grid h-14 w-full grid-cols-[1fr_1fr] items-center px-2">
+        {children}
+      </header>
+    </TooltipProvider>
   );
 }
 

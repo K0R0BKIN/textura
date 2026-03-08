@@ -7,6 +7,11 @@ import { useHotkey } from '@tanstack/react-hotkeys';
 import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
 import { Logo } from '@/components/logo';
 import { SearchBox } from '@/components/search-box';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
 
 const RegenerateButton =
   process.env.NODE_ENV === 'development'
@@ -27,9 +32,14 @@ export default function ArticleLayout({
     <>
       <Navbar>
         <Navbar.Start>
-          <Link href="/" className="ml-2">
-            <Logo variant="nav" />
-          </Link>
+          <Tooltip>
+            <TooltipTrigger render={<Link href="/" className="ml-2" />}>
+              <Logo variant="nav" />
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              Go to Home
+            </TooltipContent>
+          </Tooltip>
         </Navbar.Start>
         <Navbar.End>
           {RegenerateButton && <RegenerateButton />}
