@@ -51,7 +51,11 @@ export function SearchBox({
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const term = query.trim();
-    if (term) router.push('/article/' + encodeURIComponent(term));
+    if (term) {
+      router.push('/article/' + encodeURIComponent(term));
+      setQuery('');
+      inputRef.current?.blur();
+    }
   }
 
   return (
