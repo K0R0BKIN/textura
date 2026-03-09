@@ -1,9 +1,11 @@
 'use client';
 
+import { useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
+import { TooltipRoot } from '@base-ui/react';
 import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
 import { Logo } from '@/components/logo';
 import { SearchBox } from '@/components/search-box';
@@ -29,12 +31,27 @@ export default function ArticleLayout({
   const router = useRouter();
   useHotkey('Mod+Shift+O', () => router.push('/'));
 
+  const tooltipActionsRef = useRef<TooltipRoot.Actions>(null);
+
   return (
     <>
       <Navbar>
         <Navbar.Start>
-          <Tooltip>
-            <TooltipTrigger render={<Link href="/" className="ml-2" />}>
+          <Tooltip
+            actionsRef={tooltipActionsRef}
+            onOpenChange={(open, event) => {
+              if (!open && event.reason === 'trigger-press') event.cancel();
+            }}
+          >
+            <TooltipTrigger
+              render={
+                <Link
+                  href="/"
+                  className="ml-2"
+                  onNavigate={() => tooltipActionsRef.current?.close()}
+                />
+              }
+            >
               <Logo variant="nav" />
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
