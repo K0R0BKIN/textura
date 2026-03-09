@@ -48,7 +48,7 @@ export default function ArticleLayout({
         </Navbar.End>
       </Navbar>
       <div className="pb-32">{children}</div>
-      <div className="fixed inset-x-0 bottom-0 flex justify-center pb-4">
+      <div className="fixed inset-x-0 bottom-0 flex justify-center bg-background pb-4">
         <SearchBox variant="article" />
       </div>
     </>
