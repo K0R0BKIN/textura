@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
 import { generateArticle } from '@/lib/ai';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export async function generateMetadata({
   params,
@@ -18,12 +19,12 @@ export async function generateMetadata({
 
 function ArticleSkeleton() {
   return (
-    <div className="animate-pulse space-y-4">
-      <div className="h-12 w-48 rounded bg-muted" />
-      <div className="h-5 w-32 rounded bg-muted" />
+    <div className="space-y-4">
+      <Skeleton className="h-12 w-48" />
+      <Skeleton className="h-5 w-32" />
       <div className="space-y-2">
-        <div className="h-4 w-full rounded bg-muted" />
-        <div className="h-4 w-3/4 rounded bg-muted" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
       </div>
     </div>
   );
