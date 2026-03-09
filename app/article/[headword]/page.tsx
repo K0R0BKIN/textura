@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
 import { generateArticle } from '@/lib/ai';
 
@@ -29,6 +30,7 @@ function ArticleSkeleton() {
 }
 
 async function ArticleContent({ headword }: { headword: Promise<string> }) {
+  await connection();
   const article = await generateArticle(await headword);
 
   if (!article) notFound();
