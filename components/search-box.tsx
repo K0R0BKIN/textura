@@ -23,6 +23,7 @@ const searchBoxVariants = cva('', {
       article: 'w-2xl shadow-md',
     },
   },
+  defaultVariants: { variant: 'home' },
 });
 
 export function SearchBox({
