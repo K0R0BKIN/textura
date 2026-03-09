@@ -121,7 +121,7 @@ export function SearchBox({
                   transition: { duration: 0.08, ease: 'easeIn' },
                 }}
               >
-                <Kbd>{formatForDisplay('Mod+K')}</Kbd>
+                <Kbd size="lg">{formatForDisplay('Mod+K')}</Kbd>
               </motion.div>
             )}
           </AnimatePresence>

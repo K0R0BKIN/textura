@@ -1,13 +1,28 @@
+import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-function Kbd({ className, ...props }: React.ComponentProps<'kbd'>) {
+const kbdVariants = cva(
+  'pointer-events-none inline-flex w-fit items-center justify-center font-sans leading-none font-normal text-muted-foreground select-none in-data-[slot=tooltip-content]:text-tooltip-muted-foreground',
+  {
+    variants: {
+      size: {
+        default: 'text-xs',
+        lg: 'text-base',
+      },
+    },
+    defaultVariants: { size: 'default' },
+  },
+);
+
+function Kbd({
+  className,
+  size = 'default',
+  ...props
+}: React.ComponentProps<'kbd'> & VariantProps<typeof kbdVariants>) {
   return (
     <kbd
       data-slot="kbd"
-      className={cn(
-        'pointer-events-none inline-flex w-fit items-center justify-center font-sans text-base leading-none font-normal text-muted-foreground select-none',
-        className,
-      )}
+      className={cn(kbdVariants({ size }), className)}
       {...props}
     />
   );

@@ -28,13 +28,7 @@ function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
 }
 
 function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
-  return (
-    <TooltipPrimitive.Trigger
-      delay={0}
-      data-slot="tooltip-trigger"
-      {...props}
-    />
-  );
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
 }
 
 function TooltipContent({
@@ -62,7 +56,7 @@ function TooltipContent({
         <TooltipPrimitive.Popup
           data-slot="tooltip-content"
           className={cn(
-            'z-50 inline-flex w-fit max-w-xs items-center rounded-sm bg-tooltip px-2 py-1 text-xs text-tooltip-foreground',
+            'z-50 inline-flex w-fit max-w-xs items-center gap-1 rounded-sm bg-tooltip px-2 py-1 text-xs font-medium text-tooltip-foreground',
             className,
           )}
           {...props}

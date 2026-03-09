@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useHotkey } from '@tanstack/react-hotkeys';
+import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
 import { Logo } from '@/components/logo';
 import { SearchBox } from '@/components/search-box';
@@ -12,6 +12,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip';
+import { Kbd } from '@/components/ui/kbd';
 
 const RegenerateButton =
   process.env.NODE_ENV === 'development'
@@ -37,7 +38,7 @@ export default function ArticleLayout({
               <Logo variant="nav" />
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
-              Go to Home
+              Go to Home <Kbd>{formatForDisplay('Mod+Shift+O')}</Kbd>
             </TooltipContent>
           </Tooltip>
         </Navbar.Start>
