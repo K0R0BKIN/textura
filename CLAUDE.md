@@ -46,12 +46,10 @@ Dark mode uses `next-themes` with `attribute="class"`. The CSS custom variant is
 
 ### AI
 
-`lib/ai.ts` generates articles using the Vercel AI SDK with structured output (`Output.object`). The function is cached with `'use cache'` + `cacheTag('articles')`.
+`lib/articles.ts` generates articles using the OpenAI SDK via the Responses API with a platform-managed prompt. The function is cached with `'use cache'` + `cacheTag('articles')`.
 
-**Persistence**: Articles are stored in Neon Postgres via Drizzle ORM (`lib/db/`). `generateArticle` checks the DB before calling the AI and saves the result after generation. This survives deployments and dev server restarts — no regeneration cost on Vercel preview visits. The insert uses `onConflictDoNothing()` to handle concurrent first-requests safely: multiple lambdas racing to insert the same word will not throw a duplicate key error.
+**Persistence**: Articles are stored in Neon Postgres via Drizzle ORM (`lib/db/`). `generateArticle` checks the DB before calling the AI and saves the result after generation. The insert uses `onConflictDoNothing()` to handle concurrent first-requests safely.
 
 **Caching**: `'use cache'` + `cacheLife('max')` + `cacheTag('articles')` sits on top of the DB layer. Within a deployment session, repeated requests hit the Next.js cache and skip the DB lookup entirely.
 
-**Invalidation**: `revalidateArticles` in `lib/actions.ts` deletes all DB entries then calls `updateTag('articles')` to clear the Next.js cache. The regenerate button (dev only) triggers this. Next visit to any article page generates fresh content and saves it back to DB. To regenerate a single article, delete its row via `pnpm db:studio`.
-
-**Few-shot examples**: `lib/ai/prompts.ts` defines the system prompt and exports typed `Article` constants used as few-shot examples via `JSON.stringify`. If the schema changes, TypeScript will flag broken examples at compile time.
+**Invalidation**: Restart the dev server to clear the Next.js cache. To clear DB articles, use `pnpm db:studio` or the Neon console.
