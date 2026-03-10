@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef } from 'react';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
@@ -15,13 +14,6 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { Kbd } from '@/components/ui/kbd';
-
-const RegenerateButton =
-  process.env.NODE_ENV === 'development'
-    ? dynamic(() => import('@/components/navbar/regenerate-button'), {
-        ssr: false,
-      })
-    : null;
 
 export default function ArticleLayout({
   children,
@@ -60,7 +52,6 @@ export default function ArticleLayout({
           </Tooltip>
         </Navbar.Start>
         <Navbar.End>
-          {RegenerateButton && <RegenerateButton />}
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
