@@ -1,11 +1,12 @@
-import { generateText, Output } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import OpenAI from 'openai';
+import { zodTextFormat } from 'openai/helpers/zod';
 import { cacheLife, cacheTag } from 'next/cache';
 import { eq } from 'drizzle-orm';
 import { ArticleSchema } from './schemas';
-import { systemPrompt } from './ai/prompts';
 import { drizzleDb } from './db';
 import { articles } from './db/schema';
+
+const client = new OpenAI();
 
 export async function generateArticle(headword: string) {
   'use cache';
@@ -20,15 +21,19 @@ export async function generateArticle(headword: string) {
 
   if (existing[0]) return existing[0].data;
 
-  const { output } = await generateText({
-    model: openai('gpt-5.4'),
-    output: Output.object({ schema: ArticleSchema }),
-    providerOptions: {
-      openai: { reasoningEffort: 'low' },
+  const response = await client.responses.parse({
+    model: 'gpt-5.4',
+    prompt: {
+      id: 'pmpt_69a975f6d0b0819791769e9d5c95723a046b78f99e06fd36',
+      variables: { headword },
     },
-    system: systemPrompt,
-    prompt: `Generate a dictionary article for: ${headword}`,
+    reasoning: { effort: 'low' },
+    text: {
+      format: zodTextFormat(ArticleSchema, 'article'),
+    },
   });
+
+  const output = response.output_parsed;
 
   if (output) {
     await drizzleDb
