@@ -48,7 +48,7 @@ Dark mode uses `next-themes` with `attribute="class"`. The CSS custom variant is
 
 `lib/ai.ts` generates articles using the Vercel AI SDK with structured output (`Output.object`). The function is cached with `'use cache'` + `cacheTag('articles')`.
 
-**Persistence**: Articles are stored in Neon Postgres via Drizzle ORM (`lib/db/`). `generateArticle` checks the DB before calling the AI and saves the result after generation. This survives deployments and dev server restarts — no regeneration cost on Vercel preview visits.
+**Persistence**: Articles are stored in Neon Postgres via Drizzle ORM (`lib/db/`). `generateArticle` checks the DB before calling the AI and saves the result after generation. This survives deployments and dev server restarts — no regeneration cost on Vercel preview visits. The insert uses `onConflictDoNothing()` to handle concurrent first-requests safely: multiple lambdas racing to insert the same word will not throw a duplicate key error.
 
 **Caching**: `'use cache'` + `cacheLife('max')` + `cacheTag('articles')` sits on top of the DB layer. Within a deployment session, repeated requests hit the Next.js cache and skip the DB lookup entirely.
 
