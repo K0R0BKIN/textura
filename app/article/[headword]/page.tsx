@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
-import { generateArticle } from '@/lib/ai';
+import { generateArticle } from '@/lib/articles';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export async function generateMetadata({
