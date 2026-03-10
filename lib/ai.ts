@@ -31,7 +31,10 @@ export async function generateArticle(headword: string) {
   });
 
   if (output) {
-    await drizzleDb.insert(articles).values({ headword, data: output });
+    await drizzleDb
+      .insert(articles)
+      .values({ headword, data: output })
+      .onConflictDoNothing();
   }
 
   return output;
