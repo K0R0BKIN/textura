@@ -16,7 +16,6 @@
     "@ai-sdk/openai": "^3.0.36",
     "@base-ui/react": "^1.2.0",
     "@neondatabase/serverless": "^1.0.2",
-    "@radix-ui/colors": "^3.0.0",
     "@tanstack/react-hotkeys": "^0.4.0",
     "ai": "^6.0.103",
     "class-variance-authority": "^0.7.1",

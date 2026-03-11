@@ -2,73 +2,57 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
-@import '@radix-ui/colors/gray.css';
-@import '@radix-ui/colors/gray-dark.css';
-
-@import '@radix-ui/colors/sand.css';
-@import '@radix-ui/colors/sand-dark.css';
-@import '@radix-ui/colors/sand-alpha.css';
-@import '@radix-ui/colors/sand-dark-alpha.css';
-
-@import '@radix-ui/colors/brown.css';
-@import '@radix-ui/colors/brown-dark.css';
-@import '@radix-ui/colors/brown-alpha.css';
-@import '@radix-ui/colors/brown-dark-alpha.css';
-
-@import '@radix-ui/colors/red.css';
-@import '@radix-ui/colors/red-dark.css';
-
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --radius: 12px;
 
-  --background: var(--brown-2);
-  --foreground: var(--sand-12);
-  --card: var(--sand-1);
+  --background: oklch(0.984 0.005 67.8);
+  --foreground: oklch(0.243 0.008 95.4);
+  --card: oklch(0.994 0.001 106.4);
   --card-foreground: var(--foreground);
   --popover: var(--card);
   --popover-foreground: var(--foreground);
-  --primary: var(--brown-9);
-  --primary-foreground: var(--color-white);
-  --secondary-foreground: var(--sand-11);
+  --primary: oklch(0.633 0.079 61);
+  --primary-foreground: oklch(1 0 0);
+  --secondary-foreground: oklch(0.498 0.008 106.7);
   --muted: var(--accent);
-  --muted-foreground: var(--sand-9);
-  --accent: var(--brown-3);
+  --muted-foreground: oklch(0.641 0.01 106.7);
+  --accent: oklch(0.953 0.013 63.9);
   --accent-foreground: var(--foreground);
 
-  --destructive: var(--red-8);
-  --destructive-foreground: var(--color-white);
+  --destructive: oklch(0.744 0.113 18.8);
+  --destructive-foreground: oklch(1 0 0);
 
-  --border: var(--sand-6);
+  --border: oklch(0.885 0.004 91.5);
   --input: var(--border);
-  --ring: var(--brown-8);
+  --ring: oklch(0.746 0.072 62.1);
 
   --tooltip: var(--foreground);
-  --tooltip-foreground: var(--sand-1);
-  --tooltip-muted-foreground: var(--sand-8);
+  --tooltip-foreground: oklch(0.994 0.001 106.4);
+  --tooltip-muted-foreground: oklch(0.791 0.008 98.9);
 
-  --selection: var(--brown-a6);
+  --selection: oklch(0.517 0.131 53.1 / 0.282);
   --selection-foreground: var(--foreground);
 
   --shadow-md: 0px 2px 8px rgb(0 0 0 / 0.08);
 }
 
 .dark {
-  --background: var(--gray-3);
-  --foreground: var(--gray-12);
-  --card: var(--gray-5);
+  --background: oklch(0.252 0 89.9);
+  --foreground: oklch(0.949 0 89.9);
+  --card: oklch(0.313 0 89.9);
   --popover-foreground: var(--secondary-foreground);
-  --secondary-foreground: var(--gray-11);
-  --muted: var(--gray-2);
-  --muted-foreground: var(--gray-10);
-  --accent: var(--gray-3);
+  --secondary-foreground: oklch(0.77 0 89.9);
+  --muted: oklch(0.213 0 89.9);
+  --muted-foreground: oklch(0.583 0 89.9);
+  --accent: oklch(0.252 0 89.9);
 
-  --tooltip: var(--gray-1);
+  --tooltip: oklch(0.178 0 89.9);
   --tooltip-foreground: var(--foreground);
-  --tooltip-muted-foreground: var(--gray-11);
+  --tooltip-muted-foreground: oklch(0.77 0 89.9);
 
-  --border: var(--gray-7);
+  --border: oklch(0.402 0 89.9);
 
   --shadow-md: 0px 2px 8px rgb(0 0 0 / 0.24);
 }
