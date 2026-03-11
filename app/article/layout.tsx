@@ -55,9 +55,11 @@ export default function ArticleLayout({
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
-      <main className="pb-32">{children}</main>
-      <div className="fixed inset-x-0 bottom-0 flex justify-center bg-background pb-4">
-        <SearchBox variant="article" />
+      <main className="pt-24 pb-42">{children}</main>
+      <div className="fixed inset-x-0 bottom-0">
+        <div className="mx-auto w-fit bg-background pb-4">
+          <SearchBox variant="article" />
+        </div>
       </div>
     </>
   );

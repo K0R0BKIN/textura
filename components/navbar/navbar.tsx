@@ -10,7 +10,7 @@ const ThemeSwitcher = dynamic(() => import('./theme-switcher'), {
 export function Navbar({ children }: { children?: React.ReactNode }) {
   return (
     <TooltipProvider>
-      <header className="fixed top-0 grid h-14 w-full grid-cols-[1fr_1fr] items-center px-2">
+      <header className="fixed inset-x-0 top-0 grid h-14 grid-cols-[1fr_1fr] items-center px-2">
         {children}
       </header>
     </TooltipProvider>

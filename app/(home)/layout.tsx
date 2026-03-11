@@ -14,7 +14,9 @@ export default function HomeLayout({
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
-      <main>{children}</main>
+      <main className="flex h-screen items-start justify-center pt-[25vh]">
+        {children}
+      </main>
     </>
   );
 }

@@ -93,10 +93,10 @@ export default function ArticlePage({
   const headword = params.then((p) => decodeURIComponent(p.headword));
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-24">
+    <article className="mx-auto max-w-2xl px-4">
       <Suspense fallback={<ArticleSkeleton />}>
         <ArticleContent headword={headword} />
       </Suspense>
-    </div>
+    </article>
   );
 }
