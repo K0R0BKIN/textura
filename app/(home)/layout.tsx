@@ -14,7 +14,7 @@ export default function HomeLayout({
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
-      {children}
+      <main>{children}</main>
     </>
   );
 }
