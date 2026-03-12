@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
 export const SenseSchema = z.object({
-  definition: z.string(),
+  definition: z
+    .string()
+    .describe('Lowercase definition fragment with no trailing punctuation'),
   example: z.string(),
 });
 export type Sense = z.infer<typeof SenseSchema>;
@@ -31,7 +33,7 @@ export const LexemeSchema = z.object({
 export type Lexeme = z.infer<typeof LexemeSchema>;
 
 export const EtymonSchema = z.object({
-  origin: z.string().describe('Concise etymology.'),
+  origin: z.string(),
   lexemes: z.array(LexemeSchema),
 });
 export type Etymon = z.infer<typeof EtymonSchema>;

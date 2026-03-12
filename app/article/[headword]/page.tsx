@@ -70,7 +70,10 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
               <ol className="mt-2 list-[bare-decimal] space-y-2 pl-[calc(1ch+0.5em)] marker:text-muted-foreground">
                 {lexeme.senses.map((sense, senseIndex) => (
                   <li key={senseIndex} className="font-serif">
-                    <span className="font-medium">{sense.definition}</span>
+                    <span className="font-medium">
+                      {sense.definition}
+                      <span className="text-muted-foreground">:</span>
+                    </span>
                     <span className="ml-1 text-muted-foreground italic">
                       {sense.example}
                     </span>

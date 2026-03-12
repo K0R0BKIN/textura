@@ -27,9 +27,10 @@ export async function generateArticle(headword: string) {
       id: 'pmpt_69a975f6d0b0819791769e9d5c95723a046b78f99e06fd36',
       variables: { headword },
     },
-    reasoning: { effort: 'low' },
+    reasoning: { effort: 'medium' },
     text: {
       format: zodTextFormat(ArticleSchema, 'article'),
+      verbosity: 'medium',
     },
   });
 
