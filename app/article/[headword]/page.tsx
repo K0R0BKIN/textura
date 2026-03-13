@@ -39,7 +39,7 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
   const showSuperscript = article.etymons.length > 1;
 
   return (
-    <>
+    <div className="animate-in duration-200 fade-in">
       <h1 className="sr-only">{article.headword}</h1>
       {article.etymons.map((etymon, etymonIndex) => (
         <section key={etymonIndex} className={etymonIndex > 0 ? 'mt-12' : ''}>
@@ -84,7 +84,7 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
           ))}
         </section>
       ))}
-    </>
+    </div>
   );
 }
 
