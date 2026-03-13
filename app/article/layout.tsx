@@ -39,7 +39,7 @@ export default function ArticleLayout({
               render={
                 <Link
                   href="/"
-                  className="ml-2"
+                  className="ml-1 rounded-xs p-1"
                   onNavigate={() => tooltipActionsRef.current?.close()}
                 />
               }
