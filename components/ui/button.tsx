@@ -13,7 +13,7 @@ const buttonVariants = cva(
         default:
           'bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-primary/80 dark:hover:bg-primary/90',
         ghost:
-          'text-foreground hover:bg-muted dark:text-secondary-foreground dark:hover:text-foreground',
+          'text-foreground hover:bg-muted dark:text-subtle-foreground dark:hover:text-foreground',
       },
       size: {
         'icon-lg':

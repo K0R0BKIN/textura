@@ -46,7 +46,7 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
           <h2 className="font-serif text-5xl font-semibold tracking-tight">
             {article.headword}
             {showSuperscript && (
-              <sup className="text-secondary-foreground select-none">
+              <sup className="text-subtle-foreground select-none">
                 {etymonIndex + 1}
               </sup>
             )}
@@ -59,7 +59,7 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
               key={lexemeIndex}
               className={lexemeIndex === 0 ? 'mt-4' : 'mt-8'}
             >
-              <h3 className="text-lg text-secondary-foreground">
+              <h3 className="text-lg text-subtle-foreground">
                 <span className="font-semibold select-none">
                   {lexeme.lexicalCategory}
                 </span>
