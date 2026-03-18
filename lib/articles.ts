@@ -22,7 +22,7 @@ export async function generateArticle(headword: string) {
   if (existing[0]) return existing[0].data;
 
   const response = await client.responses.parse({
-    model: 'gpt-5.4',
+    model: 'gpt-5.4-mini',
     prompt: {
       id: 'pmpt_69a975f6d0b0819791769e9d5c95723a046b78f99e06fd36',
       variables: { headword },

@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const SenseSchema = z.object({
   definition: z
     .string()
-    .describe('Lowercase definition fragment with no trailing punctuation'),
+    .describe('Lowercase phrasal definition with no terminal punctuation'),
   example: z.string(),
 });
 export type Sense = z.infer<typeof SenseSchema>;
