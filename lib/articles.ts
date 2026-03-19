@@ -1,14 +1,17 @@
 import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { cacheLife, cacheTag } from 'next/cache';
-import { eq } from 'drizzle-orm';
-import { ArticleSchema } from './schemas';
+import { and, eq } from 'drizzle-orm';
+import { ArticleSchema, type Variety } from './schemas';
 import { drizzleDb } from './db';
 import { articles } from './db/schema';
 
 const client = new OpenAI();
 
-export async function generateArticle(headword: string) {
+export async function generateArticle(
+  headword: string,
+  variety: Variety = 'en-US',
+) {
   'use cache';
   cacheLife('max');
   cacheTag('articles');
@@ -16,7 +19,7 @@ export async function generateArticle(headword: string) {
   const existing = await drizzleDb
     .select()
     .from(articles)
-    .where(eq(articles.headword, headword))
+    .where(and(eq(articles.headword, headword), eq(articles.variety, variety)))
     .limit(1);
 
   if (existing[0]) return existing[0].data;
@@ -25,7 +28,7 @@ export async function generateArticle(headword: string) {
     model: 'gpt-5.4-mini',
     prompt: {
       id: 'pmpt_69a975f6d0b0819791769e9d5c95723a046b78f99e06fd36',
-      variables: { headword },
+      variables: { headword, variety },
     },
     reasoning: { effort: 'medium' },
     text: {
@@ -39,7 +42,7 @@ export async function generateArticle(headword: string) {
   if (output) {
     await drizzleDb
       .insert(articles)
-      .values({ headword, data: output })
+      .values({ headword, variety, data: output })
       .onConflictDoNothing();
   }
 
