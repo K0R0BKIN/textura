@@ -57,7 +57,7 @@ export function SearchBox({
     event.preventDefault();
     const term = query.trim();
     if (term) {
-      router.push('/article/' + encodeURIComponent(term));
+      router.push('/dictionary/' + encodeURIComponent(term) + '/en-us');
       setQuery('');
       inputRef.current?.blur();
     }

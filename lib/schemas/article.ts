@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { EtymonSchema } from './etymon';
-
-export const VarietySchema = z.enum(['en-US']);
-export type Variety = z.infer<typeof VarietySchema>;
+import { VarietySchema } from './variety';
 
 export const ArticleSchema = z.object({
   headword: z.string(),

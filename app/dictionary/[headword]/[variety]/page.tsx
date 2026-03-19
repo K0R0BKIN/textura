@@ -4,11 +4,12 @@ import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
 import { generateArticle } from '@/lib/articles';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VARIETY_BY_SLUG } from '@/lib/schemas';
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ headword: string }>;
+  params: Promise<{ headword: string; variety: string }>;
 }): Promise<Metadata> {
   const { headword } = await params;
 
@@ -30,10 +31,19 @@ function ArticleSkeleton() {
   );
 }
 
-async function ArticleContent({ headword }: { headword: Promise<string> }) {
+async function ArticleContent({
+  headword,
+  variety,
+}: {
+  headword: Promise<string>;
+  variety: Promise<string>;
+}) {
   await connection();
-  const article = await generateArticle(await headword);
 
+  const resolvedVariety = VARIETY_BY_SLUG[await variety];
+  if (!resolvedVariety) notFound();
+
+  const article = await generateArticle(await headword, resolvedVariety);
   if (!article) notFound();
 
   const showSuperscript = article.etymons.length > 1;
@@ -91,14 +101,15 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
 export default function ArticlePage({
   params,
 }: {
-  params: Promise<{ headword: string }>;
+  params: Promise<{ headword: string; variety: string }>;
 }) {
   const headword = params.then((p) => decodeURIComponent(p.headword));
+  const variety = params.then((p) => p.variety);
 
   return (
     <article className="mx-auto max-w-2xl px-4">
       <Suspense fallback={<ArticleSkeleton />}>
-        <ArticleContent headword={headword} />
+        <ArticleContent headword={headword} variety={variety} />
       </Suspense>
     </article>
   );

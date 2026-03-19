@@ -8,9 +8,5 @@ export {
   type Lexeme,
   type Etymon,
 } from './etymon';
-export {
-  ArticleSchema,
-  VarietySchema,
-  type Article,
-  type Variety,
-} from './article';
+export { ArticleSchema, type Article } from './article';
+export { VarietySchema, VARIETY_BY_SLUG, type Variety } from './variety';

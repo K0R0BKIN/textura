@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Kbd } from '@/components/ui/kbd';
 
-export default function ArticleLayout({
+export default function DictionaryLayout({
   children,
 }: {
   children: React.ReactNode;
