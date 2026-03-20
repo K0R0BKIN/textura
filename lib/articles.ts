@@ -33,7 +33,6 @@ export async function generateArticle(
     reasoning: { effort: 'medium' },
     text: {
       format: zodTextFormat(ArticleSchema, 'article'),
-      verbosity: 'medium',
     },
   });
 
