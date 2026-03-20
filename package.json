@@ -9,6 +9,7 @@
     "start": "next start --port 3001",
     "lint": "eslint",
     "format": "prettier --write .",
+    "oai:schema": "tsx scripts/oai-schema.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },
