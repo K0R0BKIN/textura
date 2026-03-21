@@ -1,7 +1,6 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 import { AnimatePresence, motion } from 'motion/react';
@@ -31,7 +30,7 @@ export function SearchBox({
   variant = 'default',
 }: VariantProps<typeof searchBoxVariants>) {
   const [, action, pending] = useActionState(triage, null);
-  const [query, setQuery] = useState(useSearchParams().get('q') ?? '');
+  const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const hasQuery = query.trim().length > 0;
   const showButton = variant === 'default' || focused || hasQuery;
