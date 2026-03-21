@@ -3,7 +3,6 @@ import { Suspense } from 'react';
 import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
 import { generateArticle } from '@/lib/articles';
-import { triageQuery } from '@/lib/queries';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VARIETY_BY_SLUG } from '@/lib/schemas';
 
@@ -45,9 +44,6 @@ async function ArticleContent({
   if (!resolvedVariety) notFound();
 
   const resolvedHeadword = await headword;
-  const triage = await triageQuery(resolvedHeadword, resolvedVariety);
-  if (!triage?.valid) notFound();
-
   const article = await generateArticle(resolvedHeadword, resolvedVariety);
   if (!article) notFound();
 

@@ -1,13 +1,12 @@
 'use client';
 
-import { Suspense, useRef } from 'react';
+import { useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 import { TooltipRoot } from '@base-ui/react';
 import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
 import { Logo } from '@/components/logo';
-import { SearchBox } from '@/components/search-box';
 import {
   Tooltip,
   TooltipTrigger,
@@ -58,13 +57,6 @@ export default function SearchLayout({
       <main className="flex h-screen items-start justify-center pt-[40vh]">
         {children}
       </main>
-      <div className="fixed inset-x-0 bottom-0">
-        <div className="mx-auto w-fit bg-background pb-4">
-          <Suspense>
-            <SearchBox variant="command" />
-          </Suspense>
-        </div>
-      </div>
     </>
   );
 }

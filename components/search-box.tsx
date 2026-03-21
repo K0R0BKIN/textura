@@ -1,10 +1,14 @@
 'use client';
 
-import { type SubmitEvent, useEffect, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useActionState, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
+import { AnimatePresence, motion } from 'motion/react';
+import { Search } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 
+import { triage } from '@/lib/actions';
 import {
   InputGroup,
   InputGroupInput,
@@ -12,9 +16,6 @@ import {
   InputGroupButton,
 } from '@/components/ui/input-group';
 import { Kbd } from '@/components/ui/kbd';
-import { AnimatePresence, motion } from 'motion/react';
-
-import { Search } from 'lucide-react';
 
 const searchBoxVariants = cva('', {
   variants: {
@@ -29,12 +30,12 @@ const searchBoxVariants = cva('', {
 export function SearchBox({
   variant = 'default',
 }: VariantProps<typeof searchBoxVariants>) {
+  const [, action, pending] = useActionState(triage, null);
   const [query, setQuery] = useState(useSearchParams().get('q') ?? '');
   const [focused, setFocused] = useState(false);
   const hasQuery = query.trim().length > 0;
   const showButton = variant === 'default' || focused || hasQuery;
   const inputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
     if (variant === 'default') inputRef.current?.focus();
@@ -53,18 +54,8 @@ export function SearchBox({
     target: inputRef,
   });
 
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const term = query.trim();
-    if (term) {
-      router.push('/dictionary/' + encodeURIComponent(term) + '/en-us');
-      setQuery('');
-      inputRef.current?.blur();
-    }
-  }
-
   return (
-    <form onSubmit={handleSubmit}>
+    <form action={action}>
       <InputGroup
         variant="card"
         size="lg"
@@ -72,6 +63,7 @@ export function SearchBox({
       >
         <InputGroupInput
           ref={inputRef}
+          name="query"
           placeholder="Look up definitions…"
           aria-label="Search query"
           autoComplete="off"
@@ -102,9 +94,9 @@ export function SearchBox({
                   aria-label="Search"
                   variant="default"
                   size="icon-lg"
-                  disabled={!hasQuery}
+                  disabled={!hasQuery || pending}
                 >
-                  <Search />
+                  {pending ? <Spinner /> : <Search />}
                 </InputGroupButton>
               </motion.div>
             ) : (
