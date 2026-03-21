@@ -8,16 +8,6 @@ import { articles } from './db/schema';
 
 const client = new OpenAI();
 
-export async function articleExists(headword: string, variety: Variety) {
-  const rows = await drizzleDb
-    .select({ headword: articles.headword })
-    .from(articles)
-    .where(and(eq(articles.headword, headword), eq(articles.variety, variety)))
-    .limit(1);
-
-  return rows.length > 0;
-}
-
 export async function generateArticle(
   headword: string,
   variety: Variety = 'en-US',

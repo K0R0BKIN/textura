@@ -1,10 +1,23 @@
 import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
+import { and, eq } from 'drizzle-orm';
 import { TriageResultSchema, type Variety } from './schemas';
+import { drizzleDb } from './db';
+import { articles } from './db/schema';
 
 const client = new OpenAI();
 
 export async function validateHeadword(query: string, variety: Variety) {
+  'use cache';
+
+  const existing = await drizzleDb
+    .select({ headword: articles.headword })
+    .from(articles)
+    .where(and(eq(articles.headword, query), eq(articles.variety, variety)))
+    .limit(1);
+
+  if (existing.length > 0) return true;
+
   const response = await client.responses.parse({
     model: 'gpt-5.4-mini',
     prompt: {
@@ -17,5 +30,5 @@ export async function validateHeadword(query: string, variety: Variety) {
     },
   });
 
-  return response.output_parsed;
+  return response.output_parsed?.valid ?? false;
 }
