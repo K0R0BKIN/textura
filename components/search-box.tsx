@@ -1,7 +1,7 @@
 'use client';
 
 import { type SubmitEvent, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 
@@ -19,25 +19,25 @@ import { Search } from 'lucide-react';
 const searchBoxVariants = cva('', {
   variants: {
     variant: {
-      home: 'w-lg',
-      article: 'w-2xl shadow-md',
+      default: 'w-lg',
+      command: 'w-2xl shadow-md',
     },
   },
-  defaultVariants: { variant: 'home' },
+  defaultVariants: { variant: 'default' },
 });
 
 export function SearchBox({
-  variant = 'home',
+  variant = 'default',
 }: VariantProps<typeof searchBoxVariants>) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(useSearchParams().get('q') ?? '');
   const [focused, setFocused] = useState(false);
   const hasQuery = query.trim().length > 0;
-  const showButton = variant === 'home' || focused || hasQuery;
+  const showButton = variant === 'default' || focused || hasQuery;
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (variant === 'home') inputRef.current?.focus();
+    if (variant === 'default') inputRef.current?.focus();
   }, [variant]);
 
   useHotkey(
@@ -46,7 +46,7 @@ export function SearchBox({
       if (document.activeElement === inputRef.current) inputRef.current?.blur();
       else inputRef.current?.focus();
     },
-    { enabled: variant === 'article' },
+    { enabled: variant === 'command' },
   );
 
   useHotkey('Escape', () => inputRef.current?.blur(), {

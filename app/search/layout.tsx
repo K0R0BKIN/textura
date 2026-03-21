@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
@@ -60,7 +60,9 @@ export default function SearchLayout({
       </main>
       <div className="fixed inset-x-0 bottom-0">
         <div className="mx-auto w-fit bg-background pb-4">
-          <SearchBox variant="article" />
+          <Suspense>
+            <SearchBox variant="command" />
+          </Suspense>
         </div>
       </div>
     </>
