@@ -1,13 +1,13 @@
 import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { and, eq } from 'drizzle-orm';
-import { TriageResultSchema, type Variety } from './schemas';
+import { QueryValidationSchema, type Variety } from './schemas';
 import { drizzleDb } from './db';
 import { articles } from './db/schema';
 
 const client = new OpenAI();
 
-export async function validateHeadword(query: string, variety: Variety) {
+export async function validateQuery(query: string, variety: Variety) {
   'use cache';
 
   const existing = await drizzleDb
@@ -26,7 +26,7 @@ export async function validateHeadword(query: string, variety: Variety) {
     },
     reasoning: { effort: 'medium' },
     text: {
-      format: zodTextFormat(TriageResultSchema, 'triage_result'),
+      format: zodTextFormat(QueryValidationSchema, 'query_validation'),
     },
   });
 

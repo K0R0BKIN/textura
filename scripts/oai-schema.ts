@@ -1,9 +1,9 @@
 import { zodTextFormat } from 'openai/helpers/zod';
-import { ArticleSchema, TriageResultSchema } from '../lib/schemas';
+import { ArticleSchema, QueryValidationSchema } from '../lib/schemas';
 
 const schemas = {
   article: zodTextFormat(ArticleSchema, 'article'),
-  triage: zodTextFormat(TriageResultSchema, 'triage_result'),
+  query_validation: zodTextFormat(QueryValidationSchema, 'query_validation'),
 };
 
 const name = process.argv[2];
