@@ -29,10 +29,11 @@ const searchBoxVariants = cva('', {
 export function SearchBox({
   variant = 'default',
 }: VariantProps<typeof searchBoxVariants>) {
-  const [, action, pending] = useActionState(triage, null);
+  const [state, action, pending] = useActionState(triage, null);
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const hasQuery = query.trim().length > 0;
+  const invalid = state !== null && !state.valid && query === state.query;
   const showButton = variant === 'default' || focused || hasQuery;
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -70,6 +71,8 @@ export function SearchBox({
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
+          data-invalid={invalid || undefined}
+          className="data-invalid:underline data-invalid:decoration-destructive data-invalid:decoration-dotted data-invalid:decoration-[2.5px]"
         />
         <InputGroupAddon align="inline-end" size="lg">
           <AnimatePresence mode="wait" initial={false}>

@@ -16,7 +16,7 @@ export async function validateQuery(query: string, variety: Variety) {
     .where(and(eq(articles.headword, query), eq(articles.variety, variety)))
     .limit(1);
 
-  if (existing.length > 0) return true;
+  if (existing.length > 0) return { valid: true };
 
   const response = await client.responses.parse({
     model: 'gpt-5.4-mini',
@@ -30,5 +30,5 @@ export async function validateQuery(query: string, variety: Variety) {
     },
   });
 
-  return response.output_parsed?.valid ?? false;
+  return response.output_parsed ?? { valid: false };
 }
