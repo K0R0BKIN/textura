@@ -10,6 +10,8 @@ const client = new OpenAI();
 export async function validateQuery(query: string, variety: Variety) {
   'use cache';
 
+  if (!/[\p{L}\p{N}]/u.test(query)) return { valid: false };
+
   const existing = await drizzleDb
     .select({ headword: articles.headword })
     .from(articles)
