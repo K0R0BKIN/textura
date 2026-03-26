@@ -67,6 +67,7 @@ export function SearchBox({
           placeholder="Look up definitions…"
           aria-label="Search query"
           autoComplete="off"
+          spellCheck={false}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setFocused(true)}
