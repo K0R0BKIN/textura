@@ -97,7 +97,7 @@ export function SearchBox({
                   aria-label="Search"
                   variant="default"
                   size="icon-lg"
-                  disabled={!hasQuery || pending}
+                  disabled={!hasQuery || pending || invalid}
                 >
                   {pending ? <Spinner /> : <Search />}
                 </InputGroupButton>
