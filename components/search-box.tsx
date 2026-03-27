@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState } from 'react';
 import { Toast } from '@base-ui/react/toast';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Search, X } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -31,14 +31,15 @@ const searchBoxVariants = cva('', {
 
 function SearchBoxToasts() {
   const { toasts } = Toast.useToastManager();
+  const reduceMotion = useReducedMotion();
   return (
     <Toast.Portal>
       <Toast.Viewport>
         <AnimatePresence>
           {toasts.map((toast) => {
             const side = toast.positionerProps?.side ?? 'bottom';
-            const offset = side === 'top' ? 8 : -8;
-            const exitOffset = side === 'top' ? 4 : -4;
+            const offset = reduceMotion ? 0 : side === 'top' ? 8 : -8;
+            const exitOffset = reduceMotion ? 0 : side === 'top' ? 4 : -4;
             return (
               <Toast.Positioner key={toast.id} toast={toast}>
                 <Toast.Root
