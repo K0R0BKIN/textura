@@ -85,6 +85,7 @@ export function SearchBox({
   const hasQuery = query.trim().length > 0;
   const invalid = state !== null && !state.valid && query === state.query;
   const showButton = variant === 'default' || focused || hasQuery;
+  const reduceMotion = useReducedMotion();
   const groupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -150,7 +151,7 @@ export function SearchBox({
               {showButton ? (
                 <motion.div
                   key="button"
-                  initial={{ opacity: 0, scale: 0.85 }}
+                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
                   animate={{
                     opacity: 1,
                     scale: 1,
@@ -158,7 +159,7 @@ export function SearchBox({
                   }}
                   exit={{
                     opacity: 0,
-                    scale: 0.85,
+                    scale: reduceMotion ? 1 : 0.85,
                     transition: { duration: 0.08, ease: 'easeIn' },
                   }}
                 >
@@ -175,7 +176,7 @@ export function SearchBox({
               ) : (
                 <motion.div
                   key="kbd"
-                  initial={{ opacity: 0, scale: 0.85 }}
+                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
                   animate={{
                     opacity: 1,
                     scale: 1,
@@ -183,7 +184,7 @@ export function SearchBox({
                   }}
                   exit={{
                     opacity: 0,
-                    scale: 0.85,
+                    scale: reduceMotion ? 1 : 0.85,
                     transition: { duration: 0.08, ease: 'easeIn' },
                   }}
                 >
