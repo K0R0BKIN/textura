@@ -48,8 +48,10 @@ function SearchBoxToasts() {
         <AnimatePresence>
           {toasts.map((toast) => {
             const side = toast.positionerProps?.side ?? 'bottom';
-            const offset = reduceMotion ? 0 : side === 'top' ? 8 : -8;
-            const exitOffset = reduceMotion ? 0 : side === 'top' ? 4 : -4;
+            const offset = reduceMotion ? 0 : side === 'top' ? 6 : -6;
+            const exitOffset = reduceMotion ? 0 : side === 'top' ? 2 : -2;
+            const transformOrigin =
+              side === 'top' ? 'left bottom' : 'left top';
             return (
               <Toast.Positioner key={toast.id} toast={toast}>
                 <Toast.Root
@@ -57,17 +59,45 @@ function SearchBoxToasts() {
                   render={(props) => (
                     <motion.div
                       {...(props as HTMLMotionProps<'div'>)}
-                      initial={{ opacity: 0, y: offset }}
-                      animate={{ opacity: 1, y: 0 }}
+                      style={{ transformOrigin }}
+                      initial={{
+                        opacity: 0,
+                        y: offset,
+                        scale: reduceMotion ? 1 : 0.985,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                        scale: 1,
+                        transition: reduceMotion
+                          ? {
+                              duration: 0.18,
+                              ease: [0.32, 0.72, 0, 1],
+                            }
+                          : {
+                              y: {
+                                type: 'spring',
+                                visualDuration: 0.18,
+                                bounce: 0.12,
+                              },
+                              scale: {
+                                type: 'spring',
+                                visualDuration: 0.18,
+                                bounce: 0.08,
+                              },
+                              opacity: {
+                                duration: 0.14,
+                                ease: [0.32, 0.72, 0, 1],
+                              },
+                            },
+                      }}
                       exit={{
                         opacity: 0,
                         y: exitOffset,
-                        transition: { duration: 0.1, ease: [0.32, 0.72, 0, 1] },
-                      }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 400,
-                        damping: 28,
+                        transition: {
+                          duration: 0.12,
+                          ease: [0.4, 0, 1, 1],
+                        },
                       }}
                     />
                   )}
