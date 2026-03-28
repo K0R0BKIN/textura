@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
 import { generateArticle } from '@/lib/articles';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,18 +31,15 @@ function ArticleSkeleton() {
 }
 
 async function ArticleContent({
-  headword,
-  variety,
+  params,
 }: {
-  headword: Promise<string>;
-  variety: Promise<string>;
+  params: Promise<{ headword: string; variety: string }>;
 }) {
-  await connection();
-
-  const resolvedVariety = VARIETY_BY_SLUG[await variety];
+  const { headword, variety } = await params;
+  const resolvedVariety = VARIETY_BY_SLUG[variety];
   if (!resolvedVariety) notFound();
 
-  const resolvedHeadword = await headword;
+  const resolvedHeadword = decodeURIComponent(headword);
   const article = await generateArticle(resolvedHeadword, resolvedVariety);
   if (!article) notFound();
 
@@ -104,13 +100,10 @@ export default function ArticlePage({
 }: {
   params: Promise<{ headword: string; variety: string }>;
 }) {
-  const headword = params.then((p) => decodeURIComponent(p.headword));
-  const variety = params.then((p) => p.variety);
-
   return (
     <article className="mx-auto max-w-2xl px-4">
       <Suspense fallback={<ArticleSkeleton />}>
-        <ArticleContent headword={headword} variety={variety} />
+        <ArticleContent params={params} />
       </Suspense>
     </article>
   );
