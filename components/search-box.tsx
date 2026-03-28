@@ -1,10 +1,20 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Toast } from '@base-ui/react/toast';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import {
+  AnimatePresence,
+  motion,
+  type HTMLMotionProps,
+  useReducedMotion,
+} from 'motion/react';
 import { Search, X } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -46,7 +56,7 @@ function SearchBoxToasts() {
                   toast={toast}
                   render={(props) => (
                     <motion.div
-                      {...props}
+                      {...(props as HTMLMotionProps<'div'>)}
                       initial={{ opacity: 0, y: offset }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{
@@ -81,17 +91,13 @@ export function SearchBox({
 }: VariantProps<typeof searchBoxVariants>) {
   const [state, action, pending] = useActionState(triage, null);
   const [query, setQuery] = useState('');
-  const [focused, setFocused] = useState(false);
+  const groupRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const hasQuery = query.trim().length > 0;
+  const [focused, setFocused] = useState(false);
   const invalid = state !== null && !state.valid && query === state.query;
   const showButton = variant === 'default' || focused || hasQuery;
   const reduceMotion = useReducedMotion();
-  const groupRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (variant === 'default') inputRef.current?.focus();
-  }, [variant]);
 
   useEffect(() => {
     if (invalid) {
@@ -109,6 +115,10 @@ export function SearchBox({
       return () => toastManager.close(id);
     }
   }, [invalid, variant]);
+
+  useEffect(() => {
+    if (variant === 'default') inputRef.current?.focus();
+  }, [variant]);
 
   useHotkey(
     'Mod+K',
