@@ -184,7 +184,6 @@ export function SearchBox({
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             data-invalid={invalid || undefined}
-            className="data-invalid:underline data-invalid:decoration-destructive data-invalid:decoration-dotted data-invalid:decoration-[2.5px]"
           />
           <InputGroupAddon align="inline-end" size="lg">
             <AnimatePresence mode="wait" initial={false}>
