@@ -63,7 +63,7 @@ export default function DictionaryLayout({
       </Navbar>
       <main className="pt-24 pb-42">{children}</main>
       <div className="fixed inset-x-0 bottom-0">
-        <div className="mx-auto w-fit bg-background pb-4">
+        <div className="mx-auto w-fit bg-background pb-3">
           <Suspense>
             <DictionarySearchBox />
           </Suspense>
