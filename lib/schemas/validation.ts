@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-export const QueryValidationSchema = z.object({
+export const QueryValidationResultSchema = z.object({
   valid: z.boolean(),
 });
-export type QueryValidation = z.infer<typeof QueryValidationSchema>;

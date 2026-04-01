@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { and, eq } from 'drizzle-orm';
-import { QueryValidationSchema, type Variety } from './schemas';
+import { QueryValidationResultSchema, type Variety } from './schemas';
 import { drizzleDb } from './db';
 import { articles } from './db/schema';
 
@@ -28,7 +28,7 @@ export async function validateQuery(query: string, variety: Variety) {
     },
     reasoning: { effort: 'medium' },
     text: {
-      format: zodTextFormat(QueryValidationSchema, 'query_validation'),
+      format: zodTextFormat(QueryValidationResultSchema, 'query_validation'),
     },
   });
 

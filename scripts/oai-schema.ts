@@ -1,9 +1,12 @@
 import { zodTextFormat } from 'openai/helpers/zod';
-import { ArticleSchema, QueryValidationSchema } from '../lib/schemas';
+import { ArticleSchema, QueryValidationResultSchema } from '../lib/schemas';
 
 const schemas = {
   article: zodTextFormat(ArticleSchema, 'article'),
-  query_validation: zodTextFormat(QueryValidationSchema, 'query_validation'),
+  query_validation: zodTextFormat(
+    QueryValidationResultSchema,
+    'query_validation',
+  ),
 };
 
 const name = process.argv[2];

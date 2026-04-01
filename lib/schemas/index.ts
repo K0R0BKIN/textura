@@ -9,5 +9,5 @@ export {
   type Etymon,
 } from './etymon';
 export { ArticleSchema, type Article } from './article';
-export { QueryValidationSchema, type QueryValidation } from './validation';
+export { QueryValidationResultSchema } from './validation';
 export { VarietySchema, VARIETY_BY_SLUG, type Variety } from './variety';
