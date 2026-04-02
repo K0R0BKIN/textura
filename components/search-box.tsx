@@ -10,8 +10,7 @@ import {
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Toast } from '@base-ui/react/toast';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
+import { useHotkey } from '@tanstack/react-hotkeys';
 import {
   AnimatePresence,
   motion,
@@ -26,20 +25,9 @@ import {
   InputGroupAddon,
   InputGroupButton,
 } from '@/components/ui/input-group';
-import { Kbd } from '@/components/ui/kbd';
 import { getTRPCClient } from '@/trpc/client';
 
 const toastManager = Toast.createToastManager();
-
-const searchBoxVariants = cva('', {
-  variants: {
-    variant: {
-      default: 'w-lg',
-      command: 'w-2xl shadow-md',
-    },
-  },
-  defaultVariants: { variant: 'default' },
-});
 
 function SearchBoxToasts() {
   const { toasts } = Toast.useToastManager();
@@ -117,13 +105,9 @@ function SearchBoxToasts() {
   );
 }
 
-export function SearchBox({
-  variant = 'default',
-}: VariantProps<typeof searchBoxVariants>) {
-  const resolvedVariant = variant ?? 'default';
+export function SearchBox() {
   const groupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [focused, setFocused] = useState(false);
   const {
     query,
     hasQuery,
@@ -132,8 +116,6 @@ export function SearchBox({
     handleQueryChange,
     handleSubmit,
   } = useSearchBox();
-  const showButton = resolvedVariant === 'default' || focused || hasQuery;
-  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (isInvalid) {
@@ -142,7 +124,7 @@ export function SearchBox({
         description: 'This query looks invalid',
         positionerProps: {
           anchor: groupRef.current,
-          side: resolvedVariant === 'command' ? 'top' : 'bottom',
+          side: 'bottom',
           sideOffset: 8,
           align: 'start',
           alignOffset: 4,
@@ -150,20 +132,11 @@ export function SearchBox({
       });
       return () => toastManager.close(id);
     }
-  }, [isInvalid, resolvedVariant]);
+  }, [isInvalid]);
 
   useEffect(() => {
-    if (resolvedVariant === 'default') inputRef.current?.focus();
-  }, [resolvedVariant]);
-
-  useHotkey(
-    'Mod+K',
-    () => {
-      if (document.activeElement === inputRef.current) inputRef.current?.blur();
-      else inputRef.current?.focus();
-    },
-    { enabled: resolvedVariant === 'command' },
-  );
+    inputRef.current?.focus();
+  }, []);
 
   useHotkey('Escape', () => inputRef.current?.blur(), {
     target: inputRef,
@@ -172,12 +145,7 @@ export function SearchBox({
   return (
     <Toast.Provider toastManager={toastManager} limit={1}>
       <form onSubmit={handleSubmit}>
-        <InputGroup
-          ref={groupRef}
-          variant="card"
-          size="lg"
-          className={searchBoxVariants({ variant: resolvedVariant })}
-        >
+        <InputGroup ref={groupRef} variant="card" size="lg" className="w-lg">
           <InputGroupInput
             ref={inputRef}
             placeholder="Look up definitions…"
@@ -186,56 +154,18 @@ export function SearchBox({
             spellCheck={false}
             value={query}
             onChange={handleQueryChange}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
             data-invalid={isInvalid || undefined}
           />
           <InputGroupAddon align="inline-end" size="lg">
-            <AnimatePresence mode="wait" initial={false}>
-              {showButton ? (
-                <motion.div
-                  key="button"
-                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    transition: { duration: 0.12, ease: 'easeOut' },
-                  }}
-                  exit={{
-                    opacity: 0,
-                    scale: reduceMotion ? 1 : 0.85,
-                    transition: { duration: 0.08, ease: 'easeIn' },
-                  }}
-                >
-                  <InputGroupButton
-                    type="submit"
-                    aria-label="Search"
-                    variant="default"
-                    size="icon-lg"
-                    disabled={!hasQuery || isValidating || isInvalid}
-                  >
-                    {isValidating ? <Spinner /> : <Search />}
-                  </InputGroupButton>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="kbd"
-                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    transition: { duration: 0.12, ease: 'easeOut' },
-                  }}
-                  exit={{
-                    opacity: 0,
-                    scale: reduceMotion ? 1 : 0.85,
-                    transition: { duration: 0.08, ease: 'easeIn' },
-                  }}
-                >
-                  <Kbd size="lg">{formatForDisplay('Mod+K')}</Kbd>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <InputGroupButton
+              type="submit"
+              aria-label="Search"
+              variant="default"
+              size="icon-lg"
+              disabled={!hasQuery || isValidating || isInvalid}
+            >
+              {isValidating ? <Spinner /> : <Search />}
+            </InputGroupButton>
           </InputGroupAddon>
         </InputGroup>
       </form>

@@ -54,7 +54,7 @@ export default function DictionaryLayout({
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
-      <main className="pt-24 pb-42">{children}</main>
+      <main className="pt-24 pb-16">{children}</main>
     </>
   );
 }
