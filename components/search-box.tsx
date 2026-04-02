@@ -3,8 +3,8 @@
 import {
   useEffect,
   useLayoutEffect,
+  useReducer,
   useRef,
-  useState,
   useTransition,
   type SyntheticEvent,
 } from 'react';
@@ -174,9 +174,57 @@ export function SearchBox() {
   );
 }
 
+type SearchState = {
+  query: string;
+  status: 'idle' | 'validating' | 'invalid';
+  invalidFor: string | null;
+};
+
+type SearchAction =
+  | { type: 'queryChanged'; query: string }
+  | { type: 'submitted' }
+  | { type: 'validationFailed'; query: string }
+  | { type: 'reset' };
+
+const initialSearchState: SearchState = {
+  query: '',
+  status: 'idle',
+  invalidFor: null,
+};
+
+function searchReducer(
+  state: SearchState,
+  action: SearchAction,
+): SearchState {
+  switch (action.type) {
+    case 'queryChanged':
+      return {
+        query: action.query,
+        status: 'idle',
+        invalidFor: null,
+      };
+
+    case 'submitted':
+      return {
+        ...state,
+        status: 'validating',
+        invalidFor: null,
+      };
+
+    case 'validationFailed':
+      return {
+        ...state,
+        status: 'invalid',
+        invalidFor: action.query,
+      };
+
+    case 'reset':
+      return initialSearchState;
+  }
+}
+
 function useSearchBox() {
-  const [query, setQuery] = useState('');
-  const [invalidFor, setInvalidFor] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(searchReducer, initialSearchState);
   const [isPending, transition] = useTransition();
   const pathname = usePathname();
   const router = useRouter();
@@ -185,31 +233,30 @@ function useSearchBox() {
   useLayoutEffect(() => {
     return () => {
       abortRef.current?.abort();
-      setQuery('');
-      setInvalidFor(null);
+      dispatch({ type: 'reset' });
     };
   }, []);
 
-  const hasQuery = query.trim().length > 0;
+  const hasQuery = state.query.trim().length > 0;
   const isValidating = isPending;
-  const isInvalid = invalidFor !== null && invalidFor === query.trim();
+  const isInvalid =
+    state.status === 'invalid' && state.invalidFor === state.query.trim();
 
   function handleQueryChange(event: SyntheticEvent<HTMLInputElement>) {
-    const next = event.currentTarget.value;
-    setQuery(next);
-    setInvalidFor(null);
     abortRef.current?.abort();
+    dispatch({ type: 'queryChanged', query: event.currentTarget.value });
   }
 
   function handleSubmit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
 
-    const submittedQuery = query.trim();
+    const submittedQuery = state.query.trim();
     if (!submittedQuery || isValidating || isInvalid) return;
 
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    dispatch({ type: 'submitted' });
 
     transition(async () => {
       try {
@@ -218,25 +265,24 @@ function useSearchBox() {
           { signal: controller.signal },
         );
 
+        if (controller.signal.aborted) return;
+
         if (result.valid) {
           const targetPath = `/dictionary/${encodeURIComponent(result.query)}/en-us`;
 
           if (pathname === targetPath) {
-            transition(() => {
-              setQuery('');
-              setInvalidFor(null);
-            });
+            dispatch({ type: 'reset' });
             router.refresh();
             return;
           }
 
           router.push(targetPath);
         } else {
-          transition(() => setInvalidFor(submittedQuery));
+          dispatch({ type: 'validationFailed', query: submittedQuery });
         }
-      } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return;
-        transition(() => setInvalidFor(null));
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error(error);
       } finally {
         if (abortRef.current === controller) {
           abortRef.current = null;
@@ -246,7 +292,7 @@ function useSearchBox() {
   }
 
   return {
-    query,
+    query: state.query,
     hasQuery,
     isInvalid,
     isValidating,
