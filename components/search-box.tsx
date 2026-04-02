@@ -29,6 +29,7 @@ import {
   InputGroupButton,
 } from '@/components/ui/input-group';
 import { Kbd } from '@/components/ui/kbd';
+import { dictionaryPath } from '@/lib/dictionary/routes';
 import { getTRPCClient } from '@/trpc/client';
 
 const toastManager = Toast.createToastManager();
@@ -344,7 +345,7 @@ function useSearchBox() {
         if (controller.signal.aborted) return;
 
         if (result.valid) {
-          const targetPath = `/dictionary/${encodeURIComponent(result.query)}/en-us`;
+          const targetPath = dictionaryPath(result.query);
 
           if (pathname === targetPath) {
             transition(() => {
