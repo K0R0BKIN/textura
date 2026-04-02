@@ -5,14 +5,13 @@ import {
   useLayoutEffect,
   useReducer,
   useRef,
-  useState,
   useTransition,
   type SyntheticEvent,
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Toast } from '@base-ui/react/toast';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
+import { useHotkey } from '@tanstack/react-hotkeys';
 import {
   AnimatePresence,
   motion,
@@ -28,7 +27,6 @@ import {
   InputGroupAddon,
   InputGroupButton,
 } from '@/components/ui/input-group';
-import { Kbd } from '@/components/ui/kbd';
 import { dictionaryPath } from '@/lib/dictionary/routes';
 import { getTRPCClient } from '@/trpc/client';
 
@@ -175,7 +173,6 @@ export function SearchBox({
   const resolvedVariant = variant ?? 'default';
   const groupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [focused, setFocused] = useState(false);
   const {
     query,
     hasQuery,
@@ -184,8 +181,6 @@ export function SearchBox({
     handleQueryChange,
     handleSubmit,
   } = useSearchBox();
-  const showButton = resolvedVariant === 'default' || focused || hasQuery;
-  const reduceMotion = useReducedMotion();
   const showSpinner = useSpinDelay(isValidating, {
     delay: 80,
     minDuration: 180,
@@ -242,56 +237,18 @@ export function SearchBox({
             spellCheck={false}
             value={query}
             onChange={handleQueryChange}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
             data-invalid={isInvalid || undefined}
           />
           <InputGroupAddon align="inline-end" size="lg">
-            <AnimatePresence mode="wait" initial={false}>
-              {showButton ? (
-                <motion.div
-                  key="button"
-                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    transition: { duration: 0.12, ease: 'easeOut' },
-                  }}
-                  exit={{
-                    opacity: 0,
-                    scale: reduceMotion ? 1 : 0.85,
-                    transition: { duration: 0.08, ease: 'easeIn' },
-                  }}
-                >
-                  <InputGroupButton
-                    type="submit"
-                    aria-label="Search"
-                    variant="default"
-                    size="icon-lg"
-                    disabled={!hasQuery || isInvalid || showSpinner}
-                  >
-                    {showSpinner ? <Spinner /> : <Search />}
-                  </InputGroupButton>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="kbd"
-                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    transition: { duration: 0.12, ease: 'easeOut' },
-                  }}
-                  exit={{
-                    opacity: 0,
-                    scale: reduceMotion ? 1 : 0.85,
-                    transition: { duration: 0.08, ease: 'easeIn' },
-                  }}
-                >
-                  <Kbd size="lg">{formatForDisplay('Mod+K')}</Kbd>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <InputGroupButton
+              type="submit"
+              aria-label="Search"
+              variant="default"
+              size="icon-lg"
+              disabled={!hasQuery || isInvalid || showSpinner}
+            >
+              {showSpinner ? <Spinner /> : <Search />}
+            </InputGroupButton>
           </InputGroupAddon>
         </InputGroup>
       </form>
