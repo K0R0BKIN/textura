@@ -1,18 +1,25 @@
 'use client';
 
-import { useRef } from 'react';
+import { Suspense, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 import { TooltipRoot } from '@base-ui/react';
 import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
 import { Logo } from '@/components/logo';
+import { SearchBox } from '@/components/search-box';
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { Kbd } from '@/components/ui/kbd';
+
+function DictionarySearchBox() {
+  const pathname = usePathname();
+
+  return <SearchBox key={pathname} variant="command" />;
+}
 
 export default function DictionaryLayout({
   children,
@@ -55,6 +62,13 @@ export default function DictionaryLayout({
         </Navbar.End>
       </Navbar>
       <main className="pt-24 pb-42">{children}</main>
+      <div className="fixed inset-x-0 bottom-0">
+        <div className="mx-auto w-fit bg-background pb-3">
+          <Suspense>
+            <DictionarySearchBox />
+          </Suspense>
+        </div>
+      </div>
     </>
   );
 }

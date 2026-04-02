@@ -5,12 +5,13 @@ import {
   useLayoutEffect,
   useReducer,
   useRef,
+  useState,
   type SyntheticEvent,
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Toast } from '@base-ui/react/toast';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { useHotkey } from '@tanstack/react-hotkeys';
+import { formatForDisplay, useHotkey } from '@tanstack/react-hotkeys';
 import {
   AnimatePresence,
   motion,
@@ -19,6 +20,7 @@ import {
 } from 'motion/react';
 import { Search, X } from 'lucide-react';
 import { useSpinDelay } from 'spin-delay';
+import { Kbd } from '@/components/ui/kbd';
 import { Spinner } from '@/components/ui/spinner';
 import {
   InputGroup,
@@ -183,6 +185,9 @@ export function SearchBox({
   const resolvedVariant = variant ?? 'default';
   const groupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [commandAddon, setCommandAddon] = useState<'shortcut' | 'submit'>(
+    'shortcut',
+  );
   const {
     query,
     hasQuery,
@@ -191,12 +196,17 @@ export function SearchBox({
     handleQueryChange,
     handleSubmit,
   } = useSearchBox({
-    onCurrentArticleMatch: () => inputRef.current?.blur(),
+    onCurrentArticleMatch: () => {
+      inputRef.current?.blur();
+      setCommandAddon('shortcut');
+    },
   });
+  const reduceMotion = useReducedMotion();
   const showSpinner = useSpinDelay(isBusy, {
     delay: 80,
     minDuration: 180,
   });
+  const showButton = resolvedVariant === 'default' || commandAddon === 'submit';
 
   useEffect(() => {
     if (isInvalid) {
@@ -232,6 +242,26 @@ export function SearchBox({
     target: inputRef,
   });
 
+  function handleInputFocus() {
+    if (resolvedVariant === 'command') {
+      setCommandAddon('submit');
+    }
+  }
+
+  function handleInputBlur() {
+    if (resolvedVariant !== 'command') return;
+    if (hasQuery || isBusy || isInvalid) return;
+    setCommandAddon('shortcut');
+  }
+
+  function handleInputChange(event: SyntheticEvent<HTMLInputElement>) {
+    if (resolvedVariant === 'command' && event.currentTarget.value.trim() !== '') {
+      setCommandAddon('submit');
+    }
+
+    handleQueryChange(event);
+  }
+
   return (
     <Toast.Provider toastManager={toastManager} limit={1}>
       <form onSubmit={handleSubmit}>
@@ -248,19 +278,57 @@ export function SearchBox({
             autoComplete="off"
             spellCheck={false}
             value={query}
-            onChange={handleQueryChange}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
             data-invalid={isInvalid || undefined}
           />
           <InputGroupAddon align="inline-end" size="lg">
-            <InputGroupButton
-              type="submit"
-              aria-label="Search"
-              variant="default"
-              size="icon-lg"
-              disabled={!hasQuery || isInvalid || showSpinner}
-            >
-              {showSpinner ? <Spinner /> : <Search />}
-            </InputGroupButton>
+            <AnimatePresence mode="wait" initial={false}>
+              {showButton ? (
+                <motion.div
+                  key="button"
+                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    transition: { duration: 0.12, ease: 'easeOut' },
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: reduceMotion ? 1 : 0.85,
+                    transition: { duration: 0.08, ease: 'easeIn' },
+                  }}
+                >
+                  <InputGroupButton
+                    type="submit"
+                    aria-label="Search"
+                    variant="default"
+                    size="icon-lg"
+                    disabled={!hasQuery || isInvalid || showSpinner}
+                  >
+                    {showSpinner ? <Spinner /> : <Search />}
+                  </InputGroupButton>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="kbd"
+                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    transition: { duration: 0.12, ease: 'easeOut' },
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: reduceMotion ? 1 : 0.85,
+                    transition: { duration: 0.08, ease: 'easeIn' },
+                  }}
+                >
+                  <Kbd size="lg">{formatForDisplay('Mod+K')}</Kbd>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </InputGroupAddon>
         </InputGroup>
       </form>
