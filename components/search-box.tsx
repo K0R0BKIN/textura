@@ -5,7 +5,6 @@ import {
   useLayoutEffect,
   useReducer,
   useRef,
-  useTransition,
   type SyntheticEvent,
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -120,7 +119,7 @@ function SearchBoxToasts() {
 
 type SearchState = {
   query: string;
-  status: 'idle' | 'validating' | 'invalid';
+  status: 'idle' | 'validating' | 'invalid' | 'navigating';
   invalidFor: string | null;
 };
 
@@ -128,6 +127,8 @@ type SearchAction =
   | { type: 'queryChanged'; query: string }
   | { type: 'submitted' }
   | { type: 'validationFailed'; query: string }
+  | { type: 'navigationStarted' }
+  | { type: 'validationSettled' }
   | { type: 'reset' };
 
 const initialSearchState: SearchState = {
@@ -136,10 +137,7 @@ const initialSearchState: SearchState = {
   invalidFor: null,
 };
 
-function searchReducer(
-  state: SearchState,
-  action: SearchAction,
-): SearchState {
+function searchReducer(state: SearchState, action: SearchAction): SearchState {
   switch (action.type) {
     case 'queryChanged':
       return {
@@ -162,6 +160,18 @@ function searchReducer(
         invalidFor: action.query,
       };
 
+    case 'navigationStarted':
+      return {
+        ...state,
+        status: 'navigating',
+      };
+
+    case 'validationSettled':
+      return {
+        ...state,
+        status: 'idle',
+      };
+
     case 'reset':
       return initialSearchState;
   }
@@ -177,13 +187,13 @@ export function SearchBox({
     query,
     hasQuery,
     isInvalid,
-    isValidating,
+    isBusy,
     handleQueryChange,
     handleSubmit,
   } = useSearchBox({
     onCurrentArticleMatch: () => inputRef.current?.blur(),
   });
-  const showSpinner = useSpinDelay(isValidating, {
+  const showSpinner = useSpinDelay(isBusy, {
     delay: 80,
     minDuration: 180,
   });
@@ -265,7 +275,6 @@ function useSearchBox({
   onCurrentArticleMatch?: () => void;
 }) {
   const [state, dispatch] = useReducer(searchReducer, initialSearchState);
-  const [isPending, transition] = useTransition();
   const pathname = usePathname();
   const router = useRouter();
   const abortRef = useRef<AbortController | null>(null);
@@ -278,7 +287,8 @@ function useSearchBox({
   }, []);
 
   const hasQuery = state.query.trim().length > 0;
-  const isValidating = isPending;
+  const isBusy =
+    state.status === 'validating' || state.status === 'navigating';
   const isInvalid =
     state.invalidFor !== null && state.invalidFor === state.query.trim();
 
@@ -287,59 +297,57 @@ function useSearchBox({
     dispatch({ type: 'queryChanged', query: event.currentTarget.value });
   }
 
-  function handleSubmit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
+  async function handleSubmit(
+    event: SyntheticEvent<HTMLFormElement, SubmitEvent>,
+  ) {
     event.preventDefault();
 
     const submittedQuery = state.query.trim();
-    if (!submittedQuery || isValidating || isInvalid) return;
+    if (!submittedQuery || isBusy || isInvalid) return;
 
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
     dispatch({ type: 'submitted' });
 
-    transition(async () => {
-      try {
-        const result = await getTRPCClient().search.validateQuery.mutate(
-          { query: submittedQuery },
-          { signal: controller.signal },
-        );
+    try {
+      const result = await getTRPCClient().search.validateQuery.mutate(
+        { query: submittedQuery },
+        { signal: controller.signal },
+      );
 
-        if (controller.signal.aborted) return;
+      if (controller.signal.aborted) return;
 
-        if (result.valid) {
-          const targetPath = dictionaryPath(result.query);
+      if (result.valid) {
+        const targetPath = dictionaryPath(result.query);
 
-          if (pathname === targetPath) {
-            onCurrentArticleMatch?.();
-            transition(() => {
-              dispatch({ type: 'reset' });
-            });
-            return;
-          }
-
-          router.push(targetPath);
-        } else {
-          transition(() =>
-            dispatch({ type: 'validationFailed', query: submittedQuery }),
-          );
+        if (pathname === targetPath) {
+          onCurrentArticleMatch?.();
+          dispatch({ type: 'reset' });
+          return;
         }
-      } catch (err) {
-        if (controller.signal.aborted) return;
-        console.error(err);
-      } finally {
-        if (abortRef.current === controller) {
-          abortRef.current = null;
-        }
+
+        dispatch({ type: 'navigationStarted' });
+        router.push(targetPath);
+      } else {
+        dispatch({ type: 'validationFailed', query: submittedQuery });
       }
-    });
+    } catch (err) {
+      if (controller.signal.aborted) return;
+      dispatch({ type: 'validationSettled' });
+      console.error(err);
+    } finally {
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+      }
+    }
   }
 
   return {
     query: state.query,
     hasQuery,
     isInvalid,
-    isValidating,
+    isBusy,
     handleQueryChange,
     handleSubmit,
   };
