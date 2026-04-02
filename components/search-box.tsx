@@ -180,7 +180,9 @@ export function SearchBox({
     isValidating,
     handleQueryChange,
     handleSubmit,
-  } = useSearchBox();
+  } = useSearchBox({
+    onCurrentArticleMatch: () => inputRef.current?.blur(),
+  });
   const showSpinner = useSpinDelay(isValidating, {
     delay: 80,
     minDuration: 180,
@@ -257,7 +259,11 @@ export function SearchBox({
   );
 }
 
-function useSearchBox() {
+function useSearchBox({
+  onCurrentArticleMatch,
+}: {
+  onCurrentArticleMatch?: () => void;
+}) {
   const [state, dispatch] = useReducer(searchReducer, initialSearchState);
   const [isPending, transition] = useTransition();
   const pathname = usePathname();
@@ -305,10 +311,10 @@ function useSearchBox() {
           const targetPath = dictionaryPath(result.query);
 
           if (pathname === targetPath) {
+            onCurrentArticleMatch?.();
             transition(() => {
               dispatch({ type: 'reset' });
             });
-            router.refresh();
             return;
           }
 
