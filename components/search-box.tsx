@@ -18,6 +18,7 @@ import {
   useReducedMotion,
 } from 'motion/react';
 import { Search, X } from 'lucide-react';
+import { useSpinDelay } from 'spin-delay';
 import { Spinner } from '@/components/ui/spinner';
 import {
   InputGroup,
@@ -116,6 +117,10 @@ export function SearchBox() {
     handleQueryChange,
     handleSubmit,
   } = useSearchBox();
+  const showSpinner = useSpinDelay(isValidating, {
+    delay: 80,
+    minDuration: 180,
+  });
 
   useEffect(() => {
     if (isInvalid) {
@@ -162,9 +167,9 @@ export function SearchBox() {
               aria-label="Search"
               variant="default"
               size="icon-lg"
-              disabled={!hasQuery || isValidating || isInvalid}
+              disabled={!hasQuery || isInvalid || showSpinner}
             >
-              {isValidating ? <Spinner /> : <Search />}
+              {showSpinner ? <Spinner /> : <Search />}
             </InputGroupButton>
           </InputGroupAddon>
         </InputGroup>
@@ -192,10 +197,7 @@ const initialSearchState: SearchState = {
   invalidFor: null,
 };
 
-function searchReducer(
-  state: SearchState,
-  action: SearchAction,
-): SearchState {
+function searchReducer(state: SearchState, action: SearchAction): SearchState {
   switch (action.type) {
     case 'queryChanged':
       return {
