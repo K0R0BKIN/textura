@@ -185,6 +185,8 @@ function useSearchBox() {
   useLayoutEffect(() => {
     return () => {
       abortRef.current?.abort();
+      setQuery('');
+      setInvalidFor(null);
     };
   }, []);
 
