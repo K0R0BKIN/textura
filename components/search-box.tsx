@@ -5,12 +5,14 @@ import {
   useLayoutEffect,
   useReducer,
   useRef,
+  useState,
   useTransition,
   type SyntheticEvent,
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Toast } from '@base-ui/react/toast';
-import { useHotkey } from '@tanstack/react-hotkeys';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 import {
   AnimatePresence,
   motion,
@@ -26,9 +28,20 @@ import {
   InputGroupAddon,
   InputGroupButton,
 } from '@/components/ui/input-group';
+import { Kbd } from '@/components/ui/kbd';
 import { getTRPCClient } from '@/trpc/client';
 
 const toastManager = Toast.createToastManager();
+
+const searchBoxVariants = cva('', {
+  variants: {
+    variant: {
+      default: 'w-lg',
+      command: 'w-2xl shadow-md',
+    },
+  },
+  defaultVariants: { variant: 'default' },
+});
 
 function SearchBoxToasts() {
   const { toasts } = Toast.useToastManager();
@@ -106,79 +119,6 @@ function SearchBoxToasts() {
   );
 }
 
-export function SearchBox() {
-  const groupRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const {
-    query,
-    hasQuery,
-    isInvalid,
-    isValidating,
-    handleQueryChange,
-    handleSubmit,
-  } = useSearchBox();
-  const showSpinner = useSpinDelay(isValidating, {
-    delay: 80,
-    minDuration: 180,
-  });
-
-  useEffect(() => {
-    if (isInvalid) {
-      const id = toastManager.add({
-        type: 'error',
-        description: 'This query looks invalid',
-        positionerProps: {
-          anchor: groupRef.current,
-          side: 'bottom',
-          sideOffset: 8,
-          align: 'start',
-          alignOffset: 4,
-        },
-      });
-      return () => toastManager.close(id);
-    }
-  }, [isInvalid]);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  useHotkey('Escape', () => inputRef.current?.blur(), {
-    target: inputRef,
-  });
-
-  return (
-    <Toast.Provider toastManager={toastManager} limit={1}>
-      <form onSubmit={handleSubmit}>
-        <InputGroup ref={groupRef} variant="card" size="lg" className="w-lg">
-          <InputGroupInput
-            ref={inputRef}
-            placeholder="Look up definitions…"
-            aria-label="Search query"
-            autoComplete="off"
-            spellCheck={false}
-            value={query}
-            onChange={handleQueryChange}
-            data-invalid={isInvalid || undefined}
-          />
-          <InputGroupAddon align="inline-end" size="lg">
-            <InputGroupButton
-              type="submit"
-              aria-label="Search"
-              variant="default"
-              size="icon-lg"
-              disabled={!hasQuery || isInvalid || showSpinner}
-            >
-              {showSpinner ? <Spinner /> : <Search />}
-            </InputGroupButton>
-          </InputGroupAddon>
-        </InputGroup>
-      </form>
-      <SearchBoxToasts />
-    </Toast.Provider>
-  );
-}
-
 type SearchState = {
   query: string;
   status: 'idle' | 'validating' | 'invalid';
@@ -197,7 +137,10 @@ const initialSearchState: SearchState = {
   invalidFor: null,
 };
 
-function searchReducer(state: SearchState, action: SearchAction): SearchState {
+function searchReducer(
+  state: SearchState,
+  action: SearchAction,
+): SearchState {
   switch (action.type) {
     case 'queryChanged':
       return {
@@ -225,6 +168,137 @@ function searchReducer(state: SearchState, action: SearchAction): SearchState {
   }
 }
 
+export function SearchBox({
+  variant = 'default',
+}: VariantProps<typeof searchBoxVariants>) {
+  const resolvedVariant = variant ?? 'default';
+  const groupRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [focused, setFocused] = useState(false);
+  const {
+    query,
+    hasQuery,
+    isInvalid,
+    isValidating,
+    handleQueryChange,
+    handleSubmit,
+  } = useSearchBox();
+  const showButton = resolvedVariant === 'default' || focused || hasQuery;
+  const reduceMotion = useReducedMotion();
+  const showSpinner = useSpinDelay(isValidating, {
+    delay: 80,
+    minDuration: 180,
+  });
+
+  useEffect(() => {
+    if (isInvalid) {
+      const id = toastManager.add({
+        type: 'error',
+        description: 'This query looks invalid',
+        positionerProps: {
+          anchor: groupRef.current,
+          side: resolvedVariant === 'command' ? 'top' : 'bottom',
+          sideOffset: 8,
+          align: 'start',
+          alignOffset: 4,
+        },
+      });
+      return () => toastManager.close(id);
+    }
+  }, [isInvalid, resolvedVariant]);
+
+  useEffect(() => {
+    if (resolvedVariant === 'default') inputRef.current?.focus();
+  }, [resolvedVariant]);
+
+  useHotkey(
+    'Mod+K',
+    () => {
+      if (document.activeElement === inputRef.current) inputRef.current?.blur();
+      else inputRef.current?.focus();
+    },
+    { enabled: resolvedVariant === 'command' },
+  );
+
+  useHotkey('Escape', () => inputRef.current?.blur(), {
+    target: inputRef,
+  });
+
+  return (
+    <Toast.Provider toastManager={toastManager} limit={1}>
+      <form onSubmit={handleSubmit}>
+        <InputGroup
+          ref={groupRef}
+          variant="card"
+          size="lg"
+          className={searchBoxVariants({ variant: resolvedVariant })}
+        >
+          <InputGroupInput
+            ref={inputRef}
+            placeholder="Look up definitions…"
+            aria-label="Search query"
+            autoComplete="off"
+            spellCheck={false}
+            value={query}
+            onChange={handleQueryChange}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            data-invalid={isInvalid || undefined}
+          />
+          <InputGroupAddon align="inline-end" size="lg">
+            <AnimatePresence mode="wait" initial={false}>
+              {showButton ? (
+                <motion.div
+                  key="button"
+                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    transition: { duration: 0.12, ease: 'easeOut' },
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: reduceMotion ? 1 : 0.85,
+                    transition: { duration: 0.08, ease: 'easeIn' },
+                  }}
+                >
+                  <InputGroupButton
+                    type="submit"
+                    aria-label="Search"
+                    variant="default"
+                    size="icon-lg"
+                    disabled={!hasQuery || isInvalid || showSpinner}
+                  >
+                    {showSpinner ? <Spinner /> : <Search />}
+                  </InputGroupButton>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="kbd"
+                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    transition: { duration: 0.12, ease: 'easeOut' },
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: reduceMotion ? 1 : 0.85,
+                    transition: { duration: 0.08, ease: 'easeIn' },
+                  }}
+                >
+                  <Kbd size="lg">{formatForDisplay('Mod+K')}</Kbd>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </InputGroupAddon>
+        </InputGroup>
+      </form>
+      <SearchBoxToasts />
+    </Toast.Provider>
+  );
+}
+
 function useSearchBox() {
   const [state, dispatch] = useReducer(searchReducer, initialSearchState);
   const [isPending, transition] = useTransition();
@@ -242,7 +316,7 @@ function useSearchBox() {
   const hasQuery = state.query.trim().length > 0;
   const isValidating = isPending;
   const isInvalid =
-    state.status === 'invalid' && state.invalidFor === state.query.trim();
+    state.invalidFor !== null && state.invalidFor === state.query.trim();
 
   function handleQueryChange(event: SyntheticEvent<HTMLInputElement>) {
     abortRef.current?.abort();
@@ -273,18 +347,22 @@ function useSearchBox() {
           const targetPath = `/dictionary/${encodeURIComponent(result.query)}/en-us`;
 
           if (pathname === targetPath) {
-            dispatch({ type: 'reset' });
+            transition(() => {
+              dispatch({ type: 'reset' });
+            });
             router.refresh();
             return;
           }
 
           router.push(targetPath);
         } else {
-          dispatch({ type: 'validationFailed', query: submittedQuery });
+          transition(() =>
+            dispatch({ type: 'validationFailed', query: submittedQuery }),
+          );
         }
-      } catch (error) {
+      } catch (err) {
         if (controller.signal.aborted) return;
-        console.error(error);
+        console.error(err);
       } finally {
         if (abortRef.current === controller) {
           abortRef.current = null;
