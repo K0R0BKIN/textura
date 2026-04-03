@@ -182,7 +182,6 @@ function searchReducer(state: SearchState, action: SearchAction): SearchState {
 export function SearchBox({
   variant = 'default',
 }: VariantProps<typeof searchBoxVariants>) {
-  const resolvedVariant = variant ?? 'default';
   const groupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -197,12 +196,25 @@ export function SearchBox({
     onCurrentArticleMatch: () => inputRef.current?.blur(),
   });
   const reduceMotion = useReducedMotion();
+  const swapMotionProps = {
+    initial: { opacity: 0, scale: reduceMotion ? 1 : 0.85 },
+    animate: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.12, ease: 'easeOut' },
+    },
+    exit: {
+      opacity: 0,
+      scale: reduceMotion ? 1 : 0.85,
+      transition: { duration: 0.08, ease: 'easeIn' },
+    },
+  } as const;
   const showSpinner = useSpinDelay(isBusy, {
     delay: 80,
     minDuration: 180,
   });
   const showButton =
-    resolvedVariant === 'default' || isFocused || hasQuery || isBusy || isInvalid;
+    variant === 'default' || isFocused || hasQuery || isBusy || isInvalid;
 
   useEffect(() => {
     if (isInvalid) {
@@ -211,7 +223,7 @@ export function SearchBox({
         description: 'This query looks invalid',
         positionerProps: {
           anchor: groupRef.current,
-          side: resolvedVariant === 'command' ? 'top' : 'bottom',
+          side: variant === 'command' ? 'top' : 'bottom',
           sideOffset: 8,
           align: 'start',
           alignOffset: 4,
@@ -219,11 +231,11 @@ export function SearchBox({
       });
       return () => toastManager.close(id);
     }
-  }, [isInvalid, resolvedVariant]);
+  }, [isInvalid, variant]);
 
   useEffect(() => {
-    if (resolvedVariant === 'default') inputRef.current?.focus();
-  }, [resolvedVariant]);
+    if (variant === 'default') inputRef.current?.focus();
+  }, [variant]);
 
   useHotkey(
     'Mod+K',
@@ -231,7 +243,7 @@ export function SearchBox({
       if (document.activeElement === inputRef.current) inputRef.current?.blur();
       else inputRef.current?.focus();
     },
-    { enabled: resolvedVariant === 'command' },
+    { enabled: variant === 'command' },
   );
 
   useHotkey('Escape', () => inputRef.current?.blur(), {
@@ -239,13 +251,10 @@ export function SearchBox({
   });
 
   function handleInputFocus() {
-    if (resolvedVariant === 'command') {
-      setIsFocused(true);
-    }
+    setIsFocused(true);
   }
 
   function handleInputBlur() {
-    if (resolvedVariant !== 'command') return;
     setIsFocused(false);
   }
 
@@ -256,7 +265,7 @@ export function SearchBox({
           ref={groupRef}
           variant="card"
           size="lg"
-          className={searchBoxVariants({ variant: resolvedVariant })}
+          className={searchBoxVariants({ variant })}
         >
           <InputGroupInput
             ref={inputRef}
@@ -273,20 +282,7 @@ export function SearchBox({
           <InputGroupAddon align="inline-end" size="lg">
             <AnimatePresence mode="wait" initial={false}>
               {showButton ? (
-                <motion.div
-                  key="button"
-                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    transition: { duration: 0.12, ease: 'easeOut' },
-                  }}
-                  exit={{
-                    opacity: 0,
-                    scale: reduceMotion ? 1 : 0.85,
-                    transition: { duration: 0.08, ease: 'easeIn' },
-                  }}
-                >
+                <motion.div key="button" {...swapMotionProps}>
                   <InputGroupButton
                     type="submit"
                     aria-label="Search"
@@ -298,20 +294,7 @@ export function SearchBox({
                   </InputGroupButton>
                 </motion.div>
               ) : (
-                <motion.div
-                  key="kbd"
-                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    transition: { duration: 0.12, ease: 'easeOut' },
-                  }}
-                  exit={{
-                    opacity: 0,
-                    scale: reduceMotion ? 1 : 0.85,
-                    transition: { duration: 0.08, ease: 'easeIn' },
-                  }}
-                >
+                <motion.div key="kbd" {...swapMotionProps}>
                   <Kbd size="lg">{formatForDisplay('Mod+K')}</Kbd>
                 </motion.div>
               )}
@@ -337,15 +320,13 @@ function useSearchBox({
   useLayoutEffect(() => {
     return () => {
       abortRef.current?.abort();
-      dispatch({ type: 'reset' });
     };
   }, []);
 
-  const hasQuery = state.query.trim().length > 0;
-  const isBusy =
-    state.status === 'validating' || state.status === 'navigating';
-  const isInvalid =
-    state.invalidFor !== null && state.invalidFor === state.query.trim();
+  const trimmedQuery = state.query.trim();
+  const hasQuery = trimmedQuery.length > 0;
+  const isBusy = state.status === 'validating' || state.status === 'navigating';
+  const isInvalid = state.invalidFor !== null;
 
   function handleQueryChange(event: SyntheticEvent<HTMLInputElement>) {
     abortRef.current?.abort();
@@ -357,7 +338,7 @@ function useSearchBox({
   ) {
     event.preventDefault();
 
-    const submittedQuery = state.query.trim();
+    const submittedQuery = trimmedQuery;
     if (!submittedQuery || isBusy || isInvalid) return;
 
     abortRef.current?.abort();
