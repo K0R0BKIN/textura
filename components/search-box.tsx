@@ -185,9 +185,7 @@ export function SearchBox({
   const resolvedVariant = variant ?? 'default';
   const groupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [commandAddon, setCommandAddon] = useState<'shortcut' | 'submit'>(
-    'shortcut',
-  );
+  const [isFocused, setIsFocused] = useState(false);
   const {
     query,
     hasQuery,
@@ -196,17 +194,15 @@ export function SearchBox({
     handleQueryChange,
     handleSubmit,
   } = useSearchBox({
-    onCurrentArticleMatch: () => {
-      inputRef.current?.blur();
-      setCommandAddon('shortcut');
-    },
+    onCurrentArticleMatch: () => inputRef.current?.blur(),
   });
   const reduceMotion = useReducedMotion();
   const showSpinner = useSpinDelay(isBusy, {
     delay: 80,
     minDuration: 180,
   });
-  const showButton = resolvedVariant === 'default' || commandAddon === 'submit';
+  const showButton =
+    resolvedVariant === 'default' || isFocused || hasQuery || isBusy || isInvalid;
 
   useEffect(() => {
     if (isInvalid) {
@@ -244,22 +240,13 @@ export function SearchBox({
 
   function handleInputFocus() {
     if (resolvedVariant === 'command') {
-      setCommandAddon('submit');
+      setIsFocused(true);
     }
   }
 
   function handleInputBlur() {
     if (resolvedVariant !== 'command') return;
-    if (hasQuery || isBusy || isInvalid) return;
-    setCommandAddon('shortcut');
-  }
-
-  function handleInputChange(event: SyntheticEvent<HTMLInputElement>) {
-    if (resolvedVariant === 'command' && event.currentTarget.value.trim() !== '') {
-      setCommandAddon('submit');
-    }
-
-    handleQueryChange(event);
+    setIsFocused(false);
   }
 
   return (
@@ -278,7 +265,7 @@ export function SearchBox({
             autoComplete="off"
             spellCheck={false}
             value={query}
-            onChange={handleInputChange}
+            onChange={handleQueryChange}
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             data-invalid={isInvalid || undefined}
