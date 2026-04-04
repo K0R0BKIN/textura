@@ -16,7 +16,6 @@ import {
   useReducedMotion,
 } from 'motion/react';
 import { Search, X } from 'lucide-react';
-import { useSpinDelay } from 'spin-delay';
 import { Spinner } from '@/components/ui/spinner';
 import {
   InputGroup,
@@ -179,11 +178,6 @@ export function SearchBox() {
     handleSubmit,
   } = useSearchBox();
 
-  const showSpinner = useSpinDelay(isBusy, {
-    delay: 80,
-    minDuration: 180,
-  });
-
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -228,7 +222,7 @@ export function SearchBox() {
               size="icon-lg"
               disabled={!hasQuery || isInvalid || isBusy}
             >
-              {showSpinner ? <Spinner /> : <Search />}
+              {isBusy ? <Spinner /> : <Search />}
             </InputGroupButton>
           </InputGroupAddon>
         </InputGroup>
