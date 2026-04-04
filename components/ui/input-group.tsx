@@ -15,7 +15,7 @@ const inputGroupVariants = cva(
         card: 'border-border bg-card shadow-xs',
       },
       size: {
-        lg: 'h-14 rounded-2xl [&>input]:px-4 has-[>[data-align=inline-end]]:[&>input]:pr-3 has-[>[data-align=inline-start]]:[&>input]:pl-3',
+        lg: 'h-14 w-lg rounded-2xl [&>input]:px-4 has-[>[data-align=inline-end]]:[&>input]:pr-3 has-[>[data-align=inline-start]]:[&>input]:pl-3',
       },
     },
   },

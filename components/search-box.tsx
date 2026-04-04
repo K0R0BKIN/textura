@@ -5,13 +5,10 @@ import {
   useLayoutEffect,
   useReducer,
   useRef,
-  useState,
   type SyntheticEvent,
 } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Toast } from '@base-ui/react/toast';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { formatForDisplay, useHotkey } from '@tanstack/react-hotkeys';
 import {
   AnimatePresence,
   motion,
@@ -20,7 +17,6 @@ import {
 } from 'motion/react';
 import { Search, X } from 'lucide-react';
 import { useSpinDelay } from 'spin-delay';
-import { Kbd } from '@/components/ui/kbd';
 import { Spinner } from '@/components/ui/spinner';
 import {
   InputGroup,
@@ -33,19 +29,10 @@ import { getTRPCClient } from '@/trpc/client';
 
 const toastManager = Toast.createToastManager();
 
-const searchBoxVariants = cva('', {
-  variants: {
-    variant: {
-      default: 'w-lg',
-      command: 'w-2xl shadow-md',
-    },
-  },
-  defaultVariants: { variant: 'default' },
-});
-
 function SearchBoxToasts() {
   const { toasts } = Toast.useToastManager();
   const reduceMotion = useReducedMotion();
+
   return (
     <Toast.Portal>
       <Toast.Viewport>
@@ -55,6 +42,7 @@ function SearchBoxToasts() {
             const offset = reduceMotion ? 0 : side === 'top' ? 6 : -6;
             const exitOffset = reduceMotion ? 0 : side === 'top' ? 2 : -2;
             const transformOrigin = side === 'top' ? 'left bottom' : 'left top';
+
             return (
               <Toast.Positioner key={toast.id} toast={toast}>
                 <Toast.Root
@@ -179,12 +167,9 @@ function searchReducer(state: SearchState, action: SearchAction): SearchState {
   }
 }
 
-export function SearchBox({
-  variant = 'default',
-}: VariantProps<typeof searchBoxVariants>) {
+export function SearchBox() {
   const groupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isFocused, setIsFocused] = useState(false);
   const {
     query,
     hasQuery,
@@ -192,81 +177,39 @@ export function SearchBox({
     isBusy,
     handleQueryChange,
     handleSubmit,
-  } = useSearchBox({
-    onCurrentArticleMatch: () => inputRef.current?.blur(),
-  });
-  const reduceMotion = useReducedMotion();
-  const swapMotionProps = {
-    initial: { opacity: 0, scale: reduceMotion ? 1 : 0.85 },
-    animate: {
-      opacity: 1,
-      scale: 1,
-      transition: { duration: 0.12, ease: 'easeOut' },
-    },
-    exit: {
-      opacity: 0,
-      scale: reduceMotion ? 1 : 0.85,
-      transition: { duration: 0.08, ease: 'easeIn' },
-    },
-  } as const;
+  } = useSearchBox();
+
   const showSpinner = useSpinDelay(isBusy, {
     delay: 80,
     minDuration: 180,
   });
-  const showButton =
-    variant === 'default' || isFocused || hasQuery || isBusy || isInvalid;
 
   useEffect(() => {
-    if (isInvalid) {
-      const id = toastManager.add({
-        type: 'error',
-        description: 'This query looks invalid',
-        positionerProps: {
-          anchor: groupRef.current,
-          side: variant === 'command' ? 'top' : 'bottom',
-          sideOffset: 8,
-          align: 'start',
-          alignOffset: 4,
-        },
-      });
-      return () => toastManager.close(id);
-    }
-  }, [isInvalid, variant]);
+    inputRef.current?.focus();
+  }, []);
 
   useEffect(() => {
-    if (variant === 'default') inputRef.current?.focus();
-  }, [variant]);
+    if (!isInvalid) return;
 
-  useHotkey(
-    'Mod+K',
-    () => {
-      if (document.activeElement === inputRef.current) inputRef.current?.blur();
-      else inputRef.current?.focus();
-    },
-    { enabled: variant === 'command' },
-  );
+    const id = toastManager.add({
+      type: 'error',
+      description: 'This query looks invalid',
+      positionerProps: {
+        anchor: groupRef.current,
+        side: 'bottom',
+        sideOffset: 8,
+        align: 'start',
+        alignOffset: 4,
+      },
+    });
 
-  useHotkey('Escape', () => inputRef.current?.blur(), {
-    target: inputRef,
-  });
-
-  function handleInputFocus() {
-    setIsFocused(true);
-  }
-
-  function handleInputBlur() {
-    setIsFocused(false);
-  }
+    return () => toastManager.close(id);
+  }, [isInvalid]);
 
   return (
     <Toast.Provider toastManager={toastManager} limit={1}>
       <form onSubmit={handleSubmit}>
-        <InputGroup
-          ref={groupRef}
-          variant="card"
-          size="lg"
-          className={searchBoxVariants({ variant })}
-        >
+        <InputGroup ref={groupRef} variant="card" size="lg">
           <InputGroupInput
             ref={inputRef}
             placeholder="Look up definitions…"
@@ -275,30 +218,18 @@ export function SearchBox({
             spellCheck={false}
             value={query}
             onChange={handleQueryChange}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
             data-invalid={isInvalid || undefined}
           />
           <InputGroupAddon align="inline-end" size="lg">
-            <AnimatePresence mode="wait" initial={false}>
-              {showButton ? (
-                <motion.div key="button" {...swapMotionProps}>
-                  <InputGroupButton
-                    type="submit"
-                    aria-label="Search"
-                    variant="default"
-                    size="icon-lg"
-                    disabled={!hasQuery || isInvalid || showSpinner}
-                  >
-                    {showSpinner ? <Spinner /> : <Search />}
-                  </InputGroupButton>
-                </motion.div>
-              ) : (
-                <motion.div key="kbd" {...swapMotionProps}>
-                  <Kbd size="lg">{formatForDisplay('Mod+K')}</Kbd>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <InputGroupButton
+              type="submit"
+              aria-label="Search"
+              variant="default"
+              size="icon-lg"
+              disabled={!hasQuery || isInvalid || isBusy}
+            >
+              {showSpinner ? <Spinner /> : <Search />}
+            </InputGroupButton>
           </InputGroupAddon>
         </InputGroup>
       </form>
@@ -307,19 +238,15 @@ export function SearchBox({
   );
 }
 
-function useSearchBox({
-  onCurrentArticleMatch,
-}: {
-  onCurrentArticleMatch?: () => void;
-}) {
+function useSearchBox() {
   const [state, dispatch] = useReducer(searchReducer, initialSearchState);
-  const pathname = usePathname();
   const router = useRouter();
   const abortRef = useRef<AbortController | null>(null);
 
   useLayoutEffect(() => {
     return () => {
       abortRef.current?.abort();
+      dispatch({ type: 'reset' });
     };
   }, []);
 
@@ -355,16 +282,8 @@ function useSearchBox({
       if (controller.signal.aborted) return;
 
       if (result.valid) {
-        const targetPath = dictionaryPath(result.query);
-
-        if (pathname === targetPath) {
-          onCurrentArticleMatch?.();
-          dispatch({ type: 'reset' });
-          return;
-        }
-
         dispatch({ type: 'navigationStarted' });
-        router.push(targetPath);
+        router.push(dictionaryPath(result.query));
       } else {
         dispatch({ type: 'validationFailed', query: submittedQuery });
       }
