@@ -1,10 +1,13 @@
 'use client';
 
 import {
+  createContext,
   useEffect,
+  use,
   useLayoutEffect,
   useReducer,
   useRef,
+  type ReactNode,
   type SyntheticEvent,
 } from 'react';
 import { useRouter } from 'next/navigation';
@@ -106,27 +109,47 @@ function SearchBoxToasts() {
   );
 }
 
-type SearchState = {
+type SearchBoxState = {
   query: string;
   status: 'idle' | 'validating' | 'invalid' | 'navigating';
   invalidFor: string | null;
 };
 
-type SearchAction =
+type SearchBoxContextValue = {
+  state: {
+    query: string;
+    busy: boolean;
+    invalid: boolean;
+  };
+  actions: {
+    setQuery: (query: string) => void;
+    submit: () => Promise<void>;
+  };
+  meta: {
+    inputRef: React.RefObject<HTMLInputElement | null>;
+  };
+};
+
+type SearchBoxAction =
   | { type: 'queryChanged'; query: string }
   | { type: 'submitted' }
   | { type: 'validationFailed'; query: string }
   | { type: 'navigationStarted' }
-  | { type: 'validationSettled' }
+  | { type: 'validationErrored' }
   | { type: 'reset' };
 
-const initialSearchState: SearchState = {
+const initialSearchBoxState: SearchBoxState = {
   query: '',
   status: 'idle',
   invalidFor: null,
 };
 
-function searchReducer(state: SearchState, action: SearchAction): SearchState {
+const SearchBoxContext = createContext<SearchBoxContextValue | null>(null);
+
+function searchBoxReducer(
+  state: SearchBoxState,
+  action: SearchBoxAction,
+): SearchBoxState {
   switch (action.type) {
     case 'queryChanged':
       return {
@@ -155,35 +178,39 @@ function searchReducer(state: SearchState, action: SearchAction): SearchState {
         status: 'navigating',
       };
 
-    case 'validationSettled':
+    case 'validationErrored':
       return {
         ...state,
         status: 'idle',
       };
 
     case 'reset':
-      return initialSearchState;
+      return initialSearchBoxState;
   }
 }
 
-export function SearchBox() {
+export function HomeSearchBox() {
+  return (
+    <Toast.Provider toastManager={toastManager} limit={1}>
+      <SearchBox.Provider>
+        <HomeSearchBoxInner />
+      </SearchBox.Provider>
+      <SearchBoxToasts />
+    </Toast.Provider>
+  );
+}
+
+function HomeSearchBoxInner() {
   const groupRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const {
-    query,
-    hasQuery,
-    isInvalid,
-    isBusy,
-    handleQueryChange,
-    handleSubmit,
-  } = useSearchBox();
+  const { state, actions, meta } = useSearchBoxContext();
+  const { inputRef } = meta;
 
   useEffect(() => {
     inputRef.current?.focus();
-  }, []);
+  }, [inputRef]);
 
   useEffect(() => {
-    if (!isInvalid) return;
+    if (!state.invalid) return;
 
     const id = toastManager.add({
       type: 'error',
@@ -198,44 +225,28 @@ export function SearchBox() {
     });
 
     return () => toastManager.close(id);
-  }, [isInvalid]);
+  }, [state.invalid]);
+
+  function handleSubmit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
+    event.preventDefault();
+    void actions.submit();
+  }
 
   return (
-    <Toast.Provider toastManager={toastManager} limit={1}>
-      <form onSubmit={handleSubmit}>
-        <InputGroup ref={groupRef} variant="card" size="lg">
-          <InputGroupInput
-            ref={inputRef}
-            placeholder="Look up definitions…"
-            aria-label="Search query"
-            autoComplete="off"
-            spellCheck={false}
-            value={query}
-            onChange={handleQueryChange}
-            data-invalid={isInvalid || undefined}
-          />
-          <InputGroupAddon align="inline-end" size="lg">
-            <InputGroupButton
-              type="submit"
-              aria-label="Search"
-              variant="default"
-              size="icon-lg"
-              disabled={!hasQuery || isInvalid || isBusy}
-            >
-              {isBusy ? <Spinner /> : <Search />}
-            </InputGroupButton>
-          </InputGroupAddon>
-        </InputGroup>
-      </form>
-      <SearchBoxToasts />
-    </Toast.Provider>
+    <form onSubmit={handleSubmit}>
+      <SearchBox.Group groupRef={groupRef}>
+        <SearchBox.Input />
+        <SearchBox.Addon />
+      </SearchBox.Group>
+    </form>
   );
 }
 
-function useSearchBox() {
-  const [state, dispatch] = useReducer(searchReducer, initialSearchState);
+function SearchBoxProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(searchBoxReducer, initialSearchBoxState);
   const router = useRouter();
   const abortRef = useRef<AbortController | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useLayoutEffect(() => {
     return () => {
@@ -245,22 +256,12 @@ function useSearchBox() {
   }, []);
 
   const trimmedQuery = state.query.trim();
-  const hasQuery = trimmedQuery.length > 0;
-  const isBusy = state.status === 'validating' || state.status === 'navigating';
-  const isInvalid = state.invalidFor !== null;
+  const busy = state.status === 'validating' || state.status === 'navigating';
+  const invalid = state.invalidFor !== null;
 
-  function handleQueryChange(event: SyntheticEvent<HTMLInputElement>) {
-    abortRef.current?.abort();
-    dispatch({ type: 'queryChanged', query: event.currentTarget.value });
-  }
-
-  async function handleSubmit(
-    event: SyntheticEvent<HTMLFormElement, SubmitEvent>,
-  ) {
-    event.preventDefault();
-
+  async function submit() {
     const submittedQuery = trimmedQuery;
-    if (!submittedQuery || isBusy || isInvalid) return;
+    if (!submittedQuery || busy || invalid) return;
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -283,7 +284,7 @@ function useSearchBox() {
       }
     } catch (err) {
       if (controller.signal.aborted) return;
-      dispatch({ type: 'validationSettled' });
+      dispatch({ type: 'validationErrored' });
       console.error(err);
     } finally {
       if (abortRef.current === controller) {
@@ -292,12 +293,96 @@ function useSearchBox() {
     }
   }
 
-  return {
-    query: state.query,
-    hasQuery,
-    isInvalid,
-    isBusy,
-    handleQueryChange,
-    handleSubmit,
-  };
+  return (
+    <SearchBoxContext.Provider
+      value={{
+        state: {
+          query: state.query,
+          busy,
+          invalid,
+        },
+        actions: {
+          setQuery(query) {
+            abortRef.current?.abort();
+            dispatch({ type: 'queryChanged', query });
+          },
+          submit,
+        },
+        meta: {
+          inputRef,
+        },
+      }}
+    >
+      {children}
+    </SearchBoxContext.Provider>
+  );
 }
+
+function useSearchBoxContext() {
+  const context = use(SearchBoxContext);
+  if (!context) {
+    throw new Error(
+      'SearchBox parts must be used within <SearchBox.Provider>.',
+    );
+  }
+
+  return context;
+}
+
+function SearchBoxGroup({
+  children,
+  groupRef,
+}: {
+  children: ReactNode;
+  groupRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  return (
+    <InputGroup ref={groupRef} variant="card" size="lg">
+      {children}
+    </InputGroup>
+  );
+}
+
+function SearchBoxInput() {
+  const { state, actions, meta } = useSearchBoxContext();
+  const { inputRef } = meta;
+
+  return (
+    <InputGroupInput
+      ref={inputRef}
+      placeholder="Look up definitions…"
+      aria-label="Search query"
+      autoComplete="off"
+      spellCheck={false}
+      value={state.query}
+      onChange={(event) => actions.setQuery(event.currentTarget.value)}
+      data-invalid={state.invalid || undefined}
+    />
+  );
+}
+
+function SearchBoxAddon() {
+  const { state } = useSearchBoxContext();
+  const hasQuery = state.query.trim().length > 0;
+
+  return (
+    <InputGroupAddon align="inline-end" size="lg">
+      <InputGroupButton
+        type="submit"
+        aria-label="Search"
+        variant="default"
+        size="icon-lg"
+        disabled={!hasQuery || state.invalid || state.busy}
+      >
+        {state.busy ? <Spinner /> : <Search />}
+      </InputGroupButton>
+    </InputGroupAddon>
+  );
+}
+
+const SearchBox = {
+  Provider: SearchBoxProvider,
+  Group: SearchBoxGroup,
+  Input: SearchBoxInput,
+  Addon: SearchBoxAddon,
+};
