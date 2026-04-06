@@ -5,9 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 import { TooltipRoot } from '@base-ui/react';
-import { Search } from 'lucide-react';
 import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
-import { NavbarButton } from '@/components/navbar/navbar-button';
 import { Logo } from '@/components/logo';
 import {
   Tooltip,
@@ -53,9 +51,6 @@ export default function DictionaryLayout({
           </Tooltip>
         </Navbar.Start>
         <Navbar.End>
-          <NavbarButton tooltip="Search">
-            <Search />
-          </NavbarButton>
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
