@@ -1,12 +1,13 @@
 'use client';
 
-import { useRef } from 'react';
+import { Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 import { TooltipRoot } from '@base-ui/react';
 import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
 import { Logo } from '@/components/logo';
+import { DictionarySearchBox } from '@/components/search-box';
 import {
   Tooltip,
   TooltipTrigger,
@@ -54,7 +55,14 @@ export default function DictionaryLayout({
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
-      <main className="pt-24 pb-16">{children}</main>
+      <main className="pt-24 pb-42">{children}</main>
+      <div className="fixed inset-x-0 bottom-0">
+        <div className="mx-auto w-fit bg-background pb-4">
+          <Suspense>
+            <DictionarySearchBox />
+          </Suspense>
+        </div>
+      </div>
     </>
   );
 }

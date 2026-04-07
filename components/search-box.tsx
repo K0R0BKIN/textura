@@ -4,13 +4,16 @@ import {
   createContext,
   useEffect,
   use,
+  useCallback,
   useLayoutEffect,
   useReducer,
   useRef,
+  useState,
   type ReactNode,
   type SyntheticEvent,
 } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 import { Toast } from '@base-ui/react/toast';
 import {
   AnimatePresence,
@@ -20,6 +23,7 @@ import {
 } from 'motion/react';
 import { Search, X } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { Kbd } from '@/components/ui/kbd';
 import {
   InputGroup,
   InputGroupInput,
@@ -31,16 +35,41 @@ import { getTRPCClient } from '@/trpc/client';
 
 const toastManager = Toast.createToastManager();
 
-function SearchBoxToasts() {
+function SearchBoxToasts({
+  side,
+}: {
+  side: Extract<Toast.Positioner.Props['side'], 'top' | 'bottom'>;
+}) {
+  const {
+    state: { invalid },
+    meta: { groupRef },
+  } = useSearchBoxContext();
   const { toasts } = Toast.useToastManager();
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (!invalid) return;
+
+    const id = toastManager.add({
+      type: 'error',
+      description: 'This query looks invalid',
+      positionerProps: {
+        anchor: groupRef.current,
+        side,
+        sideOffset: 8,
+        align: 'start',
+        alignOffset: 4,
+      },
+    });
+
+    return () => toastManager.close(id);
+  }, [groupRef, invalid, side]);
 
   return (
     <Toast.Portal>
       <Toast.Viewport>
         <AnimatePresence>
           {toasts.map((toast) => {
-            const side = toast.positionerProps?.side ?? 'bottom';
             const offset = reduceMotion ? 0 : side === 'top' ? 6 : -6;
             const exitOffset = reduceMotion ? 0 : side === 'top' ? 2 : -2;
             const transformOrigin = side === 'top' ? 'left bottom' : 'left top';
@@ -124,9 +153,11 @@ type SearchBoxContextValue = {
   actions: {
     setQuery: (query: string) => void;
     submit: () => Promise<void>;
+    reset: () => void;
   };
   meta: {
     inputRef: React.RefObject<HTMLInputElement | null>;
+    groupRef: React.RefObject<HTMLDivElement | null>;
   };
 };
 
@@ -194,49 +225,102 @@ export function HomeSearchBox() {
     <Toast.Provider toastManager={toastManager} limit={1}>
       <SearchBox.Provider>
         <HomeSearchBoxInner />
+        <SearchBox.Toasts side="bottom" />
       </SearchBox.Provider>
-      <SearchBoxToasts />
+    </Toast.Provider>
+  );
+}
+
+export function DictionarySearchBox() {
+  return (
+    <Toast.Provider toastManager={toastManager} limit={1}>
+      <SearchBox.Provider>
+        <DictionarySearchBoxInner />
+        <SearchBox.Toasts side="top" />
+      </SearchBox.Provider>
     </Toast.Provider>
   );
 }
 
 function HomeSearchBoxInner() {
-  const groupRef = useRef<HTMLDivElement>(null);
-  const { state, actions, meta } = useSearchBoxContext();
-  const { inputRef } = meta;
+  const {
+    actions: { submit },
+    meta: { inputRef },
+  } = useSearchBoxContext();
 
   useEffect(() => {
     inputRef.current?.focus();
   }, [inputRef]);
 
-  useEffect(() => {
-    if (!state.invalid) return;
-
-    const id = toastManager.add({
-      type: 'error',
-      description: 'This query looks invalid',
-      positionerProps: {
-        anchor: groupRef.current,
-        side: 'bottom',
-        sideOffset: 8,
-        align: 'start',
-        alignOffset: 4,
-      },
-    });
-
-    return () => toastManager.close(id);
-  }, [state.invalid]);
-
   function handleSubmit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
-    void actions.submit();
+    void submit();
   }
 
   return (
     <form onSubmit={handleSubmit}>
-      <SearchBox.Group groupRef={groupRef}>
+      <SearchBox.Group>
         <SearchBox.Input />
-        <SearchBox.Addon />
+        <SearchBox.Addon>
+          <SearchBox.Button />
+        </SearchBox.Addon>
+      </SearchBox.Group>
+    </form>
+  );
+}
+
+function DictionarySearchBoxInner() {
+  const pathname = usePathname();
+  const {
+    state: { query },
+    actions: { reset, submit },
+    meta: { inputRef },
+  } = useSearchBoxContext();
+  const [focused, setFocused] = useState(false);
+  const hasQuery = query.trim().length > 0;
+
+  useEffect(() => {
+    inputRef.current?.blur();
+    reset();
+  }, [inputRef, pathname, reset]);
+
+  useLayoutEffect(() => {
+    return () => {
+      setFocused(false);
+    };
+  }, []);
+
+  useHotkey(
+    'Mod+K',
+    () => {
+      if (focused) {
+        inputRef.current?.blur();
+      } else {
+        inputRef.current?.focus();
+      }
+    },
+    { enabled: true },
+  );
+
+  useHotkey('Escape', () => inputRef.current?.blur(), {
+    target: inputRef,
+  });
+
+  function handleSubmit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
+    event.preventDefault();
+    void submit();
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <SearchBox.Group className="w-2xl shadow-md">
+        <SearchBox.Input
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+        />
+        <SearchBox.Addon>
+          {focused || hasQuery ? <SearchBox.Button /> : <SearchBox.Hint />}
+        </SearchBox.Addon>
       </SearchBox.Group>
     </form>
   );
@@ -244,20 +328,31 @@ function HomeSearchBoxInner() {
 
 function SearchBoxProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(searchBoxReducer, initialSearchBoxState);
+  const pathname = usePathname();
   const router = useRouter();
   const abortRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useLayoutEffect(() => {
-    return () => {
-      abortRef.current?.abort();
-      dispatch({ type: 'reset' });
-    };
-  }, []);
+  const groupRef = useRef<HTMLDivElement>(null);
 
   const trimmedQuery = state.query.trim();
   const busy = state.status === 'validating' || state.status === 'navigating';
   const invalid = state.invalidFor !== null;
+
+  const reset = useCallback(() => {
+    dispatch({ type: 'reset' });
+  }, []);
+
+  const setQuery = useCallback((query: string) => {
+    abortRef.current?.abort();
+    dispatch({ type: 'queryChanged', query });
+  }, []);
+
+  useLayoutEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+      reset();
+    };
+  }, [reset]);
 
   async function submit() {
     const submittedQuery = trimmedQuery;
@@ -277,8 +372,16 @@ function SearchBoxProvider({ children }: { children: ReactNode }) {
       if (controller.signal.aborted) return;
 
       if (result.valid) {
+        const targetPath = dictionaryPath(result.query);
+
+        if (pathname === targetPath) {
+          inputRef.current?.blur();
+          reset();
+          return;
+        }
+
         dispatch({ type: 'navigationStarted' });
-        router.push(dictionaryPath(result.query));
+        router.push(targetPath);
       } else {
         dispatch({ type: 'validationFailed', query: submittedQuery });
       }
@@ -302,14 +405,13 @@ function SearchBoxProvider({ children }: { children: ReactNode }) {
           invalid,
         },
         actions: {
-          setQuery(query) {
-            abortRef.current?.abort();
-            dispatch({ type: 'queryChanged', query });
-          },
+          setQuery,
           submit,
+          reset,
         },
         meta: {
           inputRef,
+          groupRef,
         },
       }}
     >
@@ -331,21 +433,30 @@ function useSearchBoxContext() {
 
 function SearchBoxGroup({
   children,
-  groupRef,
+  className,
 }: {
   children: ReactNode;
-  groupRef: React.RefObject<HTMLDivElement | null>;
+  className?: string;
 }) {
+  const {
+    meta: { groupRef },
+  } = useSearchBoxContext();
   return (
-    <InputGroup ref={groupRef} variant="card" size="lg">
+    <InputGroup ref={groupRef} variant="card" size="lg" className={className}>
       {children}
     </InputGroup>
   );
 }
 
-function SearchBoxInput() {
-  const { state, actions, meta } = useSearchBoxContext();
-  const { inputRef } = meta;
+function SearchBoxInput({
+  onBlur,
+  onFocus,
+}: Pick<React.ComponentProps<typeof InputGroupInput>, 'onBlur' | 'onFocus'>) {
+  const {
+    state: { query, invalid },
+    actions: { setQuery },
+    meta: { inputRef },
+  } = useSearchBoxContext();
 
   return (
     <InputGroupInput
@@ -354,35 +465,52 @@ function SearchBoxInput() {
       aria-label="Search query"
       autoComplete="off"
       spellCheck={false}
-      value={state.query}
-      onChange={(event) => actions.setQuery(event.currentTarget.value)}
-      data-invalid={state.invalid || undefined}
+      value={query}
+      onChange={(event) => setQuery(event.currentTarget.value)}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      data-invalid={invalid || undefined}
     />
   );
 }
 
-function SearchBoxAddon() {
-  const { state } = useSearchBoxContext();
-  const hasQuery = state.query.trim().length > 0;
-
+function SearchBoxAddon({ children }: { children: ReactNode }) {
   return (
     <InputGroupAddon align="inline-end" size="lg">
-      <InputGroupButton
-        type="submit"
-        aria-label="Search"
-        variant="default"
-        size="icon-lg"
-        disabled={!hasQuery || state.invalid || state.busy}
-      >
-        {state.busy ? <Spinner /> : <Search />}
-      </InputGroupButton>
+      {children}
     </InputGroupAddon>
   );
 }
 
+function SearchBoxButton() {
+  const {
+    state: { query, invalid, busy },
+  } = useSearchBoxContext();
+  const hasQuery = query.trim().length > 0;
+
+  return (
+    <InputGroupButton
+      type="submit"
+      aria-label="Search"
+      variant="default"
+      size="icon-lg"
+      disabled={!hasQuery || invalid || busy}
+    >
+      {busy ? <Spinner /> : <Search />}
+    </InputGroupButton>
+  );
+}
+
+function SearchBoxHint() {
+  return <Kbd size="lg">{formatForDisplay('Mod+K')}</Kbd>;
+}
+
 const SearchBox = {
   Provider: SearchBoxProvider,
+  Toasts: SearchBoxToasts,
   Group: SearchBoxGroup,
   Input: SearchBoxInput,
   Addon: SearchBoxAddon,
+  Button: SearchBoxButton,
+  Hint: SearchBoxHint,
 };
