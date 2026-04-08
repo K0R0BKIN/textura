@@ -8,12 +8,10 @@ import {
   useLayoutEffect,
   useReducer,
   useRef,
-  useState,
   type ReactNode,
   type SyntheticEvent,
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 import { Toast } from '@base-ui/react/toast';
 import {
   AnimatePresence,
@@ -23,7 +21,6 @@ import {
 } from 'motion/react';
 import { Search, X } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
-import { Kbd } from '@/components/ui/kbd';
 import {
   InputGroup,
   InputGroupInput,
@@ -231,17 +228,6 @@ export function HomeSearchBox() {
   );
 }
 
-export function DictionarySearchBox() {
-  return (
-    <Toast.Provider toastManager={toastManager} limit={1}>
-      <SearchBox.Provider>
-        <DictionarySearchBoxInner />
-        <SearchBox.Toasts side="top" />
-      </SearchBox.Provider>
-    </Toast.Provider>
-  );
-}
-
 function HomeSearchBoxInner() {
   const {
     actions: { submit },
@@ -263,63 +249,6 @@ function HomeSearchBoxInner() {
         <SearchBox.Input />
         <SearchBox.Addon>
           <SearchBox.Button />
-        </SearchBox.Addon>
-      </SearchBox.Group>
-    </form>
-  );
-}
-
-function DictionarySearchBoxInner() {
-  const pathname = usePathname();
-  const {
-    state: { query },
-    actions: { reset, submit },
-    meta: { inputRef },
-  } = useSearchBoxContext();
-  const [focused, setFocused] = useState(false);
-  const hasQuery = query.trim().length > 0;
-
-  useEffect(() => {
-    inputRef.current?.blur();
-    reset();
-  }, [inputRef, pathname, reset]);
-
-  useLayoutEffect(() => {
-    return () => {
-      setFocused(false);
-    };
-  }, []);
-
-  useHotkey(
-    'Mod+K',
-    () => {
-      if (focused) {
-        inputRef.current?.blur();
-      } else {
-        inputRef.current?.focus();
-      }
-    },
-    { enabled: true },
-  );
-
-  useHotkey('Escape', () => inputRef.current?.blur(), {
-    target: inputRef,
-  });
-
-  function handleSubmit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
-    event.preventDefault();
-    void submit();
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <SearchBox.Group className="w-2xl shadow-md">
-        <SearchBox.Input
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-        />
-        <SearchBox.Addon>
-          {focused || hasQuery ? <SearchBox.Button /> : <SearchBox.Hint />}
         </SearchBox.Addon>
       </SearchBox.Group>
     </form>
@@ -433,25 +362,20 @@ function useSearchBoxContext() {
 
 function SearchBoxGroup({
   children,
-  className,
 }: {
   children: ReactNode;
-  className?: string;
 }) {
   const {
     meta: { groupRef },
   } = useSearchBoxContext();
   return (
-    <InputGroup ref={groupRef} variant="card" size="lg" className={className}>
+    <InputGroup ref={groupRef} variant="card" size="lg">
       {children}
     </InputGroup>
   );
 }
 
-function SearchBoxInput({
-  onBlur,
-  onFocus,
-}: Pick<React.ComponentProps<typeof InputGroupInput>, 'onBlur' | 'onFocus'>) {
+function SearchBoxInput() {
   const {
     state: { query, invalid },
     actions: { setQuery },
@@ -467,8 +391,6 @@ function SearchBoxInput({
       spellCheck={false}
       value={query}
       onChange={(event) => setQuery(event.currentTarget.value)}
-      onFocus={onFocus}
-      onBlur={onBlur}
       data-invalid={invalid || undefined}
     />
   );
@@ -501,10 +423,6 @@ function SearchBoxButton() {
   );
 }
 
-function SearchBoxHint() {
-  return <Kbd size="lg">{formatForDisplay('Mod+K')}</Kbd>;
-}
-
 const SearchBox = {
   Provider: SearchBoxProvider,
   Toasts: SearchBoxToasts,
@@ -512,5 +430,4 @@ const SearchBox = {
   Input: SearchBoxInput,
   Addon: SearchBoxAddon,
   Button: SearchBoxButton,
-  Hint: SearchBoxHint,
 };
