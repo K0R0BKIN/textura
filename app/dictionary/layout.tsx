@@ -10,6 +10,11 @@ import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
 import { NavbarButton } from '@/components/navbar/navbar-button';
 import { Logo } from '@/components/logo';
 import {
+  SearchDialog,
+  searchDialogHandle,
+} from '@/components/search-dialog';
+import { DialogTrigger } from '@/components/ui/dialog';
+import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
@@ -53,12 +58,18 @@ export default function DictionaryLayout({
           </Tooltip>
         </Navbar.Start>
         <Navbar.End>
-          <NavbarButton tooltip="Search">
-            <Search />
-          </NavbarButton>
+          <DialogTrigger
+            handle={searchDialogHandle}
+            render={
+              <NavbarButton tooltip="Search">
+                <Search />
+              </NavbarButton>
+            }
+          />
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
+      <SearchDialog />
       <main className="pt-24 pb-16">{children}</main>
     </>
   );

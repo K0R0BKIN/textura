@@ -33,9 +33,9 @@ import { getTRPCClient } from '@/trpc/client';
 const toastManager = Toast.createToastManager();
 
 function SearchBoxToasts({
-  side,
+  side = 'bottom',
 }: {
-  side: Extract<Toast.Positioner.Props['side'], 'top' | 'bottom'>;
+  side?: Extract<Toast.Positioner.Props['side'], 'bottom'>;
 }) {
   const {
     state: { invalid },
@@ -67,9 +67,9 @@ function SearchBoxToasts({
       <Toast.Viewport>
         <AnimatePresence>
           {toasts.map((toast) => {
-            const offset = reduceMotion ? 0 : side === 'top' ? 6 : -6;
-            const exitOffset = reduceMotion ? 0 : side === 'top' ? 2 : -2;
-            const transformOrigin = side === 'top' ? 'left bottom' : 'left top';
+            const offset = reduceMotion ? 0 : -6;
+            const exitOffset = reduceMotion ? 0 : -2;
+            const transformOrigin = 'left top';
 
             return (
               <Toast.Positioner key={toast.id} toast={toast}>
@@ -217,18 +217,7 @@ function searchBoxReducer(
   }
 }
 
-export function HomeSearchBox() {
-  return (
-    <Toast.Provider toastManager={toastManager} limit={1}>
-      <SearchBox.Provider>
-        <HomeSearchBoxInner />
-        <SearchBox.Toasts side="bottom" />
-      </SearchBox.Provider>
-    </Toast.Provider>
-  );
-}
-
-function HomeSearchBoxInner() {
+function SearchBoxInner() {
   const {
     actions: { submit },
     meta: { inputRef },
@@ -245,17 +234,23 @@ function HomeSearchBoxInner() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <SearchBox.Group>
-        <SearchBox.Input />
-        <SearchBox.Addon>
-          <SearchBox.Button />
-        </SearchBox.Addon>
-      </SearchBox.Group>
+      <SearchBoxGroup>
+        <SearchBoxInput />
+        <SearchBoxAddon>
+          <SearchBoxButton />
+        </SearchBoxAddon>
+      </SearchBoxGroup>
     </form>
   );
 }
 
-function SearchBoxProvider({ children }: { children: ReactNode }) {
+function SearchBoxProvider({
+  children,
+  onValidSubmit,
+}: {
+  children: ReactNode;
+  onValidSubmit?: () => void;
+}) {
   const [state, dispatch] = useReducer(searchBoxReducer, initialSearchBoxState);
   const pathname = usePathname();
   const router = useRouter();
@@ -301,6 +296,7 @@ function SearchBoxProvider({ children }: { children: ReactNode }) {
       if (controller.signal.aborted) return;
 
       if (result.valid) {
+        onValidSubmit?.();
         const targetPath = dictionaryPath(result.query);
 
         if (pathname === targetPath) {
@@ -360,11 +356,7 @@ function useSearchBoxContext() {
   return context;
 }
 
-function SearchBoxGroup({
-  children,
-}: {
-  children: ReactNode;
-}) {
+function SearchBoxGroup({ children }: { children: ReactNode }) {
   const {
     meta: { groupRef },
   } = useSearchBoxContext();
@@ -425,9 +417,12 @@ function SearchBoxButton() {
 
 const SearchBox = {
   Provider: SearchBoxProvider,
+  Inner: SearchBoxInner,
   Toasts: SearchBoxToasts,
   Group: SearchBoxGroup,
   Input: SearchBoxInput,
   Addon: SearchBoxAddon,
   Button: SearchBoxButton,
 };
+
+export { SearchBox, toastManager };
