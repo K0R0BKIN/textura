@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
 import { TooltipRoot } from '@base-ui/react';
 import { Search } from 'lucide-react';
@@ -13,7 +14,6 @@ import {
   SearchDialog,
   searchDialogHandle,
 } from '@/components/search-dialog';
-import { DialogTrigger } from '@/components/ui/dialog';
 import {
   Tooltip,
   TooltipTrigger,
@@ -58,7 +58,7 @@ export default function DictionaryLayout({
           </Tooltip>
         </Navbar.Start>
         <Navbar.End>
-          <DialogTrigger
+          <DialogPrimitive.Trigger
             handle={searchDialogHandle}
             render={
               <NavbarButton tooltip="Search">

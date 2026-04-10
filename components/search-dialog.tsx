@@ -4,7 +4,7 @@ import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { Toast } from '@base-ui/react/toast';
 import { useHotkey } from '@tanstack/react-hotkeys';
 import { SearchBox, toastManager } from '@/components/search-box';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 export const searchDialogHandle = DialogPrimitive.createHandle();
 
@@ -29,10 +29,17 @@ export function SearchDialog() {
   });
 
   return (
-    <Dialog handle={searchDialogHandle}>
-      <DialogContent className="top-1/4 translate-y-0">
+    <DialogPrimitive.Root handle={searchDialogHandle}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Backdrop className="fixed inset-0 isolate z-50" />
+        <DialogPrimitive.Popup
+          className={cn(
+            'fixed top-1/4 left-1/2 z-50 -translate-x-1/2 translate-y-0 duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+          )}
+        >
         <DialogSearchBox />
-      </DialogContent>
-    </Dialog>
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }
