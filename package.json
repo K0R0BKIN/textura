@@ -17,6 +17,7 @@
     "@ai-sdk/openai": "^3.0.36",
     "@base-ui/react": "^1.2.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@react-aria/focus": "3.21.5",
     "@tanstack/react-hotkeys": "^0.4.0",
     "@trpc/client": "^11.16.0",
     "@trpc/server": "^11.16.0",
