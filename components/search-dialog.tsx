@@ -34,7 +34,7 @@ export function SearchDialog() {
         <DialogPrimitive.Backdrop className="fixed inset-0 isolate z-50" />
         <DialogPrimitive.Popup
           className={cn(
-            'fixed top-1/4 left-1/2 z-50 -translate-x-1/2 translate-y-0 duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+            'fixed top-1/4 left-1/2 z-50 -translate-x-1/2 translate-y-0 duration-100 outline-none will-change-transform data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
           )}
         >
         <DialogSearchBox />
