@@ -311,7 +311,7 @@ function SearchBoxProvider({
       }
 
       onValidSubmit?.();
-      const targetPath = dictionaryPath(submittedQuery);
+      const targetPath = dictionaryPath(submittedQuery, 'en-US');
 
       if (pathname === targetPath) {
         inputRef.current?.blur();

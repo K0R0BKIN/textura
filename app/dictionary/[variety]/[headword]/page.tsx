@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { generateArticle } from '@/lib/articles';
 import { Skeleton } from '@/components/ui/skeleton';
-import { VARIETY_BY_SLUG } from '@/lib/schemas';
+import { slugToVariety } from '@/lib/schemas/variety';
 
 export async function generateMetadata({
   params,
@@ -36,11 +36,12 @@ async function ArticleContent({
   params: Promise<{ headword: string; variety: string }>;
 }) {
   const { headword, variety } = await params;
-  const resolvedVariety = VARIETY_BY_SLUG[variety];
-  if (!resolvedVariety) notFound();
-
-  const resolvedHeadword = decodeURIComponent(headword);
-  const article = await generateArticle(resolvedHeadword, resolvedVariety);
+  const parsedVariety = slugToVariety.safeParse(variety);
+  if (!parsedVariety.success) notFound();
+  const article = await generateArticle(
+    decodeURIComponent(headword),
+    parsedVariety.data,
+  );
   if (!article) notFound();
 
   const showSuperscript = article.etymons.length > 1;
