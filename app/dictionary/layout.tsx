@@ -6,7 +6,8 @@ import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { type Hotkey } from '@tanstack/react-hotkeys';
 import { TooltipRoot } from '@base-ui/react';
 import { Search } from 'lucide-react';
-import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
+import { Navbar } from '@/components/navbar/navbar';
+import ThemeSwitcher from '@/components/navbar/theme-switcher';
 import { Logo } from '@/components/logo';
 import { SearchDialog, searchDialogHandle } from '@/components/search-dialog';
 import {

@@ -1,6 +1,7 @@
 'use client';
 
-import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
+import { Navbar } from '@/components/navbar/navbar';
+import ThemeSwitcher from '@/components/navbar/theme-switcher';
 
 export default function HomeLayout({
   children,

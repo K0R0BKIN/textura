@@ -1,14 +1,9 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-
-const ThemeSwitcher = dynamic(() => import('./theme-switcher'), {
-  ssr: false,
-});
 
 export function Navbar({
   className,
@@ -90,5 +85,3 @@ Navbar.Link = function NavbarLink({
     />
   );
 };
-
-export { ThemeSwitcher };
