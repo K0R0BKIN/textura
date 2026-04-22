@@ -109,7 +109,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-offset-2 outline-ring focus-visible:outline-2 focus-visible:outline-ring aria-invalid:outline-2;
+    @apply border-border outline-offset-1 outline-ring focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-ring aria-invalid:outline-2;
   }
   ::selection {
     @apply bg-selection text-selection-foreground;

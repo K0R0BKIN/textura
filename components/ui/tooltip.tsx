@@ -46,7 +46,7 @@ function TooltipShortcut({
 function TooltipContent({
   className,
   side = 'top',
-  sideOffset = 2,
+  sideOffset = 4,
   align = 'center',
   alignOffset = 0,
   children,
