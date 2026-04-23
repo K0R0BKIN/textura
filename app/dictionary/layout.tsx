@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { type Hotkey } from '@tanstack/react-hotkeys';
@@ -9,7 +9,11 @@ import { Search } from 'lucide-react';
 import { Navbar } from '@/components/navbar/navbar';
 import ThemeSwitcher from '@/components/navbar/theme-switcher';
 import { Logo } from '@/components/logo';
-import { SearchDialog, searchDialogHandle } from '@/components/search-dialog';
+import {
+  SearchDialog,
+  searchDialogHandle,
+  toggleSearchDialog,
+} from '@/components/search-dialog';
 import {
   Tooltip,
   TooltipTrigger,
@@ -23,8 +27,6 @@ export default function DictionaryLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [searchOpen, setSearchOpen] = useState(false);
-  const searchDialogActionsRef = useRef<DialogPrimitive.Root.Actions>(null);
   const tooltipActionsRef = useRef<TooltipRoot.Actions>(null);
   const router = useRouter();
 
@@ -37,19 +39,10 @@ export default function DictionaryLayout({
   const search: HotkeyAction = {
     name: 'Search',
     hotkey: 'Mod+K' as Hotkey,
-    callback: () => setSearchOpen((open) => !open),
+    callback: toggleSearchDialog,
   };
 
   useHotkeyActions([home, search]);
-
-  useLayoutEffect(() => {
-    const searchDialogActions = searchDialogActionsRef.current;
-
-    return () => {
-      searchDialogActions?.unmount();
-      setSearchOpen(false);
-    };
-  }, []);
 
   return (
     <>
@@ -99,11 +92,7 @@ export default function DictionaryLayout({
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
-      <SearchDialog
-        open={searchOpen}
-        onOpenChange={setSearchOpen}
-        actionsRef={searchDialogActionsRef}
-      />
+      <SearchDialog />
       <main className="pt-24 pb-16">{children}</main>
     </>
   );

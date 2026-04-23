@@ -1,6 +1,6 @@
 'use client';
 
-import type { RefObject } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { FocusScope } from '@react-aria/focus';
 import { Toast } from '@base-ui/react/toast';
@@ -9,11 +9,15 @@ import { cn } from '@/lib/utils';
 
 export const searchDialogHandle = DialogPrimitive.createHandle<null>();
 
-function DialogSearchBox({
-  onValidSubmit,
-}: {
-  onValidSubmit: () => void;
-}) {
+export function toggleSearchDialog() {
+  if (searchDialogHandle.isOpen) {
+    searchDialogHandle.close();
+  } else {
+    searchDialogHandle.open(null);
+  }
+}
+
+function DialogSearchBox({ onValidSubmit }: { onValidSubmit: () => void }) {
   return (
     <Toast.Provider toastManager={toastManager} limit={1}>
       <SearchBox.Provider onValidSubmit={onValidSubmit}>
@@ -24,29 +28,25 @@ function DialogSearchBox({
   );
 }
 
-export function SearchDialog({
-  open,
-  onOpenChange,
-  actionsRef,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  actionsRef?: RefObject<DialogPrimitive.Root.Actions | null>;
-}) {
+export function SearchDialog() {
+  const actionsRef = useRef<DialogPrimitive.Root.Actions | null>(null);
+
+  useLayoutEffect(() => {
+    const actions = actionsRef.current;
+
+    return () => {
+      actions?.close();
+      actions?.unmount();
+    };
+  }, []);
+
   return (
     <DialogPrimitive.Root
-      open={open}
-      onOpenChange={onOpenChange}
       actionsRef={actionsRef}
       handle={searchDialogHandle}
     >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop className="fixed inset-0 isolate z-50" />
-        {/* Base UI restores focus to the detached trigger on close.
-            For Cmd+K opens, that incorrectly lands focus on the search
-            button and can show a focus ring even though the button wasn't
-            the origin of the interaction. We disable that behavior and let
-            FocusScope restore the previously focused element instead. */}
         <DialogPrimitive.Popup
           finalFocus={false}
           className={cn(
@@ -54,7 +54,9 @@ export function SearchDialog({
           )}
         >
           <FocusScope restoreFocus>
-            <DialogSearchBox onValidSubmit={() => onOpenChange(false)} />
+            <DialogSearchBox
+              onValidSubmit={() => actionsRef.current?.close()}
+            />
           </FocusScope>
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
