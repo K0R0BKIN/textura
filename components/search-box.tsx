@@ -121,7 +121,7 @@ function SearchBoxToasts({
                     />
                   )}
                 >
-                  <Toast.Content className="inline-flex items-center gap-1 rounded-lg border bg-card py-1.5 pr-2.5 pl-1.5 text-xs font-normal text-foreground shadow-xs">
+                  <Toast.Content className="inline-flex items-center gap-1 rounded-lg border-[0.5px] bg-card py-1.5 pr-2.5 pl-1.5 text-xs font-normal text-foreground shadow-xs">
                     <X className="size-3 shrink-0 text-destructive" />
                     <Toast.Description />
                   </Toast.Content>

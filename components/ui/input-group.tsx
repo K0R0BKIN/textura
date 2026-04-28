@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const inputGroupVariants = cva(
-  'flex w-full min-w-0 items-center border border-input',
+  'flex w-full min-w-0 items-center border-[0.5px] border-input',
   {
     variants: {
       variant: {

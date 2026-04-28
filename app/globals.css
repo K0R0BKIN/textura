@@ -24,7 +24,7 @@
   --destructive: oklch(62.7% 0.194 33.3);
   --destructive-foreground: var(--primary-foreground);
 
-  --border: oklch(88.5% 0.004 91.5);
+  --border: oklch(85.1% 0.006 95.3);
   --input: var(--border);
   --ring: oklch(74.6% 0.072 62.1);
 
