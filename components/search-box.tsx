@@ -13,13 +13,6 @@ import {
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Field } from '@base-ui/react/field';
-import { Toast } from '@base-ui/react/toast';
-import {
-  AnimatePresence,
-  motion,
-  type HTMLMotionProps,
-  useReducedMotion,
-} from 'motion/react';
 import { Search, X } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import {
@@ -30,111 +23,6 @@ import {
 } from '@/components/ui/input-group';
 import { dictionaryPath } from '@/lib/dictionary/routes';
 import { HeadwordSchema } from '@/lib/schemas';
-
-const toastManager = Toast.createToastManager();
-
-function SearchBoxToasts({
-  side = 'bottom',
-}: {
-  side?: Extract<Toast.Positioner.Props['side'], 'bottom'>;
-}) {
-  const {
-    state: { invalid },
-    meta: { groupRef },
-  } = useSearchBoxContext();
-  const { toasts } = Toast.useToastManager();
-  const reduceMotion = useReducedMotion();
-
-  useEffect(() => {
-    if (!invalid) return;
-
-    const id = toastManager.add({
-      type: 'error',
-      description: 'This query looks invalid',
-      positionerProps: {
-        anchor: groupRef.current,
-        side,
-        sideOffset: 8,
-        align: 'start',
-        alignOffset: 4,
-      },
-    });
-
-    return () => toastManager.close(id);
-  }, [groupRef, invalid, side]);
-
-  return (
-    <Toast.Portal>
-      <Toast.Viewport>
-        <AnimatePresence>
-          {toasts.map((toast) => {
-            const offset = reduceMotion ? 0 : -6;
-            const exitOffset = reduceMotion ? 0 : -2;
-            const transformOrigin = 'left top';
-
-            return (
-              <Toast.Positioner key={toast.id} toast={toast}>
-                <Toast.Root
-                  toast={toast}
-                  render={(props) => (
-                    <motion.div
-                      {...(props as HTMLMotionProps<'div'>)}
-                      style={{ transformOrigin }}
-                      initial={{
-                        opacity: 0,
-                        y: offset,
-                        scale: reduceMotion ? 1 : 0.985,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                        scale: 1,
-                        transition: reduceMotion
-                          ? {
-                              duration: 0.18,
-                              ease: [0.32, 0.72, 0, 1],
-                            }
-                          : {
-                              y: {
-                                type: 'spring',
-                                visualDuration: 0.18,
-                                bounce: 0.12,
-                              },
-                              scale: {
-                                type: 'spring',
-                                visualDuration: 0.18,
-                                bounce: 0.08,
-                              },
-                              opacity: {
-                                duration: 0.14,
-                                ease: [0.32, 0.72, 0, 1],
-                              },
-                            },
-                      }}
-                      exit={{
-                        opacity: 0,
-                        y: exitOffset,
-                        transition: {
-                          duration: 0.12,
-                          ease: [0.4, 0, 1, 1],
-                        },
-                      }}
-                    />
-                  )}
-                >
-                  <Toast.Content className="inline-flex items-center gap-1 rounded-lg border-[0.5px] bg-card py-1.5 pr-2.5 pl-1.5 text-xs font-normal text-foreground shadow-xs">
-                    <X className="size-3 shrink-0 text-destructive" />
-                    <Toast.Description />
-                  </Toast.Content>
-                </Toast.Root>
-              </Toast.Positioner>
-            );
-          })}
-        </AnimatePresence>
-      </Toast.Viewport>
-    </Toast.Portal>
-  );
-}
 
 type SearchBoxState = {
   query: string;
@@ -218,15 +106,10 @@ function searchBoxReducer(
   }
 }
 
-function SearchBoxInner() {
+function SearchBoxForm() {
   const {
     actions: { submit },
-    meta: { inputRef },
   } = useSearchBoxContext();
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, [inputRef]);
 
   function handleSubmit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
@@ -235,12 +118,16 @@ function SearchBoxInner() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <SearchBoxGroup>
-        <SearchBoxInput />
-        <SearchBoxAddon>
-          <SearchBoxButton />
-        </SearchBoxAddon>
-      </SearchBoxGroup>
+      <SearchBoxField>
+        <SearchBoxGroup>
+          <SearchBoxInput />
+          <SearchBoxAddon>
+            <SearchBoxButton />
+          </SearchBoxAddon>
+        </SearchBoxGroup>
+
+        <SearchBoxError />
+      </SearchBoxField>
     </form>
   );
 }
@@ -371,20 +258,43 @@ function useSearchBoxContext() {
   return context;
 }
 
-function SearchBoxGroup({ children }: { children: ReactNode }) {
+function SearchBoxField({ children }: { children: ReactNode }) {
   const {
     state: { invalid },
+  } = useSearchBoxContext();
+
+  return (
+    <Field.Root name="query" invalid={invalid} className="flex flex-col gap-2">
+      {children}
+    </Field.Root>
+  );
+}
+
+function SearchBoxGroup({ children }: { children: ReactNode }) {
+  const {
     meta: { groupRef },
   } = useSearchBoxContext();
 
   return (
-    <Field.Root
-      name="query"
-      invalid={invalid}
-      render={<InputGroup ref={groupRef} variant="card" size="lg" />}
-    >
+    <InputGroup ref={groupRef} variant="card" size="lg">
       {children}
-    </Field.Root>
+    </InputGroup>
+  );
+}
+
+function SearchBoxError() {
+  const {
+    state: { invalid },
+  } = useSearchBoxContext();
+
+  return (
+    <Field.Error
+      match={invalid}
+      className="ml-1 inline-flex w-fit items-center gap-1 rounded-lg border-[0.5px] bg-popover py-1.5 pr-2.5 pl-1.5 text-xs font-normal text-popover-foreground shadow-xs transition-[opacity,translate,scale] duration-150 ease-out data-starting-style:-translate-y-1 data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:-translate-y-0.5 data-ending-style:scale-[0.99] data-ending-style:opacity-0"
+    >
+      <X className="size-3 shrink-0 text-destructive" />
+      This query looks invalid
+    </Field.Error>
   );
 }
 
@@ -394,6 +304,10 @@ function SearchBoxInput() {
     actions: { setQuery },
     meta: { inputRef },
   } = useSearchBoxContext();
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [inputRef]);
 
   return (
     <InputGroupInput
@@ -436,12 +350,13 @@ function SearchBoxButton() {
 
 const SearchBox = {
   Provider: SearchBoxProvider,
-  Inner: SearchBoxInner,
-  Toasts: SearchBoxToasts,
+  Form: SearchBoxForm,
+  Field: SearchBoxField,
   Group: SearchBoxGroup,
   Input: SearchBoxInput,
   Addon: SearchBoxAddon,
   Button: SearchBoxButton,
+  Error: SearchBoxError,
 };
 
-export { SearchBox, toastManager };
+export { SearchBox };

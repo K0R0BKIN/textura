@@ -3,8 +3,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { FocusScope } from '@react-aria/focus';
-import { Toast } from '@base-ui/react/toast';
-import { SearchBox, toastManager } from '@/components/search-box';
+import { SearchBox } from '@/components/search-box';
 import { cn } from '@/lib/utils';
 
 export const searchDialogHandle = DialogPrimitive.createHandle<null>();
@@ -19,12 +18,9 @@ export function toggleSearchDialog() {
 
 function DialogSearchBox({ onValidSubmit }: { onValidSubmit: () => void }) {
   return (
-    <Toast.Provider toastManager={toastManager} limit={1}>
-      <SearchBox.Provider onValidSubmit={onValidSubmit}>
-        <SearchBox.Inner />
-        <SearchBox.Toasts />
-      </SearchBox.Provider>
-    </Toast.Provider>
+    <SearchBox.Provider onValidSubmit={onValidSubmit}>
+      <SearchBox.Form />
+    </SearchBox.Provider>
   );
 }
 
