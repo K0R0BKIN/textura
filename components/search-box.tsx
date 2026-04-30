@@ -290,7 +290,7 @@ function SearchBoxError() {
   return (
     <Field.Error
       match={invalid}
-      className="ml-1 inline-flex w-fit items-center gap-1 rounded-lg border-[0.5px] bg-popover py-1.5 pr-2.5 pl-1.5 text-xs font-normal text-popover-foreground shadow-xs transition-[opacity,translate,scale] duration-150 ease-out data-starting-style:-translate-y-1 data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:-translate-y-0.5 data-ending-style:scale-[0.99] data-ending-style:opacity-0"
+      className="ml-1 inline-flex w-fit items-center gap-1 rounded-lg border-[0.5px] bg-popover py-1.5 pr-2.5 pl-1.5 text-xs font-normal text-popover-foreground shadow-xs transition-[opacity,translate,scale] duration-150 ease-out will-change-[opacity,translate,scale] data-ending-style:-translate-y-0.5 data-ending-style:scale-[0.99] data-ending-style:opacity-0 data-starting-style:-translate-y-1 data-starting-style:scale-[0.98] data-starting-style:opacity-0"
     >
       <X className="size-3 shrink-0 text-destructive" />
       This query looks invalid
