@@ -12,6 +12,7 @@ import {
   type SyntheticEvent,
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { Field } from '@base-ui/react/field';
 import { Toast } from '@base-ui/react/toast';
 import {
   AnimatePresence,
@@ -372,18 +373,24 @@ function useSearchBoxContext() {
 
 function SearchBoxGroup({ children }: { children: ReactNode }) {
   const {
+    state: { invalid },
     meta: { groupRef },
   } = useSearchBoxContext();
+
   return (
-    <InputGroup ref={groupRef} variant="card" size="lg">
+    <Field.Root
+      name="query"
+      invalid={invalid}
+      render={<InputGroup ref={groupRef} variant="card" size="lg" />}
+    >
       {children}
-    </InputGroup>
+    </Field.Root>
   );
 }
 
 function SearchBoxInput() {
   const {
-    state: { query, invalid },
+    state: { query },
     actions: { setQuery },
     meta: { inputRef },
   } = useSearchBoxContext();
@@ -397,7 +404,6 @@ function SearchBoxInput() {
       spellCheck={false}
       value={query}
       onChange={(event) => setQuery(event.currentTarget.value)}
-      data-invalid={invalid || undefined}
     />
   );
 }
@@ -414,7 +420,6 @@ function SearchBoxButton() {
   const {
     state: { query, invalid, busy },
   } = useSearchBoxContext();
-  const hasQuery = query.trim().length > 0;
 
   return (
     <InputGroupButton
@@ -422,7 +427,7 @@ function SearchBoxButton() {
       aria-label="Search"
       variant="default"
       size="icon-lg"
-      disabled={!hasQuery || invalid || busy}
+      disabled={query.trim() === '' || invalid || busy}
     >
       {busy ? <Spinner /> : <Search />}
     </InputGroupButton>
