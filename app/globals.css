@@ -28,14 +28,26 @@
   --input: var(--border);
   --ring: oklch(74.6% 0.072 62.1);
 
+  --selection: oklch(63.3% 0.079 61 / 30%);
+  --selection-foreground: var(--foreground);
+
+  --hairline: 0px 0px 0px 0.5px var(--border);
+  --shadow-xs:
+    0px 1px 2px 0px oklch(24.3% 0.008 95.4 / 6%),
+    0px 2px 8px 0px oklch(24.3% 0.008 95.4 / 4%);
+  --shadow-md:
+    0px 2px 4px 0px oklch(24.3% 0.008 95.4 / 5%),
+    0px 6px 16px 0px oklch(24.3% 0.008 95.4 / 5%);
+
   --tooltip: var(--foreground);
   --tooltip-foreground: oklch(99.4% 0.001 106.4);
   --tooltip-muted-foreground: oklch(79.1% 0.008 98.9);
 
-  --selection: oklch(63.3% 0.079 61 / 30%);
-  --selection-foreground: var(--foreground);
+  --popover-shadow: var(--shadow-md), var(--hairline);
 
-  --shadow-md: 0px 2px 8px rgb(0 0 0 / 0.08);
+  --toast-shadow: var(--shadow-xs), var(--hairline);
+
+  --searchbox-shadow: var(--shadow-xs), var(--hairline);
 }
 
 .dark {
@@ -51,11 +63,14 @@
   --border: oklch(40.2% 0 0);
   --ring: oklch(50.9% 0.053 61.9);
 
+  --hairline: inset 0px 0px 0px 0.5px var(--border);
+  --shadow-xs: 0px 3px 6px 0px oklch(0% 0 0 / 6%);
+  --shadow-md:
+    0px 2px 4px 0px oklch(0% 0 0 / 10%), 0px 6px 16px 0px oklch(0% 0 0 / 12%);
+
   --tooltip: oklch(17.8% 0 0);
   --tooltip-foreground: var(--foreground);
   --tooltip-muted-foreground: oklch(77% 0 0);
-
-  --shadow-md: 0px 2px 8px rgb(0 0 0 / 0.24);
 }
 
 @theme inline {
@@ -90,14 +105,21 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  --shadow-xs: var(--shadow-xs);
   --shadow-md: var(--shadow-md);
+
+  --color-selection: var(--selection);
+  --color-selection-foreground: var(--selection-foreground);
 
   --color-tooltip: var(--tooltip);
   --color-tooltip-foreground: var(--tooltip-foreground);
   --color-tooltip-muted-foreground: var(--tooltip-muted-foreground);
 
-  --color-selection: var(--selection);
-  --color-selection-foreground: var(--selection-foreground);
+  --shadow-popover: var(--popover-shadow);
+
+  --shadow-toast: var(--toast-shadow);
+
+  --shadow-searchbox: var(--searchbox-shadow);
 }
 
 @counter-style bare-decimal {
