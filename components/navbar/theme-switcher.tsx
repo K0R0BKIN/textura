@@ -1,5 +1,6 @@
 'use client';
 
+import { FocusScope } from '@react-aria/focus';
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
 
@@ -25,12 +26,16 @@ export default function ThemeSwitcher() {
           </Navbar.Button>
         }
       />
-      <DropdownMenuContent align="end">
-        <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-          <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="system">System</DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
+      <DropdownMenuContent align="end" finalFocus={false}>
+        <FocusScope restoreFocus>
+          <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+            <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="system">
+              System
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </FocusScope>
       </DropdownMenuContent>
     </DropdownMenu>
   );
