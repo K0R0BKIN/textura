@@ -109,7 +109,7 @@ function searchBoxReducer(
 function SearchBoxForm() {
   const {
     actions: { submit },
-  } = useSearchBoxContext();
+  } = useSearchBox();
 
   function handleSubmit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
@@ -247,12 +247,10 @@ function SearchBoxProvider({
   );
 }
 
-function useSearchBoxContext() {
+function useSearchBox() {
   const context = use(SearchBoxContext);
   if (!context) {
-    throw new Error(
-      'SearchBox parts must be used within <SearchBox.Provider>.',
-    );
+    throw new Error('useSearchBox must be used within SearchBox.');
   }
 
   return context;
@@ -261,7 +259,7 @@ function useSearchBoxContext() {
 function SearchBoxField({ children }: { children: ReactNode }) {
   const {
     state: { invalid },
-  } = useSearchBoxContext();
+  } = useSearchBox();
 
   return (
     <Field.Root name="query" invalid={invalid} className="flex flex-col gap-2">
@@ -273,7 +271,7 @@ function SearchBoxField({ children }: { children: ReactNode }) {
 function SearchBoxGroup({ children }: { children: ReactNode }) {
   const {
     meta: { groupRef },
-  } = useSearchBoxContext();
+  } = useSearchBox();
 
   return (
     <InputGroup
@@ -289,7 +287,7 @@ function SearchBoxGroup({ children }: { children: ReactNode }) {
 function SearchBoxError() {
   const {
     state: { invalid },
-  } = useSearchBoxContext();
+  } = useSearchBox();
 
   return (
     <Field.Error
@@ -307,7 +305,7 @@ function SearchBoxInput() {
     state: { query },
     actions: { setQuery },
     meta: { inputRef },
-  } = useSearchBoxContext();
+  } = useSearchBox();
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -337,7 +335,7 @@ function SearchBoxAddon({ children }: { children: ReactNode }) {
 function SearchBoxButton() {
   const {
     state: { query, invalid, busy },
-  } = useSearchBoxContext();
+  } = useSearchBox();
 
   return (
     <InputGroupButton
@@ -352,15 +350,16 @@ function SearchBoxButton() {
   );
 }
 
-const SearchBox = {
-  Provider: SearchBoxProvider,
-  Form: SearchBoxForm,
-  Field: SearchBoxField,
-  Group: SearchBoxGroup,
-  Input: SearchBoxInput,
-  Addon: SearchBoxAddon,
-  Button: SearchBoxButton,
-  Error: SearchBoxError,
+type SearchBoxProps = {
+  onValidSubmit?: () => void;
 };
+
+function SearchBox({ onValidSubmit }: SearchBoxProps) {
+  return (
+    <SearchBoxProvider onValidSubmit={onValidSubmit}>
+      <SearchBoxForm />
+    </SearchBoxProvider>
+  );
+}
 
 export { SearchBox };

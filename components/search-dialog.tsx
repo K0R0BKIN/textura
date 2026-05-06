@@ -16,14 +16,6 @@ export function toggleSearchDialog() {
   }
 }
 
-function DialogSearchBox({ onValidSubmit }: { onValidSubmit: () => void }) {
-  return (
-    <SearchBox.Provider onValidSubmit={onValidSubmit}>
-      <SearchBox.Form />
-    </SearchBox.Provider>
-  );
-}
-
 export function SearchDialog() {
   const actionsRef = useRef<DialogPrimitive.Root.Actions | null>(null);
 
@@ -50,9 +42,7 @@ export function SearchDialog() {
           )}
         >
           <FocusScope restoreFocus>
-            <DialogSearchBox
-              onValidSubmit={() => actionsRef.current?.close()}
-            />
+            <SearchBox onValidSubmit={() => actionsRef.current?.close()} />
           </FocusScope>
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
