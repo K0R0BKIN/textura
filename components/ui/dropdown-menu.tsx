@@ -2,6 +2,7 @@
 
 import { createContext, use, useLayoutEffect, useState } from 'react';
 import { Menu as MenuPrimitive } from '@base-ui/react/menu';
+import { FocusScope } from '@react-aria/focus';
 import { AnimatePresence, motion } from 'motion/react';
 import { CheckIcon } from 'lucide-react';
 
@@ -69,6 +70,7 @@ function DropdownMenuContent({
   side = 'bottom',
   sideOffset = 4,
   className,
+  children,
   ...props
 }: MenuPrimitive.Popup.Props &
   Pick<
@@ -92,6 +94,7 @@ function DropdownMenuContent({
           >
             <MenuPrimitive.Popup
               data-slot="dropdown-menu-content"
+              finalFocus={false}
               render={
                 <motion.div
                   initial={{ opacity: 0, scale: 0.96, y: -4 }}
@@ -116,7 +119,9 @@ function DropdownMenuContent({
                 className,
               )}
               {...props}
-            />
+            >
+              <FocusScope restoreFocus>{children}</FocusScope>
+            </MenuPrimitive.Popup>
           </MenuPrimitive.Positioner>
         </MenuPrimitive.Portal>
       )}

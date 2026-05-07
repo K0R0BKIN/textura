@@ -2,18 +2,12 @@
 
 import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { type Hotkey } from '@tanstack/react-hotkeys';
 import { TooltipRoot } from '@base-ui/react';
-import { Search } from 'lucide-react';
 import { Navbar } from '@/components/navbar/navbar';
 import ThemeSwitcher from '@/components/navbar/theme-switcher';
 import { Logo } from '@/components/logo';
-import {
-  SearchDialog,
-  searchDialogHandle,
-  toggleSearchDialog,
-} from '@/components/search-dialog';
+import { SearchDialog } from '@/components/navbar/search-dialog';
 import {
   Tooltip,
   TooltipTrigger,
@@ -36,13 +30,7 @@ export default function DictionaryLayout({
     callback: () => router.push('/'),
   };
 
-  const search: HotkeyAction = {
-    name: 'Search',
-    hotkey: 'Mod+K' as Hotkey,
-    callback: toggleSearchDialog,
-  };
-
-  useHotkeyActions([home, search]);
+  useHotkeyActions([home]);
 
   return (
     <>
@@ -72,27 +60,10 @@ export default function DictionaryLayout({
           </Tooltip>
         </Navbar.Start>
         <Navbar.End>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <DialogPrimitive.Trigger
-                  handle={searchDialogHandle}
-                  render={
-                    <Navbar.Button aria-label={search.name}>
-                      <Search />
-                    </Navbar.Button>
-                  }
-                />
-              }
-            />
-            <TooltipContent side="bottom">
-              {search.name} <TooltipShortcut hotkey={search.hotkey} />
-            </TooltipContent>
-          </Tooltip>
+          <SearchDialog />
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
-      <SearchDialog />
       <main className="pt-24 pb-16">{children}</main>
     </>
   );
