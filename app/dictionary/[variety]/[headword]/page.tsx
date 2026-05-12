@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
 import { generateArticle } from '@/lib/articles';
 import { Skeleton } from '@/components/ui/skeleton';
+import { HeadwordSchema, slugToVariety } from '@/lib/schemas';
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ headword: string }>;
+  params: Promise<{ headword: string; variety: string }>;
 }): Promise<Metadata> {
   const { headword } = await params;
 
@@ -30,10 +30,23 @@ function ArticleSkeleton() {
   );
 }
 
-async function ArticleContent({ headword }: { headword: Promise<string> }) {
-  await connection();
-  const article = await generateArticle(await headword);
+async function ArticleContent({
+  params,
+}: {
+  params: Promise<{ headword: string; variety: string }>;
+}) {
+  const { headword, variety } = await params;
 
+  const parsedVariety = slugToVariety.safeParse(variety);
+  if (!parsedVariety.success) notFound();
+
+  const parsedHeadword = HeadwordSchema.safeParse({
+    form: decodeURIComponent(headword),
+    variety: parsedVariety.data,
+  });
+  if (!parsedHeadword.success) notFound();
+
+  const article = await generateArticle(parsedHeadword.data);
   if (!article) notFound();
 
   const showSuperscript = article.etymons.length > 1;
@@ -91,14 +104,12 @@ async function ArticleContent({ headword }: { headword: Promise<string> }) {
 export default function ArticlePage({
   params,
 }: {
-  params: Promise<{ headword: string }>;
+  params: Promise<{ headword: string; variety: string }>;
 }) {
-  const headword = params.then((p) => decodeURIComponent(p.headword));
-
   return (
     <article className="mx-auto max-w-2xl px-4">
       <Suspense fallback={<ArticleSkeleton />}>
-        <ArticleContent headword={headword} />
+        <ArticleContent params={params} />
       </Suspense>
     </article>
   );

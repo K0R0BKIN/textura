@@ -2,13 +2,14 @@
   "name": "textura",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@10.29.2",
+  "packageManager": "pnpm@10.33.2",
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start --port 3001",
     "lint": "eslint",
     "format": "prettier --write .",
+    "oai:schema": "tsx scripts/oai-schema.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },
@@ -16,7 +17,8 @@
     "@ai-sdk/openai": "^3.0.36",
     "@base-ui/react": "^1.2.0",
     "@neondatabase/serverless": "^1.0.2",
-    "@tanstack/react-hotkeys": "^0.4.0",
+    "@react-aria/focus": "3.21.5",
+    "@tanstack/react-hotkeys": "^0.9.1",
     "ai": "^6.0.103",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -28,6 +30,7 @@
     "openai": "^6.27.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.5.0",
     "zod": "^4.3.6"
   },

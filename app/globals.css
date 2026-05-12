@@ -16,26 +16,41 @@
   --primary: oklch(63.3% 0.079 61);
   --primary-foreground: oklch(100% 0 0);
   --subtle-foreground: oklch(49.8% 0.008 106.7);
-  --muted: var(--accent);
+  --muted: oklch(95.3% 0.013 63.9);
   --muted-foreground: oklch(64.1% 0.01 106.7);
-  --accent: oklch(95.3% 0.013 63.9);
+  --accent: oklch(63.3% 0.079 61 / 8%);
   --accent-foreground: var(--foreground);
 
-  --destructive: oklch(74.4% 0.113 18.8);
+  --destructive: oklch(62.7% 0.194 33.3);
   --destructive-foreground: var(--primary-foreground);
 
-  --border: oklch(88.5% 0.004 91.5);
+  --border: oklch(85.1% 0.006 95.3);
   --input: var(--border);
   --ring: oklch(74.6% 0.072 62.1);
+
+  --selection: oklch(63.3% 0.079 61 / 30%);
+  --selection-foreground: var(--foreground);
+
+  --hairline: 0px 0px 0px 0.5px var(--border);
+  --shadow-xs:
+    0px 1px 2px 0px oklch(24.3% 0.008 95.4 / 6%),
+    0px 2px 8px 0px oklch(24.3% 0.008 95.4 / 4%);
+  --shadow-md:
+    0px 2px 4px 0px oklch(24.3% 0.008 95.4 / 5%),
+    0px 6px 16px 0px oklch(24.3% 0.008 95.4 / 5%);
+  --shadow-lg:
+    0px 4px 8px 0px oklch(24.3% 0.008 95.4 / 5%),
+    0px 12px 32px 0px oklch(24.3% 0.008 95.4 / 6%);
 
   --tooltip: var(--foreground);
   --tooltip-foreground: oklch(99.4% 0.001 106.4);
   --tooltip-muted-foreground: oklch(79.1% 0.008 98.9);
 
-  --selection: oklch(51.7% 0.131 53.1 / 28.2%);
-  --selection-foreground: var(--foreground);
+  --popover-shadow: var(--shadow-md), var(--hairline);
 
-  --shadow-md: 0px 2px 8px rgb(0 0 0 / 0.08);
+  --toast-shadow: var(--shadow-xs), var(--hairline);
+
+  --searchbox-shadow: var(--shadow-xs), var(--hairline);
 }
 
 .dark {
@@ -46,20 +61,21 @@
   --subtle-foreground: oklch(77% 0 0);
   --muted: oklch(21.3% 0 0);
   --muted-foreground: oklch(58.3% 0 0);
-  --accent: oklch(25.2% 0 0);
-
-  --destructive: oklch(54.4% 0.146 21.7);
+  --accent: oklch(0 0 0 / 30%);
 
   --border: oklch(40.2% 0 0);
   --ring: oklch(50.9% 0.053 61.9);
 
+  --hairline: inset 0px 0px 0px 0.5px var(--border);
+  --shadow-xs: 0px 3px 6px 0px oklch(0% 0 0 / 6%);
+  --shadow-md:
+    0px 2px 4px 0px oklch(0% 0 0 / 10%), 0px 6px 16px 0px oklch(0% 0 0 / 12%);
+  --shadow-lg:
+    0px 4px 8px 0px oklch(0% 0 0 / 8%), 0px 12px 32px 0px oklch(0% 0 0 / 10%);
+
   --tooltip: oklch(17.8% 0 0);
   --tooltip-foreground: var(--foreground);
   --tooltip-muted-foreground: oklch(77% 0 0);
-
-  --selection: oklch(84% 0.102 58.1 / 25.5%);
-
-  --shadow-md: 0px 2px 8px rgb(0 0 0 / 0.24);
 }
 
 @theme inline {
@@ -94,14 +110,22 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  --shadow-xs: var(--shadow-xs);
   --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --color-selection: var(--selection);
+  --color-selection-foreground: var(--selection-foreground);
 
   --color-tooltip: var(--tooltip);
   --color-tooltip-foreground: var(--tooltip-foreground);
   --color-tooltip-muted-foreground: var(--tooltip-muted-foreground);
 
-  --color-selection: var(--selection);
-  --color-selection-foreground: var(--selection-foreground);
+  --shadow-popover: var(--popover-shadow);
+
+  --shadow-toast: var(--toast-shadow);
+
+  --shadow-searchbox: var(--searchbox-shadow);
 }
 
 @counter-style bare-decimal {
@@ -111,7 +135,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-offset-2 outline-ring focus-visible:outline-2 focus-visible:outline-ring aria-invalid:outline-2;
+    @apply border-border outline-offset-1 outline-ring focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-ring aria-invalid:outline-2;
   }
   ::selection {
     @apply bg-selection text-selection-foreground;

@@ -8,14 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const inputGroupVariants = cva(
-  'flex w-full min-w-0 items-center border border-input',
+  'flex w-full min-w-0 items-center border-[0.5px] border-input',
   {
     variants: {
-      variant: {
-        card: 'border-border bg-card shadow-xs',
-      },
       size: {
-        lg: 'h-14 rounded-2xl [&>input]:px-4 has-[>[data-align=inline-end]]:[&>input]:pr-3 has-[>[data-align=inline-start]]:[&>input]:pl-3',
+        lg: 'h-14 w-lg rounded-2xl [&>input]:px-4 has-[>[data-align=inline-end]]:[&>input]:pr-3 has-[>[data-align=inline-start]]:[&>input]:pl-3',
       },
     },
   },
@@ -23,7 +20,6 @@ const inputGroupVariants = cva(
 
 function InputGroup({
   className,
-  variant,
   size,
   ...props
 }: React.ComponentProps<'div'> & VariantProps<typeof inputGroupVariants>) {
@@ -32,7 +28,7 @@ function InputGroup({
       data-slot="input-group"
       data-size={size}
       role="group"
-      className={cn(inputGroupVariants({ variant, size }), className)}
+      className={cn(inputGroupVariants({ size }), className)}
       {...props}
     />
   );

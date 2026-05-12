@@ -1,29 +1,35 @@
 'use client';
 
 import { useRef } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useHotkey, formatForDisplay } from '@tanstack/react-hotkeys';
+import { type Hotkey } from '@tanstack/react-hotkeys';
 import { TooltipRoot } from '@base-ui/react';
-import { Navbar, ThemeSwitcher } from '@/components/navbar/navbar';
+import { Navbar } from '@/components/navbar/navbar';
+import ThemeSwitcher from '@/components/navbar/theme-switcher';
 import { Logo } from '@/components/logo';
-import { SearchBox } from '@/components/search-box';
 import {
   Tooltip,
   TooltipTrigger,
+  TooltipShortcut,
   TooltipContent,
 } from '@/components/ui/tooltip';
-import { Kbd } from '@/components/ui/kbd';
+import { useHotkeyActions, type HotkeyAction } from '@/lib/hotkey';
 
-export default function ArticleLayout({
+export default function DictionaryLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  useHotkey('Mod+Shift+O', () => router.push('/'));
-
   const tooltipActionsRef = useRef<TooltipRoot.Actions>(null);
+  const router = useRouter();
+
+  const home: HotkeyAction = {
+    name: 'Home',
+    hotkey: 'Mod+Shift+O' as Hotkey,
+    callback: () => router.push('/'),
+  };
+
+  useHotkeyActions([home]);
 
   return (
     <>
@@ -37,17 +43,18 @@ export default function ArticleLayout({
           >
             <TooltipTrigger
               render={
-                <Link
+                <Navbar.Link
                   href="/"
-                  className="ml-1 rounded-xs p-1"
+                  aria-label={home.name}
+                  className="ml-1"
                   onNavigate={() => tooltipActionsRef.current?.close()}
-                />
+                >
+                  <Logo variant="nav" />
+                </Navbar.Link>
               }
-            >
-              <Logo variant="nav" />
-            </TooltipTrigger>
+            />
             <TooltipContent side="right" sideOffset={8}>
-              Go to Home <Kbd>{formatForDisplay('Mod+Shift+O')}</Kbd>
+              {home.name} <TooltipShortcut hotkey={home.hotkey} />
             </TooltipContent>
           </Tooltip>
         </Navbar.Start>
@@ -55,12 +62,7 @@ export default function ArticleLayout({
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
-      <main className="pt-24 pb-42">{children}</main>
-      <div className="fixed inset-x-0 bottom-0">
-        <div className="mx-auto w-fit bg-background pb-4">
-          <SearchBox variant="article" />
-        </div>
-      </div>
+      <main className="pt-24 pb-16">{children}</main>
     </>
   );
 }

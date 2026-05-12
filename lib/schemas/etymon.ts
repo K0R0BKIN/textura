@@ -8,9 +8,6 @@ export const SenseSchema = z.object({
 });
 export type Sense = z.infer<typeof SenseSchema>;
 
-export const VarietySchema = z.enum(['American English']);
-export type Variety = z.infer<typeof VarietySchema>;
-
 export const LexicalCategorySchema = z.enum([
   'noun',
   'verb',
@@ -26,7 +23,6 @@ export type LexicalCategory = z.infer<typeof LexicalCategorySchema>;
 
 export const LexemeSchema = z.object({
   lexicalCategory: LexicalCategorySchema,
-  variety: VarietySchema,
   pronunciation: z.string().describe('IPA transcription without slashes'),
   senses: z.array(SenseSchema),
 });
