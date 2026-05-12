@@ -7,7 +7,6 @@ import { TooltipRoot } from '@base-ui/react';
 import { Navbar } from '@/components/navbar/navbar';
 import ThemeSwitcher from '@/components/navbar/theme-switcher';
 import { Logo } from '@/components/logo';
-import { SearchDialog } from '@/components/navbar/search-dialog';
 import {
   Tooltip,
   TooltipTrigger,
@@ -60,7 +59,6 @@ export default function DictionaryLayout({
           </Tooltip>
         </Navbar.Start>
         <Navbar.End>
-          <SearchDialog />
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>

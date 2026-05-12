@@ -4,7 +4,7 @@ import { extendTailwindMerge } from 'tailwind-merge';
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
-      shadow: ['popover', 'toast', 'searchbox', 'searchbox-dialog'],
+      shadow: ['popover', 'toast', 'searchbox'],
     },
   },
 });

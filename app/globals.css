@@ -51,7 +51,6 @@
   --toast-shadow: var(--shadow-xs), var(--hairline);
 
   --searchbox-shadow: var(--shadow-xs), var(--hairline);
-  --searchbox-dialog-shadow: var(--shadow-lg), var(--hairline);
 }
 
 .dark {
@@ -127,7 +126,6 @@
   --shadow-toast: var(--toast-shadow);
 
   --shadow-searchbox: var(--searchbox-shadow);
-  --shadow-searchbox-dialog: var(--searchbox-dialog-shadow);
 }
 
 @counter-style bare-decimal {
