@@ -1,6 +1,6 @@
 'use client';
 
-import { Logo } from '@/components/logo';
+import { HomeLink } from '@/components/navbar/home-link';
 import { Navbar } from '@/components/navbar/navbar';
 import ThemeSwitcher from '@/components/navbar/theme-switcher';
 
@@ -13,9 +13,7 @@ export default function ChatLayout({
     <>
       <Navbar>
         <Navbar.Start>
-          <Navbar.Link href="/" aria-label="Home" className="ml-1">
-            <Logo variant="nav" />
-          </Navbar.Link>
+          <HomeLink />
         </Navbar.Start>
         <Navbar.End>
           <ThemeSwitcher />
