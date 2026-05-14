@@ -13,9 +13,9 @@ export function Message({ className, from, ...props }: MessageProps) {
   return (
     <div
       className={cn(
-        'group flex w-full max-w-[95%]',
+        'group flex w-full',
         from === 'user'
-          ? 'is-user mb-10 ml-auto justify-end'
+          ? 'is-user mb-10 ml-auto max-w-[95%] justify-end'
           : 'is-assistant mb-12',
         className,
       )}
@@ -34,9 +34,9 @@ export function MessageContent({
   return (
     <div
       className={cn(
-        'flex w-fit max-w-full min-w-0 leading-6',
-        'group-[.is-user]:rounded-xl group-[.is-user]:bg-muted group-[.is-user]:px-4 group-[.is-user]:py-2.5 group-[.is-user]:text-foreground',
-        'group-[.is-assistant]:font-serif',
+        'flex max-w-full min-w-0 leading-6',
+        'group-[.is-user]:w-fit group-[.is-user]:rounded-xl group-[.is-user]:bg-muted group-[.is-user]:px-4 group-[.is-user]:py-2.5 group-[.is-user]:text-foreground',
+        'group-[.is-assistant]:w-full group-[.is-assistant]:font-serif',
         className,
       )}
       {...props}

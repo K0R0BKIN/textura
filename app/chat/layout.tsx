@@ -19,7 +19,7 @@ export default function ChatLayout({
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
-      <main className="min-h-screen pt-24 pb-10">{children}</main>
+      <main className="min-h-screen py-24">{children}</main>
     </>
   );
 }

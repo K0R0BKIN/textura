@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Field } from '@base-ui/react/field';
-import { Search, X } from 'lucide-react';
+import { ArrowUp, X } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import {
   InputGroup,
@@ -23,14 +23,15 @@ import {
 } from '@/components/ui/input-group';
 import { dictionaryPath } from '@/lib/dictionary/routes';
 import { HeadwordSchema } from '@/lib/schemas';
+import { cn } from '@/lib/utils';
 
-type SearchBoxState = {
+type ComposerState = {
   query: string;
   status: 'idle' | 'validating' | 'invalid' | 'navigating';
   invalidFor: string | null;
 };
 
-type SearchBoxContextValue = {
+type ComposerContextValue = {
   state: {
     query: string;
     busy: boolean;
@@ -47,7 +48,7 @@ type SearchBoxContextValue = {
   };
 };
 
-type SearchBoxAction =
+type ComposerAction =
   | { type: 'queryChanged'; query: string }
   | { type: 'submitted' }
   | { type: 'validationFailed'; query: string }
@@ -55,18 +56,18 @@ type SearchBoxAction =
   | { type: 'validationErrored' }
   | { type: 'reset' };
 
-const initialSearchBoxState: SearchBoxState = {
+const initialComposerState: ComposerState = {
   query: '',
   status: 'idle',
   invalidFor: null,
 };
 
-const SearchBoxContext = createContext<SearchBoxContextValue | null>(null);
+const ComposerContext = createContext<ComposerContextValue | null>(null);
 
-function searchBoxReducer(
-  state: SearchBoxState,
-  action: SearchBoxAction,
-): SearchBoxState {
+function composerReducer(
+  state: ComposerState,
+  action: ComposerAction,
+): ComposerState {
   switch (action.type) {
     case 'queryChanged':
       return {
@@ -102,14 +103,14 @@ function searchBoxReducer(
       };
 
     case 'reset':
-      return initialSearchBoxState;
+      return initialComposerState;
   }
 }
 
-function SearchBoxForm() {
+function ComposerForm({ className }: { className?: string }) {
   const {
     actions: { submit },
-  } = useSearchBox();
+  } = useComposer();
 
   function handleSubmit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
@@ -118,28 +119,28 @@ function SearchBoxForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <SearchBoxField>
-        <SearchBoxGroup>
-          <SearchBoxInput />
-          <SearchBoxAddon>
-            <SearchBoxButton />
-          </SearchBoxAddon>
-        </SearchBoxGroup>
+      <ComposerField>
+        <ComposerGroup className={className}>
+          <ComposerInput />
+          <ComposerAddon>
+            <ComposerButton />
+          </ComposerAddon>
+        </ComposerGroup>
 
-        <SearchBoxError />
-      </SearchBoxField>
+        <ComposerError />
+      </ComposerField>
     </form>
   );
 }
 
-function SearchBoxProvider({
+function ComposerProvider({
   children,
   onValidSubmit,
 }: {
   children: ReactNode;
   onValidSubmit?: () => void;
 }) {
-  const [state, dispatch] = useReducer(searchBoxReducer, initialSearchBoxState);
+  const [state, dispatch] = useReducer(composerReducer, initialComposerState);
   const pathname = usePathname();
   const router = useRouter();
   const abortRef = useRef<AbortController | null>(null);
@@ -224,7 +225,7 @@ function SearchBoxProvider({
   }
 
   return (
-    <SearchBoxContext.Provider
+    <ComposerContext.Provider
       value={{
         state: {
           query: state.query,
@@ -243,23 +244,23 @@ function SearchBoxProvider({
       }}
     >
       {children}
-    </SearchBoxContext.Provider>
+    </ComposerContext.Provider>
   );
 }
 
-function useSearchBox() {
-  const context = use(SearchBoxContext);
+function useComposer() {
+  const context = use(ComposerContext);
   if (!context) {
-    throw new Error('useSearchBox must be used within SearchBox.');
+    throw new Error('useComposer must be used within Composer.');
   }
 
   return context;
 }
 
-function SearchBoxField({ children }: { children: ReactNode }) {
+function ComposerField({ children }: { children: ReactNode }) {
   const {
     state: { invalid },
-  } = useSearchBox();
+  } = useComposer();
 
   return (
     <Field.Root name="query" invalid={invalid} className="flex flex-col gap-2">
@@ -268,26 +269,32 @@ function SearchBoxField({ children }: { children: ReactNode }) {
   );
 }
 
-function SearchBoxGroup({ children }: { children: ReactNode }) {
+function ComposerGroup({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   const {
     meta: { groupRef },
-  } = useSearchBox();
+  } = useComposer();
 
   return (
     <InputGroup
       ref={groupRef}
       size="lg"
-      className="border-0 bg-card shadow-searchbox"
+      className={cn('border-0 bg-card shadow-searchbox', className)}
     >
       {children}
     </InputGroup>
   );
 }
 
-function SearchBoxError() {
+function ComposerError() {
   const {
     state: { invalid },
-  } = useSearchBox();
+  } = useComposer();
 
   return (
     <Field.Error
@@ -300,12 +307,12 @@ function SearchBoxError() {
   );
 }
 
-function SearchBoxInput() {
+function ComposerInput() {
   const {
     state: { query },
     actions: { setQuery },
     meta: { inputRef },
-  } = useSearchBox();
+  } = useComposer();
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -314,8 +321,8 @@ function SearchBoxInput() {
   return (
     <InputGroupInput
       ref={inputRef}
-      placeholder="Look up definitions…"
-      aria-label="Search query"
+      placeholder="Ask Textura…"
+      aria-label="Composer query"
       autoComplete="off"
       spellCheck={false}
       value={query}
@@ -324,7 +331,7 @@ function SearchBoxInput() {
   );
 }
 
-function SearchBoxAddon({ children }: { children: ReactNode }) {
+function ComposerAddon({ children }: { children: ReactNode }) {
   return (
     <InputGroupAddon align="inline-end" size="lg">
       {children}
@@ -332,34 +339,35 @@ function SearchBoxAddon({ children }: { children: ReactNode }) {
   );
 }
 
-function SearchBoxButton() {
+function ComposerButton() {
   const {
     state: { query, invalid, busy },
-  } = useSearchBox();
+  } = useComposer();
 
   return (
     <InputGroupButton
       type="submit"
-      aria-label="Search"
+      aria-label="Submit"
       variant="default"
       size="icon-lg"
       disabled={query.trim() === '' || invalid || busy}
     >
-      {busy ? <Spinner /> : <Search />}
+      {busy ? <Spinner /> : <ArrowUp />}
     </InputGroupButton>
   );
 }
 
-type SearchBoxProps = {
+type ComposerProps = {
+  className?: string;
   onValidSubmit?: () => void;
 };
 
-function SearchBox({ onValidSubmit }: SearchBoxProps) {
+function Composer({ className, onValidSubmit }: ComposerProps) {
   return (
-    <SearchBoxProvider onValidSubmit={onValidSubmit}>
-      <SearchBoxForm />
-    </SearchBoxProvider>
+    <ComposerProvider onValidSubmit={onValidSubmit}>
+      <ComposerForm className={className} />
+    </ComposerProvider>
   );
 }
 
-export { SearchBox };
+export { Composer };

@@ -16,5 +16,5 @@ export function ConversationContent({
   className,
   ...props
 }: ConversationContentProps) {
-  return <div className={cn('flex flex-col p-4', className)} {...props} />;
+  return <div className={cn('flex flex-col', className)} {...props} />;
 }
