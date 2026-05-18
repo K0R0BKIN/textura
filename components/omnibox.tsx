@@ -3,7 +3,6 @@
 import { usePathname, useRouter } from 'next/navigation';
 import type { ChatStatus } from 'ai';
 import { useLayoutEffect, useRef, useState, type SubmitEvent } from 'react';
-import { useSpinDelay } from 'spin-delay';
 
 import {
   Composer,
@@ -28,10 +27,6 @@ function Omnibox() {
   const router = useRouter();
   const hasQuery = query.trim() !== '';
   const isSubmitted = status === 'submitted';
-  const delayedIsSubmitted = useSpinDelay(isSubmitted, {
-    delay: 100,
-    minDuration: 300,
-  });
 
   useLayoutEffect(() => {
     inputRef.current?.focus();
@@ -125,8 +120,8 @@ function Omnibox() {
       />
       <ComposerAddon>
         <ComposerSubmit
-          disabled={!hasQuery || delayedIsSubmitted}
-          status={delayedIsSubmitted ? 'submitted' : 'ready'}
+          disabled={!hasQuery || isSubmitted}
+          status={status}
         />
       </ComposerAddon>
     </Composer>

@@ -66,9 +66,6 @@ importers:
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
-      spin-delay:
-        specifier: ^2.0.1
-        version: 2.0.1(react@19.2.6)
       streamdown:
         specifier: ^2.5.0
         version: 2.5.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -4084,11 +4081,6 @@ packages:
 
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
-
-  spin-delay@2.0.1:
-    resolution: {integrity: sha512-ilggKXKqAMwk21PSYvxuF/KCnrsGFDrnO6mXa629mj8fvfo+dOQfubDViqsRjRX5U1jd3Xb8FTsV+m4Tg7YeUg==}
-    peerDependencies:
-      react: '>=17.0.1'
 
   stable-hash@0.0.5:
     resolution: {integrity: sha512-+L3ccpzibovGXFK+Ap/f8LOS0ahMrHTf3xu7mMLSpEGU0EO9ucaysSylKo9eRDFNhWve/y275iPmIZ4z39a9iA==}
@@ -8747,10 +8739,6 @@ snapshots:
   source-map@0.6.1: {}
 
   space-separated-tokens@2.0.2: {}
-
-  spin-delay@2.0.1(react@19.2.6):
-    dependencies:
-      react: 19.2.6
 
   stable-hash@0.0.5: {}
 
