@@ -47,30 +47,28 @@ function Chat() {
   }
 
   return (
-    <>
-      <section className="mx-auto max-w-3xl px-8 pb-28">
-        <Conversation>
-          <ConversationContent>
-            {messages.map((message) => (
-              <Message from={message.role} key={message.id}>
-                <MessageContent>
-                  {message.parts.map((part, index) => {
-                    if (part.type !== 'text') return null;
+    <div className="flex h-full flex-col">
+      <Conversation>
+        <ConversationContent className="mx-auto w-full max-w-3xl px-8 pt-20 pb-10">
+          {messages.map((message) => (
+            <Message from={message.role} key={message.id}>
+              <MessageContent>
+                {message.parts.map((part, index) => {
+                  if (part.type !== 'text') return null;
 
-                    return (
-                      <MessageResponse key={`${message.id}-${index}`}>
-                        {part.text}
-                      </MessageResponse>
-                    );
-                  })}
-                </MessageContent>
-              </Message>
-            ))}
-          </ConversationContent>
-        </Conversation>
-      </section>
+                  return (
+                    <MessageResponse key={`${message.id}-${index}`}>
+                      {part.text}
+                    </MessageResponse>
+                  );
+                })}
+              </MessageContent>
+            </Message>
+          ))}
+        </ConversationContent>
+      </Conversation>
 
-      <div className="fixed inset-x-0 bottom-0 bg-background">
+      <div className="shrink-0 bg-background">
         <div className="mx-auto max-w-3xl px-4 pb-3">
           <Composer onSubmit={handleSubmit}>
             <ComposerInput
@@ -89,7 +87,7 @@ function Chat() {
           </Composer>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

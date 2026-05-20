@@ -1,20 +1,34 @@
-'use client';
-
 import type { ComponentProps } from 'react';
+import { StickToBottom } from 'use-stick-to-bottom';
 
 import { cn } from '@/lib/utils';
 
-export type ConversationProps = ComponentProps<'div'>;
+export type ConversationProps = ComponentProps<typeof StickToBottom>;
 
 export function Conversation({ className, ...props }: ConversationProps) {
-  return <div className={cn('relative', className)} role="log" {...props} />;
+  return (
+    <StickToBottom
+      className={cn('relative flex-1 overflow-y-hidden', className)}
+      initial="smooth"
+      resize="smooth"
+      role="log"
+      {...props}
+    />
+  );
 }
 
-export type ConversationContentProps = ComponentProps<'div'>;
+export type ConversationContentProps = ComponentProps<
+  typeof StickToBottom.Content
+>;
 
 export function ConversationContent({
   className,
   ...props
 }: ConversationContentProps) {
-  return <div className={cn('flex flex-col', className)} {...props} />;
+  return (
+    <StickToBottom.Content
+      className={cn('flex flex-col', className)}
+      {...props}
+    />
+  );
 }
