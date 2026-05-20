@@ -3,6 +3,7 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useEffect, useRef, useState, type SubmitEvent } from 'react';
+import type { StickToBottomContext } from 'use-stick-to-bottom';
 
 import {
   Conversation,
@@ -24,6 +25,7 @@ import {
 function Chat() {
   const [input, setInput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const conversationRef = useRef<StickToBottomContext>(null);
   const { messages, sendMessage, status } = useChat({
     id: 'chat',
     transport: new DefaultChatTransport({ api: '/api/chat' }),
@@ -44,12 +46,13 @@ function Chat() {
 
     sendMessage({ text: input });
     setInput('');
+    void conversationRef.current?.scrollToBottom('smooth');
     inputRef.current?.focus();
   }
 
   return (
     <div className="flex h-full flex-col">
-      <Conversation>
+      <Conversation contextRef={conversationRef}>
         <ConversationContent className="mx-auto w-full max-w-3xl px-8 pt-20 pb-10">
           {messages.map((message) => (
             <Message from={message.role} key={message.id}>
