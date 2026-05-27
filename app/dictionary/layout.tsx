@@ -19,7 +19,7 @@ export default function DictionaryLayout({
           <ThemeSwitcher />
         </Navbar.End>
       </Navbar>
-      <main className="pt-24 pb-16">{children}</main>
+      <main className="h-dvh overflow-y-auto">{children}</main>
     </>
   );
 }

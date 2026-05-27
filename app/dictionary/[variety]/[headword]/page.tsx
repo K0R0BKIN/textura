@@ -107,7 +107,7 @@ export default function ArticlePage({
   params: Promise<{ headword: string; variety: string }>;
 }) {
   return (
-    <article className="mx-auto max-w-2xl px-4">
+    <article className="mx-auto max-w-2xl px-4 py-26">
       <Suspense fallback={<ArticleSkeleton />}>
         <ArticleContent params={params} />
       </Suspense>
