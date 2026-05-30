@@ -23,7 +23,7 @@ export const HeadwordRecordSchema = z.object({
   variety: VarietySchema,
   url: z.string(),
   hasArticle: z.boolean(),
-  display: HeadwordDisplaySchema.optional(),
+  display: HeadwordDisplaySchema,
 });
 export type HeadwordRecord = z.infer<typeof HeadwordRecordSchema>;
 
@@ -31,7 +31,9 @@ function headwordObjectID(headword: Headword) {
   return `${headword.variety}:${encodeURIComponent(headword.form)}`;
 }
 
-export function getArticleDisplay(article: Article): HeadwordDisplay | undefined {
+export function getArticleDisplay(
+  article: Article,
+): HeadwordDisplay | undefined {
   const lexeme = article.etymons[0]?.lexemes[0];
   const sense = lexeme?.senses[0];
 

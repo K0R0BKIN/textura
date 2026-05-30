@@ -1,8 +1,22 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import {
+  createAutocomplete,
+  type AutocompleteApi,
+  type AutocompleteState,
+} from '@algolia/autocomplete-core';
 import type { ChatStatus } from 'ai';
-import { useLayoutEffect, useRef, useState, type SubmitEvent } from 'react';
+import type { Route } from 'next';
+import { useRouter } from 'next/navigation';
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type BaseSyntheticEvent,
+  type ComponentProps,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+} from 'react';
 
 import {
   Composer,
@@ -11,42 +25,51 @@ import {
   ComposerSubmit,
 } from '@/components/composer';
 import { dictionaryPath } from '@/lib/dictionary/routes';
+import { createDictionaryPlugin } from '@/lib/omnibox/plugins/dictionary-plugin';
+import { searchClient } from '@/lib/omnibox/search-client';
 import { HeadwordSchema } from '@/lib/schemas';
+import type { HeadwordRecord } from '@/lib/search/headwords';
+import { cn } from '@/lib/utils';
+
+type Autocomplete = AutocompleteApi<
+  HeadwordRecord,
+  BaseSyntheticEvent,
+  ReactMouseEvent,
+  ReactKeyboardEvent
+>;
+
+const initialAutocompleteState: AutocompleteState<HeadwordRecord> = {
+  activeItemId: null,
+  collections: [],
+  completion: null,
+  context: {},
+  isOpen: false,
+  query: '',
+  status: 'idle',
+};
 
 function isAbortError(error: unknown) {
   return error instanceof Error && error.name === 'AbortError';
 }
 
-function Omnibox() {
-  const [query, setQuery] = useState('');
-  const [status, setStatus] = useState<ChatStatus>('ready');
-  const inputRef = useRef<HTMLInputElement>(null);
+function useAutocomplete() {
+  const router = useRouter();
+
   const abortRef = useRef<AbortController | null>(null);
   const shouldReset = useRef(false);
-  const pathname = usePathname();
-  const router = useRouter();
-  const hasQuery = query.trim() !== '';
-  const isSubmitted = status === 'submitted';
 
-  useLayoutEffect(() => {
-    inputRef.current?.focus();
+  const [status, setStatus] = useState<ChatStatus>('ready');
+  const [autocompleteState, setAutocompleteState] = useState(
+    initialAutocompleteState,
+  );
 
-    return () => {
-      abortRef.current?.abort();
-
-      if (shouldReset.current) {
-        shouldReset.current = false;
-        setQuery('');
-        setStatus('ready');
-      }
-    };
-  }, []);
-
-  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function handleSubmit({
+    state,
+  }: {
+    state: AutocompleteState<HeadwordRecord>;
+  }) {
     const parsed = HeadwordSchema.safeParse({
-      form: query,
+      form: state.query,
       variety: 'en-US',
     });
 
@@ -80,15 +103,8 @@ function Omnibox() {
         );
       }
 
-      const targetPath = dictionaryPath(parsed.data);
-
-      if (pathname === targetPath) {
-        setStatus('ready');
-        return;
-      }
-
       shouldReset.current = true;
-      router.push(targetPath);
+      router.push(dictionaryPath(parsed.data) as Route);
     } catch (error) {
       if (isAbortError(error)) {
         return;
@@ -106,25 +122,156 @@ function Omnibox() {
     }
   }
 
-  return (
-    <Composer onSubmit={handleSubmit}>
-      <ComposerInput
-        aria-label="Dictionary search"
-        placeholder="Ask Textura..."
-        ref={inputRef}
-        value={query}
-        onChange={(event) => {
+  const [autocomplete] = useState<Autocomplete>(() =>
+    createAutocomplete<
+      HeadwordRecord,
+      BaseSyntheticEvent,
+      ReactMouseEvent,
+      ReactKeyboardEvent
+    >({
+      id: 'omnibox',
+
+      plugins: [createDictionaryPlugin({ searchClient })],
+
+      onStateChange({ state, prevState }) {
+        if (prevState.query !== state.query) {
           abortRef.current?.abort();
-          setQuery(event.currentTarget.value);
-        }}
-      />
-      <ComposerAddon>
-        <ComposerSubmit
-          disabled={!hasQuery || isSubmitted}
-          status={status}
+        }
+
+        setAutocompleteState(state);
+      },
+
+      onSubmit(params) {
+        void handleSubmit(params);
+      },
+
+      navigator: {
+        navigate({ itemUrl }) {
+          abortRef.current?.abort();
+          shouldReset.current = true;
+          router.push(itemUrl as Route);
+        },
+      },
+    }),
+  );
+
+  useLayoutEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+
+      if (shouldReset.current) {
+        shouldReset.current = false;
+        setStatus('ready');
+        autocomplete.setQuery('');
+      }
+    };
+  }, [autocomplete]);
+
+  return {
+    autocomplete,
+    autocompleteState,
+    status,
+  };
+}
+
+function OmniboxPanel({ className, ...props }: ComponentProps<'div'>) {
+  return (
+    <div
+      data-slot="omnibox-panel"
+      className={cn('mt-2', className)}
+      {...props}
+    />
+  );
+}
+
+function OmniboxList({ ...props }: ComponentProps<'ul'>) {
+  return <ul data-slot="omnibox-list" {...props} />;
+}
+
+function OmniboxItem({ className, ...props }: ComponentProps<'li'>) {
+  return (
+    <li
+      data-slot="omnibox-item"
+      className={cn(
+        'rounded-lg px-3 py-2 text-sm select-none',
+        'aria-selected:bg-accent',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function Omnibox() {
+  const { autocomplete, autocompleteState, status } = useAutocomplete();
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const hasQuery = autocompleteState.query.trim() !== '';
+  const isSubmitted = status === 'submitted';
+
+  useLayoutEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  return (
+    <div {...autocomplete.getRootProps({ className: 'w-full' })}>
+      <Composer
+        {...autocomplete.getFormProps({
+          inputElement: null,
+        })}
+      >
+        <ComposerInput
+          {...autocomplete.getInputProps({
+            inputElement: null,
+            type: 'text',
+            'aria-label': 'Ask Textura',
+            placeholder: 'Ask Textura...',
+          })}
+          ref={inputRef}
         />
-      </ComposerAddon>
-    </Composer>
+
+        <ComposerAddon>
+          <ComposerSubmit disabled={!hasQuery || isSubmitted} status={status} />
+        </ComposerAddon>
+      </Composer>
+
+      {autocompleteState.isOpen && (
+        <OmniboxPanel {...autocomplete.getPanelProps({})}>
+          {autocompleteState.collections.map(({ source, items }) =>
+            items.length > 0 ? (
+              <OmniboxList
+                key={source.sourceId}
+                {...autocomplete.getListProps({ source })}
+              >
+                {items.map((item) => (
+                  <OmniboxItem
+                    key={`${source.sourceId}:${item.objectID}`}
+                    {...autocomplete.getItemProps({
+                      item,
+                      source,
+                    })}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>{item.headword}</span>
+                      <span className="text-muted-foreground">
+                        {item.display.pronunciation}
+                      </span>
+                    </div>
+
+                    {item.display?.meaning && (
+                      <div className="truncate text-sm text-muted-foreground">
+                        {item.display.meaning}
+                      </div>
+                    )}
+                  </OmniboxItem>
+                ))}
+              </OmniboxList>
+            ) : null,
+          )}
+        </OmniboxPanel>
+      )}
+    </div>
   );
 }
 
