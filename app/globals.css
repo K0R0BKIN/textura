@@ -119,7 +119,7 @@
   --background: var(--gray-3);
   --foreground: var(--gray-12);
   --card: var(--gray-5);
-  --popover-foreground: var(--subtle-foreground);
+  --popover-foreground: var(--foreground);
   --subtle-foreground: var(--gray-11);
   --muted: var(--gray-2);
   --muted-foreground: var(--gray-10);

@@ -9,7 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { ThemeSwitcher } from '@/components/sidebar/theme-switcher';
+import { SettingsMenu } from '@/components/sidebar/settings-menu';
 
 export function AppSidebar() {
   return (
@@ -33,9 +33,7 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <ThemeSwitcher />
-          </SidebarMenuItem>
+          <SettingsMenu />
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
