@@ -3,7 +3,7 @@
 import { createContext, use, useLayoutEffect, useRef, useState } from 'react';
 import { Menu as MenuPrimitive } from '@base-ui/react/menu';
 import { FocusScope } from '@react-aria/focus';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, type HTMLMotionProps } from 'motion/react';
 import { CheckIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -12,6 +12,28 @@ type DropdownMenuContextValue = {
   state: {
     open: boolean;
   };
+};
+
+type Side = NonNullable<MenuPrimitive.Popup.State['side']>;
+
+const dropdownVariants = {
+  hidden: (side: Side) => ({
+    opacity: 0,
+    scale: 0.95,
+    x:
+      side === 'left' || side === 'inline-start'
+        ? 8
+        : side === 'right' || side === 'inline-end'
+          ? -8
+          : 0,
+    y: side === 'top' ? 8 : side === 'bottom' ? -8 : 0,
+  }),
+  visible: {
+    opacity: 1,
+    scale: 1,
+    x: 0,
+    y: 0,
+  },
 };
 
 const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(
@@ -120,25 +142,20 @@ function DropdownMenuContent({
             <MenuPrimitive.Popup
               data-slot="dropdown-menu-content"
               finalFocus={false}
-              render={
+              render={(renderProps, state) => (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.96, y: -4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{
-                    opacity: 0,
-                    scale: 0.98,
-                    y: -2,
-                    transition: {
-                      duration: 0.1,
-                      ease: [0.22, 1, 0.36, 1],
-                    },
-                  }}
+                  {...(renderProps as HTMLMotionProps<'div'>)}
+                  custom={state.side}
+                  variants={dropdownVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="hidden"
                   transition={{
                     duration: 0.16,
                     ease: [0.22, 1, 0.36, 1],
                   }}
                 />
-              }
+              )}
               className={cn(
                 'z-50 max-h-(--available-height) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring ring-border outline-none',
                 className,
