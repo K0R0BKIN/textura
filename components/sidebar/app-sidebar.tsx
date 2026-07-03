@@ -3,11 +3,13 @@ import { Logo } from '@/components/logo';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { ThemeSwitcher } from '@/components/sidebar/theme-switcher';
 
 export function AppSidebar() {
   return (
@@ -21,13 +23,21 @@ export function AppSidebar() {
                   <Logo variant="nav" />
                 </Link>
               }
-              className="h-9 hover:bg-transparent active:bg-transparent"
+              className="hover:bg-transparent active:bg-transparent"
             />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent />
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <ThemeSwitcher />
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
