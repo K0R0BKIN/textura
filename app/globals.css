@@ -279,4 +279,8 @@
   [role='button']:not(:disabled) {
     cursor: pointer;
   }
+
+  .lucide {
+    stroke-width: 1.75;
+  }
 }
