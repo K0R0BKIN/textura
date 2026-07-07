@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
-import { ViewTransition } from 'react';
+import { Suspense, ViewTransition } from 'react';
 import { notFound } from 'next/navigation';
 import { generateArticle } from '@/lib/articles';
 import { SupportedHeadwordSchema } from '@/lib/headwords';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
 import { slugToVariety } from '@/lib/schemas';
 
 export async function generateMetadata({
@@ -15,6 +22,30 @@ export async function generateMetadata({
   return {
     title: decodeURIComponent(headword),
   };
+}
+
+function ArticleSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-2xl space-y-4 pt-26">
+      <Skeleton className="h-12 w-48" />
+      <Skeleton className="h-5 w-32" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+    </div>
+  );
+}
+
+function ArticleEmpty() {
+  return (
+    <Empty>
+      <EmptyHeader>
+        <EmptyTitle>No article found</EmptyTitle>
+        <EmptyDescription>Try searching for something else.</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  );
 }
 
 async function Article({
@@ -31,7 +62,7 @@ async function Article({
     form: decodeURIComponent(headword),
     variety: parsedVariety.data,
   });
-  if (!parsedHeadword.success) notFound();
+  if (!parsedHeadword.success) return <ArticleEmpty />;
 
   const article = await generateArticle(parsedHeadword.data);
   if (!article) notFound();
@@ -94,8 +125,16 @@ export default function ArticlePage({
   params: Promise<{ headword: string; variety: string }>;
 }) {
   return (
-    <ViewTransition enter="skeleton-reveal-enter" default="none">
-      <Article params={params} />
-    </ViewTransition>
+    <Suspense
+      fallback={
+        <ViewTransition exit="skeleton-reveal-exit">
+          <ArticleSkeleton />
+        </ViewTransition>
+      }
+    >
+      <ViewTransition enter="skeleton-reveal-enter" default="none">
+        <Article params={params} />
+      </ViewTransition>
+    </Suspense>
   );
 }
