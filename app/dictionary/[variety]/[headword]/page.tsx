@@ -65,7 +65,11 @@ async function Article({
   if (!parsedHeadword.success) return <ArticleEmpty />;
 
   const article = await generateArticle(parsedHeadword.data);
-  if (!article) notFound();
+  if (!article) {
+    throw new Error(
+      `Failed to generate article for "${parsedHeadword.data.form}"`,
+    );
+  }
 
   const showSuperscript = article.etymons.length > 1;
 
