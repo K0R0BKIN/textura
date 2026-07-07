@@ -37,7 +37,7 @@ function ArticleSkeleton() {
   );
 }
 
-function ArticleEmpty() {
+function ArticleNotFound() {
   return (
     <Empty>
       <EmptyHeader>
@@ -62,7 +62,7 @@ async function Article({
     form: decodeURIComponent(headword),
     variety: parsedVariety.data,
   });
-  if (!parsedHeadword.success) return <ArticleEmpty />;
+  if (!parsedHeadword.success) return <ArticleNotFound />;
 
   const article = await generateArticle(parsedHeadword.data);
   if (!article) {
