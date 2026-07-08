@@ -1,11 +1,14 @@
 import Link from 'next/link';
 import { SearchIcon } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import { Empty, EmptyDescription } from '@/components/ui/empty';
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -33,7 +36,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup className="px-2 pt-0.5">
+        <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton className="h-8 gap-1.5 bg-card px-2.5 text-subtle-foreground shadow-xs ring ring-border hover:bg-card hover:text-subtle-foreground active:bg-card data-open:bg-card [&_svg]:size-4">
@@ -48,6 +51,19 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sm text-subtle-foreground">
+            Recents
+          </SidebarGroupLabel>
+          <SidebarGroupContent className="pt-1">
+            <Empty className="h-12 rounded-lg border border-dashed">
+              <EmptyDescription className="text-xs">
+                Recent searches will appear here
+              </EmptyDescription>
+            </Empty>
+          </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
