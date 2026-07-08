@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { Kbd } from '@/components/ui/kbd';
 import { SettingsMenu } from '@/components/sidebar/settings-menu';
 
 export function AppSidebar() {
@@ -32,12 +33,18 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="px-2 pt-0.5">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton>
-                <SearchIcon />
+              <SidebarMenuButton className="h-8 gap-1.5 bg-card px-2.5 text-subtle-foreground shadow-xs ring ring-border hover:bg-card hover:text-subtle-foreground active:bg-card data-open:bg-card [&_svg]:size-4">
+                <SearchIcon aria-hidden="true" />
                 <span>Search</span>
+                <Kbd
+                  aria-hidden="true"
+                  className="mr-0.5 ml-auto shrink-0 text-muted-foreground opacity-0 transition-opacity duration-100 group-hover/menu-button:opacity-100 group-focus-visible/menu-button:opacity-100"
+                >
+                  ⌘K
+                </Kbd>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
