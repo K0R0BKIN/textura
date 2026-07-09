@@ -5,6 +5,7 @@ import './globals.css';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { ThemeProvider } from '@/components/theme-provider';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = localFont({
   src: [
@@ -64,6 +65,7 @@ export default function RootLayout({
             <main className="min-w-0 flex-1">{children}</main>
           </SidebarProvider>
         </ThemeProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
