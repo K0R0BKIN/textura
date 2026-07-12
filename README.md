@@ -17,16 +17,14 @@ AI-powered dictionary application in early development.
 ## Setup
 
 ```bash
-pnpm dlx vercel login
-pnpm dlx vercel link
-pnpm dlx vercel env pull .env.local
-pnpm install
+pnpm setup
 pnpm dev
 ```
 
 ## Scripts
 
 ```bash
+pnpm setup      # Link Vercel, pull development env vars, and install dependencies
 pnpm dev        # Start the Next.js dev server
 pnpm build      # Build for production
 pnpm start      # Start the production server

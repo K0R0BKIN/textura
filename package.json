@@ -9,6 +9,7 @@
     "start": "next start --port 3001",
     "lint": "eslint",
     "format": "prettier --write .",
+    "setup": "bash scripts/setup.sh",
     "oai:schema": "tsx scripts/oai-schema.ts",
     "algolia:reindex:headwords": "tsx scripts/reindex-headwords.ts",
     "db:push": "drizzle-kit push",
