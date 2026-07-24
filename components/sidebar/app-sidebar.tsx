@@ -54,7 +54,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sm dark:text-subtle-foreground font-semibold text-foreground">
+          <SidebarGroupLabel className="text-sm font-semibold text-foreground dark:text-subtle-foreground">
             Recents
           </SidebarGroupLabel>
           <SidebarGroupContent className="pt-1">
