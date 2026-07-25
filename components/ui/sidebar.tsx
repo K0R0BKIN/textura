@@ -229,10 +229,14 @@ function SidebarTrigger({
     <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
+      data-state={state}
       variant="ghost"
       size="icon"
       aria-expanded={!isCollapsed}
-      className={cn('text-muted-foreground', className)}
+      className={cn(
+        'text-muted-foreground not-dark:data-[state=collapsed]:text-foreground',
+        className,
+      )}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
