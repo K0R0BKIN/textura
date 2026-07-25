@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { SearchIcon } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import {
   Sidebar,
@@ -12,7 +11,7 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Kbd } from '@/components/ui/kbd';
+import { SearchButton } from '@/components/sidebar/search-button';
 import { SettingsMenu } from '@/components/sidebar/settings-menu';
 import { RecentEntries } from '@/features/recent-entries/recent-entries';
 
@@ -39,19 +38,10 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+        <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton className="h-8 gap-1.5 bg-card px-2.5 text-subtle-foreground shadow-xs ring ring-border hover:bg-card hover:text-subtle-foreground active:bg-card data-open:bg-card [&_svg]:size-4">
-                <SearchIcon aria-hidden="true" />
-                <span>Search</span>
-                <Kbd
-                  aria-hidden="true"
-                  className="mr-0.5 ml-auto shrink-0 text-muted-foreground opacity-0 transition-opacity duration-100 group-hover/menu-button:opacity-100 group-focus-visible/menu-button:opacity-100"
-                >
-                  ⌘K
-                </Kbd>
-              </SidebarMenuButton>
+              <SearchButton />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
