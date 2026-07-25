@@ -20,7 +20,7 @@ export function RecentEntries() {
   if (recentEntries.length === 0) return null;
 
   return (
-    <SidebarGroup>
+    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Recents</SidebarGroupLabel>
       <SidebarMenu>
         {recentEntries.map((entry) => {

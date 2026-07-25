@@ -38,8 +38,8 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroup>
+      <SidebarContent>
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton className="h-8 gap-1.5 bg-card px-2.5 text-subtle-foreground shadow-xs ring ring-border hover:bg-card hover:text-subtle-foreground active:bg-card data-open:bg-card [&_svg]:size-4">
@@ -59,7 +59,7 @@ export function AppSidebar() {
         <RecentEntries />
       </SidebarContent>
 
-      <SidebarFooter className="group-data-[collapsible=icon]:hidden">
+      <SidebarFooter>
         <SidebarMenu>
           <SettingsMenu />
         </SidebarMenu>
