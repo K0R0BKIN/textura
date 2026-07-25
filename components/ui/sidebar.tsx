@@ -4,9 +4,11 @@ import * as React from 'react';
 import { mergeProps } from '@base-ui/react/merge-props';
 import { useRender } from '@base-ui/react/use-render';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { ArrowLeftToLineIcon, ArrowRightToLineIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 
@@ -212,6 +214,36 @@ function Sidebar({
         </div>
       </div>
     </div>
+  );
+}
+
+function SidebarTrigger({
+  className,
+  onClick,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  const { state, toggleSidebar } = useSidebar();
+  const isCollapsed = state === 'collapsed';
+
+  return (
+    <Button
+      data-sidebar="trigger"
+      data-slot="sidebar-trigger"
+      variant="ghost"
+      size="icon"
+      aria-expanded={!isCollapsed}
+      className={cn('text-muted-foreground', className)}
+      onClick={(event) => {
+        onClick?.(event);
+        toggleSidebar();
+      }}
+      {...props}
+    >
+      {isCollapsed ? <ArrowRightToLineIcon /> : <ArrowLeftToLineIcon />}
+      <span className="sr-only">
+        {isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      </span>
+    </Button>
   );
 }
 
@@ -657,5 +689,6 @@ export {
   SidebarProvider,
   SidebarRail,
   SidebarSeparator,
+  SidebarTrigger,
   useSidebar,
 };

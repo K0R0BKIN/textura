@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Kbd } from '@/components/ui/kbd';
 import { SettingsMenu } from '@/components/sidebar/settings-menu';
@@ -17,10 +18,10 @@ import { RecentEntries } from '@/features/recent-entries/recent-entries';
 
 export function AppSidebar() {
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu className="flex-row items-center">
-          <SidebarMenuItem>
+          <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
             <SidebarMenuButton
               render={
                 <Link href="/" aria-label="Home">
@@ -30,10 +31,14 @@ export function AppSidebar() {
               className="hover:bg-transparent active:bg-transparent"
             />
           </SidebarMenuItem>
+
+          <SidebarMenuItem className="ml-auto group-data-[collapsible=icon]:ml-0">
+            <SidebarTrigger />
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="group-data-[collapsible=icon]:hidden">
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -54,7 +59,7 @@ export function AppSidebar() {
         <RecentEntries />
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="group-data-[collapsible=icon]:hidden">
         <SidebarMenu>
           <SettingsMenu />
         </SidebarMenu>
