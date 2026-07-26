@@ -22,7 +22,9 @@ export function SettingsMenu() {
       <DropdownMenu>
         <SidebarMenuButton tooltip="Settings" render={<DropdownMenuTrigger />}>
           <SettingsIcon />
-          <span>Settings</span>
+          <span className="transition-opacity duration-150 ease-in-out group-data-[collapsible=icon]:opacity-0 motion-reduce:transition-none">
+            Settings
+          </span>
         </SidebarMenuButton>
         <DropdownMenuContent
           side="top"
