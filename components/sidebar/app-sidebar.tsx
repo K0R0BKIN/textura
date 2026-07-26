@@ -15,6 +15,8 @@ import { SearchButton } from '@/components/sidebar/search-button';
 import { SettingsMenu } from '@/components/sidebar/settings-menu';
 import { RecentEntries } from '@/features/recent-entries/recent-entries';
 
+import styles from './app-sidebar.module.css';
+
 export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
@@ -46,7 +48,7 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
 
-        <RecentEntries />
+        <RecentEntries className={styles.recents} />
       </SidebarContent>
 
       <SidebarFooter>

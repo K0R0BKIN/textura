@@ -14,13 +14,13 @@ import { slugToVariety } from '@/lib/schemas';
 
 import { useRecentEntries } from './use-recent-entries';
 
-export function RecentEntries() {
+export function RecentEntries({ className }: { className?: string }) {
   const { recentEntries } = useRecentEntries();
 
   if (recentEntries.length === 0) return null;
 
   return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+    <SidebarGroup className={className}>
       <SidebarGroupLabel>Recents</SidebarGroupLabel>
       <SidebarMenu>
         {recentEntries.map((entry) => {

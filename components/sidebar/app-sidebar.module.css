@@ -1,0 +1,22 @@
+.recents {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 150ms ease-in-out,
+    visibility 0s linear;
+}
+
+:global([data-slot='sidebar'][data-collapsible='icon']) .recents {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 150ms ease-in-out,
+    visibility 0s linear 150ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recents,
+  :global([data-slot='sidebar'][data-collapsible='icon']) .recents {
+    transition: none;
+  }
+}
