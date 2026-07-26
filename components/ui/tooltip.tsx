@@ -34,10 +34,11 @@ function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
 
 function TooltipShortcut({
   hotkey,
+  size = 'sm',
   ...props
 }: React.ComponentProps<typeof Kbd> & { hotkey: Hotkey }) {
   return (
-    <Kbd data-slot="tooltip-shortcut" {...props}>
+    <Kbd data-slot="tooltip-shortcut" size={size} {...props}>
       {formatForDisplay(hotkey, { separatorToken: '' })}
     </Kbd>
   );

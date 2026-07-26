@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { mergeProps } from '@base-ui/react/merge-props';
 import { useRender } from '@base-ui/react/use-render';
+import { useHotkey, type Hotkey } from '@tanstack/react-hotkeys';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { ArrowLeftToLineIcon, ArrowRightToLineIcon } from 'lucide-react';
 
@@ -16,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Tooltip,
   TooltipContent,
+  TooltipShortcut,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
@@ -23,7 +25,7 @@ const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const SIDEBAR_WIDTH = '16rem';
 const SIDEBAR_WIDTH_ICON = '3rem';
-const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
+const SIDEBAR_KEYBOARD_SHORTCUT: Hotkey = 'Mod+Shift+S';
 const SIDEBAR_TOOLTIP_SIDE_OFFSET = 12;
 
 type SidebarContextProps = {
@@ -87,21 +89,7 @@ function SidebarProvider({
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
   }, [isMobile, setOpen, setOpenMobile]);
 
-  // Adds a keyboard shortcut to toggle the sidebar.
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-        (event.metaKey || event.ctrlKey)
-      ) {
-        event.preventDefault();
-        toggleSidebar();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleSidebar]);
+  useHotkey(SIDEBAR_KEYBOARD_SHORTCUT, toggleSidebar);
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
@@ -255,6 +243,7 @@ function SidebarTrigger({
       <TooltipTrigger render={trigger} />
       <TooltipContent side="right" sideOffset={SIDEBAR_TOOLTIP_SIDE_OFFSET}>
         {label}
+        <TooltipShortcut hotkey={SIDEBAR_KEYBOARD_SHORTCUT} />
       </TooltipContent>
     </Tooltip>
   );
