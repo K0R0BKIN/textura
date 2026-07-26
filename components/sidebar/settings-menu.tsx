@@ -20,14 +20,10 @@ export function SettingsMenu() {
   return (
     <SidebarMenuItem>
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <SidebarMenuButton>
-              <SettingsIcon />
-              <span>Settings</span>
-            </SidebarMenuButton>
-          }
-        />
+        <SidebarMenuButton tooltip="Settings" render={<DropdownMenuTrigger />}>
+          <SettingsIcon />
+          <span>Settings</span>
+        </SidebarMenuButton>
         <DropdownMenuContent
           side="top"
           sideOffset={8}

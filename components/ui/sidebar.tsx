@@ -24,6 +24,7 @@ const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const SIDEBAR_WIDTH = '16rem';
 const SIDEBAR_WIDTH_ICON = '3rem';
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
+const SIDEBAR_TOOLTIP_SIDE_OFFSET = 12;
 
 type SidebarContextProps = {
   state: 'expanded' | 'collapsed';
@@ -224,14 +225,16 @@ function SidebarTrigger({
 }: React.ComponentProps<typeof Button>) {
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === 'collapsed';
+  const label = isCollapsed ? 'Open sidebar' : 'Close sidebar';
 
-  return (
+  const trigger = (
     <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       data-state={state}
       variant="ghost"
       size="icon"
+      aria-label={label}
       aria-expanded={!isCollapsed}
       className={cn(
         'text-muted-foreground not-dark:data-[state=collapsed]:text-foreground',
@@ -244,10 +247,16 @@ function SidebarTrigger({
       {...props}
     >
       {isCollapsed ? <ArrowRightToLineIcon /> : <ArrowLeftToLineIcon />}
-      <span className="sr-only">
-        {isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      </span>
     </Button>
+  );
+
+  return (
+    <Tooltip>
+      <TooltipTrigger render={trigger} />
+      <TooltipContent side="right" sideOffset={SIDEBAR_TOOLTIP_SIDE_OFFSET}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -518,6 +527,7 @@ function SidebarMenuButton({
       <TooltipContent
         side="right"
         align="center"
+        sideOffset={SIDEBAR_TOOLTIP_SIDE_OFFSET}
         hidden={state !== 'collapsed' || isMobile}
         {...tooltip}
       />
