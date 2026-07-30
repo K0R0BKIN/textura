@@ -4,15 +4,11 @@ AI-powered dictionary application in early development.
 
 ## Tech stack
 
-- Next.js 16 (App Router)
-- React 19
-- TypeScript
-- Tailwind CSS 4
-- shadcn (Base UI)
-- next-themes
-- OpenAI SDK (Responses API)
-- Neon Postgres
-- Drizzle ORM
+- **Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS 4
+- **UI:** shadcn + Base UI
+- **AI:** OpenAI Responses API
+- **Database:** Neon Postgres + Drizzle ORM
+- **Search:** Algolia Search and Autocomplete
 
 ## Setup
 
