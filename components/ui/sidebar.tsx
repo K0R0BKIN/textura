@@ -26,7 +26,7 @@ const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const SIDEBAR_WIDTH = '16rem';
 const SIDEBAR_WIDTH_ICON = '3.25rem';
 const SIDEBAR_KEYBOARD_SHORTCUT: Hotkey = 'Mod+Shift+S';
-const SIDEBAR_TOOLTIP_SIDE_OFFSET = 12;
+const SIDEBAR_TOOLTIP_SIDE_OFFSET = 16;
 
 type SidebarContextProps = {
   state: 'expanded' | 'collapsed';
