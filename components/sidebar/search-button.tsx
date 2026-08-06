@@ -30,7 +30,7 @@ export function SearchButton() {
         aria-hidden="true"
         className={cn(
           'mr-0.5 ml-auto shrink-0 text-muted-foreground opacity-0',
-          'transition-opacity duration-100',
+          'transition-opacity duration-100 motion-reduce:transition-none',
           'group-hover/menu-button:opacity-100',
           'group-focus-visible/menu-button:opacity-100',
         )}
