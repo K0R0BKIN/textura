@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import ContentLoader from 'react-content-loader';
 import { useSpinDelay } from 'spin-delay';
 import useSWRImmutable from 'swr/immutable';
 
@@ -10,7 +11,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { Skeleton } from '@/components/ui/skeleton';
 import { RecentEntryTracker } from '@/features/recent-entries/recent-entry-tracker';
 import { HeadwordSchema, type Article } from '@/lib/schemas';
 
@@ -26,14 +26,19 @@ async function fetchArticle(url: string): Promise<Article | null> {
 
 function ArticleSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4 pt-26">
-      <Skeleton className="h-12 w-48" />
-      <Skeleton className="h-5 w-32" />
-
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-      </div>
+    <div className="mx-auto w-full max-w-2xl pt-26">
+      <ContentLoader
+        width="100%"
+        height={140}
+        speed={1.8}
+        backgroundColor="var(--muted)"
+        foregroundColor="light-dark(var(--brand-4), var(--gray-3))"
+      >
+        <rect x="0" y="0" width="192" height="48" rx="10" />
+        <rect x="0" y="64" width="128" height="20" rx="10" />
+        <rect x="0" y="100" width="100%" height="16" rx="10" />
+        <rect x="0" y="124" width="75%" height="16" rx="10" />
+      </ContentLoader>
     </div>
   );
 }
