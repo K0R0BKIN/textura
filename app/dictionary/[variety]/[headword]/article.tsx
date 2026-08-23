@@ -70,8 +70,8 @@ export function Article() {
   );
 
   const showSkeleton = useSpinDelay(isLoading, {
-    delay: 120,
-    minDuration: 380,
+    delay: 500,
+    minDuration: 200,
     ssr: false,
   });
 
