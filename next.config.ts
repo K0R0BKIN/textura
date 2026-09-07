@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   typedRoutes: true,
   devIndicators: false,
+  agentRules: false,
 };
 
 export default nextConfig;
