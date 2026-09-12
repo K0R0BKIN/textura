@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import { Suspense } from 'react';
 
 import { Article } from './article';
@@ -15,10 +16,22 @@ export async function generateMetadata({
   };
 }
 
+async function DynamicMarker() {
+  await connection();
+
+  return null;
+}
+
 export default function ArticlePage() {
   return (
-    <Suspense fallback={null}>
-      <Article />
-    </Suspense>
+    <>
+      <Suspense>
+        <DynamicMarker />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <Article />
+      </Suspense>
+    </>
   );
 }
