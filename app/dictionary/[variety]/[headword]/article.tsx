@@ -32,8 +32,8 @@ function ArticleSkeleton() {
         width="100%"
         height={140}
         speed={1.8}
-        backgroundColor="var(--muted)"
-        foregroundColor="light-dark(var(--brand-4), var(--gray-3))"
+        backgroundColor="light-dark(var(--muted), var(--gray-5))"
+        foregroundColor="light-dark(var(--brand-4), var(--gray-6))"
       >
         <rect x="0" y="0" width="192" height="48" rx="10" />
         <rect x="0" y="64" width="128" height="20" rx="10" />
