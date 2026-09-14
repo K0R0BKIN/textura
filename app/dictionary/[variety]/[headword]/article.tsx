@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import ContentLoader from 'react-content-loader';
 import { useSpinDelay } from 'spin-delay';
@@ -59,6 +60,10 @@ export function Article() {
     headword: string;
     variety: string;
   }>();
+
+  useEffect(() => {
+    document.title = decodeURIComponent(params.headword);
+  }, [params.headword]);
 
   const {
     data: article,
