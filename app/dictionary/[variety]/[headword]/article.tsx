@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { useDocumentTitle } from 'usehooks-ts';
 import ContentLoader from 'react-content-loader';
 import { useSpinDelay } from 'spin-delay';
 import useSWRImmutable from 'swr/immutable';
@@ -61,9 +61,7 @@ export function Article() {
     variety: string;
   }>();
 
-  useEffect(() => {
-    document.title = decodeURIComponent(params.headword);
-  }, [params.headword]);
+  useDocumentTitle(decodeURIComponent(params.headword));
 
   const {
     data: article,
