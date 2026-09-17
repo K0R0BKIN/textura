@@ -26,7 +26,7 @@ export function SettingsMenu() {
           </Navbar.Button>
         }
       />
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuGroup>
           <DropdownMenuLabel>Appearance</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
