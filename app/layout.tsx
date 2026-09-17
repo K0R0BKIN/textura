@@ -2,10 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 
-import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { ThemeProvider } from '@/components/theme-provider';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = localFont({
@@ -65,12 +62,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider>
-            <SidebarProvider>
-              <AppSidebar />
-              <main className="min-w-0 flex-1">{children}</main>
-            </SidebarProvider>
-          </TooltipProvider>
+          {children}
         </ThemeProvider>
         <SpeedInsights />
       </body>
