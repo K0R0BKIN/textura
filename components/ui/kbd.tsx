@@ -6,7 +6,8 @@ const kbdVariants = cva(
   {
     variants: {
       size: {
-        default: 'text-xs',
+        sm: 'text-xs',
+        default: 'text-sm',
         lg: 'text-base',
       },
     },

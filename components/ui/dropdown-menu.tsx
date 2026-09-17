@@ -69,6 +69,26 @@ function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
   return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />;
 }
 
+function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
+  return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />;
+}
+
+function DropdownMenuLabel({
+  className,
+  ...props
+}: MenuPrimitive.GroupLabel.Props) {
+  return (
+    <MenuPrimitive.GroupLabel
+      data-slot="dropdown-menu-label"
+      className={cn(
+        'px-1.5 py-1 text-xs font-medium text-muted-foreground select-none',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
 function DropdownMenuContent({
   align = 'start',
   alignOffset = 0,
@@ -102,25 +122,27 @@ function DropdownMenuContent({
               finalFocus={false}
               render={
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.96, y: -4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{
-                    opacity: 0,
-                    scale: 0.98,
-                    y: -2,
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
                     transition: {
-                      duration: 0.1,
+                      duration: 0.25,
                       ease: [0.22, 1, 0.36, 1],
                     },
                   }}
-                  transition={{
-                    duration: 0.16,
-                    ease: [0.22, 1, 0.36, 1],
+                  exit={{
+                    opacity: 0,
+                    scale: 0.99,
+                    transition: {
+                      duration: 0.15,
+                      ease: [0.22, 1, 0.36, 1],
+                    },
                   }}
                 />
               }
               className={cn(
-                'z-50 max-h-(--available-height) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring ring-border outline-none',
+                'z-50 max-h-(--available-height) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring ring-border will-change-[opacity,transform] outline-none',
                 className,
               )}
               {...props}
@@ -152,7 +174,7 @@ function DropdownMenuRadioItem({
     <MenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        "relative flex cursor-pointer items-center rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4",
+        "relative flex h-8 cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
@@ -174,6 +196,8 @@ export {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 };

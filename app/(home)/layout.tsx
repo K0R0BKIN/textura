@@ -1,7 +1,5 @@
-'use client';
-
 import { Navbar } from '@/components/navbar/navbar';
-import ThemeSwitcher from '@/components/navbar/theme-switcher';
+import { SettingsMenu } from '@/components/navbar/settings-menu';
 
 export default function HomeLayout({
   children,
@@ -12,10 +10,10 @@ export default function HomeLayout({
     <>
       <Navbar>
         <Navbar.End>
-          <ThemeSwitcher />
+          <SettingsMenu />
         </Navbar.End>
       </Navbar>
-      <main className="flex h-dvh items-start justify-center px-4 pt-[25vh]">
+      <main className="flex min-h-svh items-start justify-center px-4 pt-[25vh]">
         {children}
       </main>
     </>

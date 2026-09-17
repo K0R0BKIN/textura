@@ -1,0 +1,4 @@
+# Prettier's --ignore-path defaults to [.gitignore, .prettierignore], so
+# everything already in .gitignore is covered. Only committed generated
+# files need listing here.
+pnpm-lock.yaml

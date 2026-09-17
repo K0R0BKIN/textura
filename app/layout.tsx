@@ -50,7 +50,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className="scheme-light dark:scheme-dark"
+      suppressHydrationWarning
+    >
       <body className={`${inter.variable} ${sourceSerif.variable} antialiased`}>
         <ThemeProvider
           attribute="class"

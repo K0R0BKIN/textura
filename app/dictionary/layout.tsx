@@ -1,8 +1,6 @@
-'use client';
-
 import { Navbar } from '@/components/navbar/navbar';
-import ThemeSwitcher from '@/components/navbar/theme-switcher';
 import { HomeLink } from '@/components/navbar/home-link';
+import { SettingsMenu } from '@/components/navbar/settings-menu';
 
 export default function DictionaryLayout({
   children,
@@ -16,10 +14,10 @@ export default function DictionaryLayout({
           <HomeLink />
         </Navbar.Start>
         <Navbar.End>
-          <ThemeSwitcher />
+          <SettingsMenu />
         </Navbar.End>
       </Navbar>
-      <main className="h-dvh overflow-y-auto">{children}</main>
+      <main className="flex min-h-svh flex-col px-4">{children}</main>
     </>
   );
 }
