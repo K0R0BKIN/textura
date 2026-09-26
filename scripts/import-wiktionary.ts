@@ -1,6 +1,5 @@
 import '@/envConfig';
 import { createReadStream } from 'node:fs';
-import { createInterface } from 'node:readline';
 import { parseArgs } from 'node:util';
 import { createGunzip } from 'node:zlib';
 import { sql } from 'drizzle-orm';
@@ -228,12 +227,29 @@ function buildArticle(word: string, entries: KaikkiEntry[]): Article | null {
   });
 }
 
+// Splits on \n only. node:readline also breaks on U+2028 and U+2029, which
+// can appear unescaped inside JSON strings.
+async function* readLines(path: string) {
+  const file = createReadStream(path);
+  const input = path.endsWith('.gz') ? file.pipe(createGunzip()) : file;
+  input.setEncoding('utf8');
+
+  let buffer = '';
+
+  for await (const chunk of input as AsyncIterable<string>) {
+    buffer += chunk;
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    yield* lines;
+  }
+
+  yield buffer;
+}
+
 // wiktextract emits all entries of a Wiktionary page together, so an article
 // is complete once the next line belongs to a different word.
 async function* readArticles(path: string) {
-  const file = createReadStream(path);
-  const input = path.endsWith('.gz') ? file.pipe(createGunzip()) : file;
-  const lines = createInterface({ input, crlfDelay: Infinity });
+  const lines = readLines(path);
 
   const seen = new Set<string>();
   let word: string | undefined;
