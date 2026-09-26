@@ -214,6 +214,16 @@
   suffix: '\2002'; /* en space */
 }
 
+@counter-style bare-lower-alpha {
+  system: extends lower-alpha;
+  suffix: '\2002'; /* en space */
+}
+
+@counter-style bare-lower-roman {
+  system: extends lower-roman;
+  suffix: '\2002'; /* en space */
+}
+
 @layer base {
   * {
     @apply border-border outline-offset-1 outline-ring focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-ring aria-invalid:outline-2;

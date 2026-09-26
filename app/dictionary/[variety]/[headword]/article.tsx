@@ -12,7 +12,8 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
-import type { Article } from '@/lib/schemas';
+import type { Article, Sense } from '@/lib/schemas';
+import { cn } from '@/lib/utils';
 
 async function fetchArticle(url: string): Promise<Article | null> {
   const response = await fetch(url);
@@ -51,6 +52,52 @@ function ArticleNotFound() {
         <EmptyDescription>Try searching for something else.</EmptyDescription>
       </EmptyHeader>
     </Empty>
+  );
+}
+
+const senseListStyles = [
+  'list-[bare-decimal]',
+  'list-[bare-lower-alpha]',
+  'list-[bare-lower-roman]',
+];
+
+function Senses({
+  senses,
+  depth = 0,
+  className,
+}: {
+  senses: Sense[];
+  depth?: number;
+  className?: string;
+}) {
+  return (
+    <ol
+      className={cn(
+        senseListStyles[Math.min(depth, senseListStyles.length - 1)],
+        'space-y-2 pl-[calc(1ch+0.5em)] marker:text-muted-foreground',
+        className,
+      )}
+    >
+      {senses.map((sense, senseIndex) => (
+        <li key={senseIndex} className="font-serif">
+          <p className="font-medium">{sense.definition}</p>
+
+          {sense.examples.map((example, exampleIndex) => (
+            <p key={exampleIndex} className="text-muted-foreground italic">
+              {example}
+            </p>
+          ))}
+
+          {sense.subsenses.length > 0 && (
+            <Senses
+              senses={sense.subsenses}
+              depth={depth + 1}
+              className="mt-2"
+            />
+          )}
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -99,9 +146,11 @@ export function Article() {
             )}
           </h2>
 
-          <p className="mt-2 font-serif text-muted-foreground">
-            {etymon.origin}
-          </p>
+          {etymon.origin && (
+            <p className="mt-2 font-serif whitespace-pre-line text-muted-foreground">
+              {etymon.origin}
+            </p>
+          )}
 
           {etymon.lexemes?.map((lexeme, lexemeIndex) => (
             <div
@@ -113,25 +162,14 @@ export function Article() {
                   {lexeme.lexicalCategory}
                 </span>
 
-                <span className="ml-2 text-muted-foreground before:content-['/'] after:content-['/']">
-                  {lexeme.transcription}
-                </span>
+                {lexeme.transcription && (
+                  <span className="ml-2 text-muted-foreground before:content-['/'] after:content-['/']">
+                    {lexeme.transcription}
+                  </span>
+                )}
               </h3>
 
-              <ol className="mt-2 list-[bare-decimal] space-y-2 pl-[calc(1ch+0.5em)] marker:text-muted-foreground">
-                {lexeme.senses.map((sense, senseIndex) => (
-                  <li key={senseIndex} className="font-serif">
-                    <span className="font-medium">
-                      {sense.definition}
-                      <span className="text-muted-foreground">:</span>
-                    </span>
-
-                    <span className="ml-1 text-muted-foreground italic">
-                      {sense.example}
-                    </span>
-                  </li>
-                ))}
-              </ol>
+              <Senses senses={lexeme.senses} className="mt-2" />
             </div>
           ))}
         </section>
