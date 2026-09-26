@@ -1,20 +1,21 @@
 import { sql } from 'drizzle-orm';
 import {
   index,
-  jsonb,
+  json,
   pgTable,
   primaryKey,
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import type { Article, Variety } from '@/lib/schemas';
+import type { Variety } from '@/lib/schemas';
+import type { StoredArticle } from './stored-article';
 
 export const articles = pgTable(
   'articles',
   {
     headword: text('headword').notNull(),
     variety: text('variety').$type<Variety>().notNull().default('en-US'),
-    data: jsonb('data').$type<Article>().notNull(),
+    data: json('data').$type<StoredArticle>().notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (t) => [

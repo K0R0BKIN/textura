@@ -5,6 +5,7 @@ import { and, eq } from 'drizzle-orm';
 import type { Headword } from './schemas';
 import { drizzleDb } from './db';
 import { articles } from './db/schema';
+import { fromStoredArticle } from './db/stored-article';
 
 export async function findArticle(headword: Headword) {
   'use cache';
@@ -22,5 +23,5 @@ export async function findArticle(headword: Headword) {
     )
     .limit(1);
 
-  return existing?.data ?? null;
+  return existing ? fromStoredArticle(existing) : null;
 }

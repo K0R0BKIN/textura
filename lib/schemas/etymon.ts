@@ -1,10 +1,11 @@
 import { z } from 'zod';
 
+// Empty arrays are left out of stored articles and restored here on parse.
 export const SenseSchema = z.object({
   definition: z.string(),
-  examples: z.array(z.string()),
-  get subsenses() {
-    return z.array(SenseSchema);
+  examples: z.array(z.string()).default([]),
+  get subsenses(): z.ZodDefault<z.ZodArray<typeof SenseSchema>> {
+    return z.array(SenseSchema).default([]);
   },
 });
 export type Sense = z.infer<typeof SenseSchema>;

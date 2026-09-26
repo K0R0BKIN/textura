@@ -5,6 +5,7 @@ import { createGunzip } from 'node:zlib';
 import { sql } from 'drizzle-orm';
 import { drizzleDb } from '@/lib/db';
 import { articles } from '@/lib/db/schema';
+import { toStoredArticle } from '@/lib/db/stored-article';
 import {
   ArticleSchema,
   HeadwordSchema,
@@ -299,7 +300,7 @@ async function writeBatch(batch: Article[]) {
       batch.map((article) => ({
         headword: article.headword,
         variety: article.variety,
-        data: article,
+        data: toStoredArticle(article),
       })),
     )
     .onConflictDoUpdate({
@@ -333,7 +334,7 @@ async function main() {
 
   for await (const article of readArticles(path)) {
     stats.headwords++;
-    stats.bytes += Buffer.byteLength(JSON.stringify(article));
+    stats.bytes += Buffer.byteLength(JSON.stringify(toStoredArticle(article)));
 
     if (dryRun) continue;
 
