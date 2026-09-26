@@ -4,8 +4,6 @@ import {
   LexicalCategorySchema,
   TranscriptionSchema,
   VarietySchema,
-  slugToVariety,
-  type Headword,
 } from '@/lib/schemas';
 
 export const HeadwordDisplaySchema = z.object({
@@ -24,21 +22,3 @@ export const HeadwordRecordSchema = z.object({
   display: HeadwordDisplaySchema,
 });
 export type HeadwordRecord = z.infer<typeof HeadwordRecordSchema>;
-
-function headwordObjectID(headword: Headword) {
-  return `${headword.variety}:${encodeURIComponent(headword.form)}`;
-}
-
-export function toHeadwordRecord(
-  headword: Headword,
-  display: HeadwordDisplay,
-): HeadwordRecord {
-  return HeadwordRecordSchema.parse({
-    objectID: headwordObjectID(headword),
-    headword: headword.form,
-    variety: headword.variety,
-    url: `/dictionary/${slugToVariety.encode(headword.variety)}/${encodeURIComponent(headword.form)}`,
-    hasArticle: true,
-    display,
-  });
-}

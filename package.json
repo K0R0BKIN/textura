@@ -13,7 +13,6 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "setup": "bash scripts/setup.sh",
-    "algolia:reindex:headwords": "tsx scripts/reindex-headwords.ts",
     "wiktionary:import": "tsx scripts/import-wiktionary.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
