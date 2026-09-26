@@ -23,7 +23,11 @@ import {
 //   pnpm wiktionary:import <path to .jsonl or .jsonl.gz> [--dry-run]
 
 const variety: Variety = 'en-US';
-const batchSize = 250;
+// Rows per INSERT (Postgres allows 65,535 parameters, 3 per row) and INSERTs
+// in flight at once. Each batch is one HTTP request to Neon, so round trips
+// dominate import time.
+const batchSize = 2000;
+const concurrency = 4;
 const maxExamples = 2;
 const maxQuotationLength = 120;
 
@@ -294,19 +298,13 @@ async function* readArticles(path: string) {
 }
 
 async function writeBatch(batch: Article[]) {
-  await drizzleDb
-    .insert(articles)
-    .values(
-      batch.map((article) => ({
-        headword: article.headword,
-        variety: article.variety,
-        data: toStoredArticle(article),
-      })),
-    )
-    .onConflictDoUpdate({
-      target: [articles.headword, articles.variety],
-      set: { data: sql`excluded.data` },
-    });
+  await drizzleDb.insert(articles).values(
+    batch.map((article) => ({
+      headword: article.headword,
+      variety: article.variety,
+      data: toStoredArticle(article),
+    })),
+  );
 }
 
 async function main() {
@@ -325,12 +323,24 @@ async function main() {
   const dryRun = values['dry-run'];
 
   // TRUNCATE frees the space immediately; DELETE would keep dead rows until
-  // vacuum, roughly doubling storage during a re-import.
+  // vacuum, roughly doubling storage during a re-import. The table starts
+  // empty, so plain INSERTs can't conflict.
   if (!dryRun) {
     await drizzleDb.execute(sql`truncate table ${articles}`);
   }
 
   let batch: Article[] = [];
+  let imported = 0;
+  const writes = new Set<Promise<void>>();
+
+  function write(articles: Article[]) {
+    const pending = writeBatch(articles).then(() => {
+      writes.delete(pending);
+      imported += articles.length;
+      console.log(`Imported ${imported} headwords…`);
+    });
+    writes.add(pending);
+  }
 
   for await (const article of readArticles(path)) {
     stats.headwords++;
@@ -340,13 +350,14 @@ async function main() {
 
     batch.push(article);
     if (batch.length === batchSize) {
-      await writeBatch(batch);
+      write(batch);
       batch = [];
-      console.log(`Imported ${stats.headwords} headwords…`);
+      if (writes.size >= concurrency) await Promise.race(writes);
     }
   }
 
-  if (!dryRun && batch.length > 0) await writeBatch(batch);
+  if (!dryRun && batch.length > 0) write(batch);
+  await Promise.all(writes);
 
   console.log({
     ...stats,
