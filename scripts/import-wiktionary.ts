@@ -323,8 +323,10 @@ async function main() {
 
   const dryRun = values['dry-run'];
 
+  // TRUNCATE frees the space immediately; DELETE would keep dead rows until
+  // vacuum, roughly doubling storage during a re-import.
   if (!dryRun) {
-    await drizzleDb.delete(articles);
+    await drizzleDb.execute(sql`truncate table ${articles}`);
   }
 
   let batch: Article[] = [];
