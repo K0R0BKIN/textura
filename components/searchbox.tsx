@@ -27,9 +27,8 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group';
-import { createDictionaryPlugin } from '@/lib/algolia/autocomplete/dictionary-plugin';
-import type { HeadwordRecord } from '@/lib/algolia/headwords';
-import { searchClient } from '@/lib/algolia/search-client';
+import { createDictionaryPlugin } from '@/lib/search/dictionary-plugin';
+import type { HeadwordRecord } from '@/lib/search/headwords';
 import { cn } from '@/lib/utils';
 
 type Autocomplete = AutocompleteApi<
@@ -95,7 +94,7 @@ function useAutocomplete() {
     >({
       id: 'searchbox',
 
-      plugins: [createDictionaryPlugin({ searchClient })],
+      plugins: [createDictionaryPlugin()],
 
       onStateChange({ state }) {
         setAutocompleteState(state);
@@ -242,7 +241,7 @@ function SearchBox() {
                 >
                   {items.map((item) => (
                     <SearchBoxItem
-                      key={`${source.sourceId}:${item.objectID}`}
+                      key={`${source.sourceId}:${item.url}`}
                       item={item}
                       {...autocomplete.getItemProps({
                         item,

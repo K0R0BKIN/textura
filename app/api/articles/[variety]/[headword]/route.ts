@@ -1,4 +1,5 @@
 import { findArticle } from '@/lib/articles';
+import { cacheHeaders } from '@/lib/http';
 import { HeadwordSchema, slugToVariety } from '@/lib/schemas';
 
 export async function GET(
@@ -23,8 +24,10 @@ export async function GET(
   });
 
   if (!parsedHeadword.success) {
-    return Response.json(null);
+    return Response.json(null, { headers: cacheHeaders });
   }
 
-  return Response.json(await findArticle(parsedHeadword.data));
+  return Response.json(await findArticle(parsedHeadword.data), {
+    headers: cacheHeaders,
+  });
 }

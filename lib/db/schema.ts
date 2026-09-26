@@ -1,4 +1,6 @@
+import { sql } from 'drizzle-orm';
 import {
+  index,
   jsonb,
   pgTable,
   primaryKey,
@@ -15,5 +17,10 @@ export const articles = pgTable(
     data: jsonb('data').$type<Article>().notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (t) => [primaryKey({ columns: [t.headword, t.variety] })],
+  (t) => [
+    primaryKey({ columns: [t.headword, t.variety] }),
+    index('articles_headword_prefix_idx').on(
+      sql`lower(${t.headword}) text_pattern_ops`,
+    ),
+  ],
 );

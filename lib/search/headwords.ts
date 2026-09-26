@@ -14,11 +14,18 @@ export const HeadwordDisplaySchema = z.object({
 export type HeadwordDisplay = z.infer<typeof HeadwordDisplaySchema>;
 
 export const HeadwordRecordSchema = z.object({
-  objectID: z.string(),
   headword: z.string(),
   variety: VarietySchema,
   url: z.string(),
-  hasArticle: z.boolean(),
   display: HeadwordDisplaySchema,
 });
 export type HeadwordRecord = z.infer<typeof HeadwordRecordSchema>;
+
+// Normalized on the client too, so equivalent queries share one CDN cache entry.
+export function normalizeSearchQuery(query: string) {
+  return query.trim().replace(/\s+/g, ' ').toLowerCase().slice(0, 50);
+}
+
+export function isSearchableQuery(query: string) {
+  return /[\p{L}\p{N}]/u.test(query);
+}
