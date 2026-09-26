@@ -12,5 +12,3 @@ export const HeadwordSchema = z
   .brand<'Headword'>();
 
 export type Headword = z.infer<typeof HeadwordSchema>;
-
-export const HeadwordSupportSchema = z.object({ valid: z.boolean() });

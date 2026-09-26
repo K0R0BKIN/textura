@@ -12,8 +12,4 @@ export {
 } from './etymon';
 export { ArticleSchema, type Article } from './article';
 export { VarietySchema, slugToVariety, type Variety } from './variety';
-export {
-  HeadwordSchema,
-  HeadwordSupportSchema,
-  type Headword,
-} from './headword';
+export { HeadwordSchema, type Headword } from './headword';

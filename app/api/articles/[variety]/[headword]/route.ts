@@ -1,6 +1,5 @@
-import { generateArticle } from '@/lib/articles';
-import { SupportedHeadwordSchema } from '@/lib/headwords';
-import { slugToVariety } from '@/lib/schemas';
+import { findArticle } from '@/lib/articles';
+import { HeadwordSchema, slugToVariety } from '@/lib/schemas';
 
 export async function GET(
   _request: Request,
@@ -18,7 +17,7 @@ export async function GET(
     return Response.json(null, { status: 404 });
   }
 
-  const parsedHeadword = await SupportedHeadwordSchema.safeParseAsync({
+  const parsedHeadword = HeadwordSchema.safeParse({
     form: decodeURIComponent(headword),
     variety: parsedVariety.data,
   });
@@ -27,13 +26,5 @@ export async function GET(
     return Response.json(null);
   }
 
-  const article = await generateArticle(parsedHeadword.data);
-
-  if (!article) {
-    throw new Error(
-      `Failed to generate article for "${parsedHeadword.data.form}"`,
-    );
-  }
-
-  return Response.json(article);
+  return Response.json(await findArticle(parsedHeadword.data));
 }

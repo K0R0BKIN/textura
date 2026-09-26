@@ -1,13 +1,10 @@
 import { z } from 'zod';
 
 import {
-  ArticleSchema,
-  HeadwordSchema,
   LexicalCategorySchema,
   TranscriptionSchema,
   VarietySchema,
   slugToVariety,
-  type Article,
   type Headword,
 } from '@/lib/schemas';
 
@@ -32,34 +29,16 @@ function headwordObjectID(headword: Headword) {
   return `${headword.variety}:${encodeURIComponent(headword.form)}`;
 }
 
-export function getArticleDisplay(
-  article: Article,
-): HeadwordDisplay | undefined {
-  const lexeme = article.etymons[0]?.lexemes[0];
-  const sense = lexeme?.senses[0];
-
-  if (!lexeme && !sense) return undefined;
-
-  return {
-    partOfSpeech: lexeme?.lexicalCategory,
-    pronunciation: lexeme?.transcription,
-    meaning: sense?.definition,
-  };
-}
-
-export function articleToHeadwordRecord(article: Article): HeadwordRecord {
-  const parsedArticle = ArticleSchema.parse(article);
-  const headword = HeadwordSchema.parse({
-    form: parsedArticle.headword,
-    variety: parsedArticle.variety,
-  });
-
+export function toHeadwordRecord(
+  headword: Headword,
+  display: HeadwordDisplay,
+): HeadwordRecord {
   return HeadwordRecordSchema.parse({
     objectID: headwordObjectID(headword),
     headword: headword.form,
     variety: headword.variety,
     url: `/dictionary/${slugToVariety.encode(headword.variety)}/${encodeURIComponent(headword.form)}`,
     hasArticle: true,
-    display: getArticleDisplay(parsedArticle),
+    display,
   });
 }
