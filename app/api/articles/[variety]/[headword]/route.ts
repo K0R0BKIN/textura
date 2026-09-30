@@ -28,13 +28,15 @@ export async function GET(
     return Response.json(null, { headers: cacheHeaders });
   }
 
-  const edited = await findEditedArticle(parsedHeadword.data);
+  // Both at once: the raw article is needed whenever no edit is saved yet.
+  const [edited, article] = await Promise.all([
+    findEditedArticle(parsedHeadword.data),
+    findArticle(parsedHeadword.data),
+  ]);
 
   if (edited) {
     return Response.json(edited, { headers: cacheHeaders });
   }
-
-  const article = await findArticle(parsedHeadword.data);
 
   if (!article) {
     return Response.json(null, { headers: cacheHeaders });

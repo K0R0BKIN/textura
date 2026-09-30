@@ -23,8 +23,10 @@ import type {
 const model = 'gpt-6-luna';
 
 // Items are packed into chunks of about this many output tokens, each a
-// parallel request.
+// parallel request. The first chunk of shown senses is smaller: the reader
+// waits on it live, while later chunks are ready by the time they're needed.
 const chunkTokens = 300;
+const firstChunkTokens = 60;
 
 // Articles with this many senses or fewer show all of them up front.
 const showAllUpTo = 3;
@@ -136,12 +138,13 @@ function estimateTokens(item: InputItem) {
     : item.definition.length / 4 + 15;
 }
 
-function toChunks(items: InputItem[]) {
+function toChunks(items: InputItem[], firstBudget = chunkTokens) {
   const chunks: InputItem[][] = [];
-  let size = chunkTokens;
+  let size = 0;
   for (const item of items) {
     const itemSize = estimateTokens(item);
-    if (size + itemSize > chunkTokens) {
+    const budget = chunks.length === 1 ? firstBudget : chunkTokens;
+    if (chunks.length === 0 || size + itemSize > budget) {
       chunks.push([]);
       size = 0;
     }
@@ -249,11 +252,48 @@ async function editChunk(
   return response.output_parsed!.items;
 }
 
+// Starts rewriting a chunk right away; its text queues up until relayed.
+function startChunk(
+  headword: string,
+  chunk: InputItem[],
+  byId: Map<string, InputItem>,
+) {
+  const queue = channel<EditStreamMessage>();
+  const result = editChunk(headword, chunk, byId, queue.push).then(
+    (edited) => {
+      queue.close();
+      return edited;
+    },
+    (error) => {
+      queue.close(error);
+      throw error;
+    },
+  );
+  // Errors surface through the queue; don't also leave them unhandled.
+  result.catch(() => {});
+  return { queue, result };
+}
+
 export async function editArticle(
   article: Article,
   send: (message: EditStreamMessage) => void,
 ): Promise<EditedArticle> {
   const word = article.headword;
+
+  // Etymologies don't depend on the sense order, so rewrite them while Jev
+  // ranks the senses.
+  const origins = new Map(
+    article.etymons.flatMap((etymon, e) => {
+      if (!etymon.origin) return [];
+      const item: InputItem = {
+        id: `o${e + 1}`,
+        kind: 'origin',
+        text: etymon.origin,
+      };
+      return [[item.id, startChunk(word, [item], new Map())]];
+    }),
+  );
+
   const lexemes = article.etymons.flatMap((etymon, e) =>
     etymon.lexemes.map((lexeme) => ({
       etymon: e,
@@ -370,28 +410,37 @@ export async function editArticle(
 
   send({ type: 'outline', article: outline, order: items.map((i) => i.id) });
 
-  // Start every chunk now, then relay their text in order: the first chunk
+  // Split into segments in display order: each etymology, already being
+  // rewritten, and the runs of senses between them, cut into chunks. Start
+  // every chunk now, then relay their text in order: the current chunk
   // streams live while later ones buffer.
-  const channels = toChunks(items).map((chunk) => {
-    const queue = channel<EditStreamMessage>();
-    const result = editChunk(word, chunk, byId, queue.push).then(
-      (edited) => {
-        queue.close();
-        return edited;
-      },
-      (error) => {
-        queue.close(error);
-        throw error;
-      },
-    );
-    // Errors surface through the queue; don't also leave them unhandled.
-    result.catch(() => {});
-    return { queue, result };
-  });
-  for (const { queue } of channels) {
+  const segments: ReturnType<typeof startChunk>[] = [];
+  let firstRun = true;
+  let run: InputItem[] = [];
+  const flushRun = () => {
+    if (run.length === 0) return;
+    for (const chunk of toChunks(
+      run,
+      firstRun ? firstChunkTokens : chunkTokens,
+    )) {
+      segments.push(startChunk(word, chunk, byId));
+    }
+    firstRun = false;
+    run = [];
+  };
+  for (const item of items) {
+    if (item.kind === 'origin') {
+      flushRun();
+      segments.push(origins.get(item.id)!);
+    } else {
+      run.push(item);
+    }
+  }
+  flushRun();
+  for (const { queue } of segments) {
     for await (const message of queue) send(message);
   }
-  const edited = (await Promise.all(channels.map((c) => c.result))).flat();
+  const edited = (await Promise.all(segments.map((c) => c.result))).flat();
   send({ type: 'done' });
 
   const text = new Map(edited.map((item) => [item.id, item.text]));
