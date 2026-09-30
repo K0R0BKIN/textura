@@ -12,8 +12,9 @@ import { fromStoredArticle } from '@/lib/db/stored-article';
 import type { Article, Sense } from '@/lib/schemas';
 
 // Pilot for on-demand article editing. Reads articles from the database
-// (read-only), ranks senses with Jev, rewrites them with an OpenAI model, and
-// writes a Markdown report. Nothing is stored.
+// (read-only), ranks senses with Jev, then rewrites the article in parallel
+// chunks cut in display order, and writes a Markdown report with a simulated
+// top-to-bottom playback. Nothing is stored.
 //
 // Usage:
 //   pnpm tsx scripts/pilot-edit.ts --out report.md [--model gpt-6-luna]
@@ -32,9 +33,12 @@ const showRules = {
   learner: (s: RankedSense) => s.learner >= 0.5,
 };
 
-// Groups (a top-level sense with its subsenses) are packed into chunks of
-// about this many output tokens, each rewritten by a parallel request.
+// Items are packed into chunks of about this many output tokens, each a
+// parallel request.
 const chunkTokens = 300;
+
+// How fast the page reveals text that has already been written.
+const revealCharsPerSecond = 2500;
 
 const commonness = score(
   'How commonly is `word` used with the meaning in `sense.definition` in present-day English?',
@@ -56,17 +60,14 @@ const learner = noul(
   },
 );
 
-const EditedSensesSchema = z.object({
-  senses: z.array(
+const EditedArticleSchema = z.object({
+  items: z.array(
     z.object({
       id: z.string(),
-      definition: z.string(),
-      example: z.string().nullable(),
+      text: z.string(),
     }),
   ),
 });
-
-const EditedOriginSchema = z.object({ origin: z.string() });
 
 type RankedSense = {
   id: string;
@@ -97,78 +98,20 @@ function parentId(id: string) {
   return id.split('.').slice(0, -1).join('.');
 }
 
-// Rough output size of one sense: its rewritten definition, an example, JSON.
-function estimateTokens(sense: RankedSense) {
-  return sense.source.definition.length / 4 + 30;
-}
-
-// Splits senses into units that fit a chunk: a sense together with all its
-// subsenses when they fit, otherwise the sense alone followed by its
-// subsenses' units. Splitting large groups keeps one group from becoming the
-// slowest request.
-function units(senses: RankedSense[]): RankedSense[][] {
-  return senses.flatMap((sense) => {
-    const group = flatten([sense]);
-    const size = group.reduce((n, s) => n + estimateTokens(s), 0);
-    return size <= chunkTokens ? [group] : [[sense], ...units(sense.subsenses)];
-  });
-}
-
-// Packs consecutive units into chunks of about chunkTokens output tokens.
-function chunkSenses(senses: RankedSense[]): RankedSense[][] {
-  const chunks: RankedSense[][] = [];
-  let current: RankedSense[] = [];
-  let size = 0;
-  for (const unit of units(senses)) {
-    const unitSize = unit.reduce((n, s) => n + estimateTokens(s), 0);
-    if (current.length > 0 && size + unitSize > chunkTokens) {
-      chunks.push(current);
-      current = [];
-      size = 0;
-    }
-    current.push(...unit);
-    size += unitSize;
-  }
-  if (current.length > 0) chunks.push(current);
-  return chunks;
-}
-
-// Ancestors of a chunk's senses that another chunk rewrites. They're sent as
-// read-only context so subsenses are written knowing their group.
-function contextFor(chunk: RankedSense[], byId: Map<string, RankedSense>) {
-  const ids = new Set(chunk.map((s) => s.id));
-  const context = new Map<string, RankedSense>();
-  for (const sense of chunk) {
-    for (let id = parentId(sense.id); id; id = parentId(id)) {
-      if (!ids.has(id)) context.set(id, byId.get(id)!);
-    }
-  }
-  return [...context.values()].toSorted((a, b) =>
-    a.id.localeCompare(b.id, undefined, { numeric: true }),
-  );
-}
-
-// What's wrong with a chunk's output: senses missing, added or duplicated.
-function chunkProblems(
-  senses: RankedSense[],
-  edited: z.infer<typeof EditedSensesSchema>['senses'],
+// Rough output size of an item: a rewritten definition or a condensed
+// etymology, plus JSON.
+function estimateTokens(
+  item:
+    | { kind: 'origin'; text: string }
+    | { kind: 'sense'; definition: string; examples: string[] },
 ) {
-  const expected = senses.map((s) => s.id);
-  const actual = edited.map((s) => s.id);
-  const problems = [
-    ...expected
-      .filter((id) => !actual.includes(id))
-      .map((id) => `${id} missing`),
-    ...actual
-      .filter((id, k) => !expected.includes(id) || actual.indexOf(id) !== k)
-      .map((id) => `${id} unexpected`),
-  ];
-  return problems;
+  return item.kind === 'origin'
+    ? Math.min(item.text.length / 8, 150) + 20
+    : item.definition.length / 4 + 15;
 }
 
-// A completed sense object in streamed JSON output.
-const completedSense =
-  /\{"id":"([^"]+)","definition":"(?:[^"\\]|\\.)*","example":(?:null|"(?:[^"\\]|\\.)*")\}/g;
+// A completed item object in streamed JSON output.
+const completedItem = /\{"id":"([^"]+)","text":"(?:[^"\\]|\\.)*"\}/g;
 
 // Senses shown up front for one ranked part of speech: a sense when it passes
 // the rule, and its subsenses that pass too.
@@ -223,18 +166,17 @@ async function main() {
     timeout: 5_000,
     retry: { maxRetries: 1 },
   });
-  const sensesPrompt = readFileSync('prompts/edit-senses.md', 'utf8');
-  const originPrompt = readFileSync('prompts/edit-origin.md', 'utf8');
+  const prompt = readFileSync('prompts/edit-article.md', 'utf8');
 
   const report: string[] = [
     `# Editing pilot`,
     ``,
-    `Model: \`${model}\`, reasoning effort: \`${effort}\`, Jev: \`jev-latest\`, shown by: \`${showRule}\` rule`,
+    `Model: \`${model}\`, reasoning effort: \`${effort}\`, Jev: \`jev-latest\`, shown by: \`${showRule}\` rule. Chunks of ~${chunkTokens} tokens in display order, played back in sequence at ${revealCharsPerSecond} chars/s.`,
     ``,
   ];
   const summary: string[] = [
-    `| Word | Senses | Shown (learner) | Shown (score) | Chunks | First sense | First 5 in order | All shown | Total | Cost |`,
-    `|---|---|---|---|---|---|---|---|---|---|`,
+    `| Word | Senses | Shown | Chunks | Jev | First text | First shown sense | Shown part on screen | Longest wait | "Show more" ready | Cost |`,
+    `|---|---|---|---|---|---|---|---|---|---|---|`,
   ];
 
   for (const word of positionals) {
@@ -256,14 +198,17 @@ async function main() {
         senses: withIds(lexeme.senses),
       })),
     );
+    // Item ids: `o1` for the first etymology, `2:1.3` for sense 1.3 of the
+    // second part of speech.
+    const senseKey = (lexemeIndex: number, id: string) =>
+      `${lexemeIndex + 1}:${id}`;
 
     const start = performance.now();
     const seconds = (ms: number) => `${(ms / 1000).toFixed(1)} s`;
 
-    // Jev: one small request per sense, all in parallel, alongside the edit.
-    let jevMs = 0;
+    // Jev first: the rewrite streams in display order, so it needs the order.
     let jevTokens = 0;
-    const scoring = Promise.all(
+    await Promise.all(
       lexemes.flatMap(({ lexeme, senses }) =>
         flatten(senses).map(async (sense) => {
           const parent = sense.id.includes('.')
@@ -288,139 +233,8 @@ async function main() {
           jevTokens += usage.input_tokens;
         }),
       ),
-    ).then(() => {
-      jevMs = performance.now() - start;
-    });
-
-    // OpenAI: senses in chunks, plus one request per origin, all in parallel.
-    // Rewriting doesn't depend on the order, so it starts before Jev finishes.
-    const usage = { input: 0, cached: 0, output: 0 };
-    const retries: string[] = [];
-    // When each sense's rewrite finished streaming, keyed `lexeme:id`.
-    const completedAt = new Map<string, number>();
-
-    async function edit<T>(
-      instructions: string,
-      input: unknown,
-      schema: z.ZodType<T>,
-      name: string,
-      onText?: (text: string) => void,
-    ): Promise<T> {
-      const stream = openai.responses.stream({
-        model,
-        instructions,
-        input: JSON.stringify(input),
-        reasoning: { effort },
-        text: { format: zodTextFormat(schema, name) },
-      });
-      let text = '';
-      stream.on('response.output_text.delta', ({ delta }) => {
-        text += delta;
-        onText?.(text);
-      });
-      const response = await stream.finalResponse();
-      usage.input += response.usage?.input_tokens ?? 0;
-      usage.cached += response.usage?.input_tokens_details?.cached_tokens ?? 0;
-      usage.output += response.usage?.output_tokens ?? 0;
-      if (!response.output_parsed) throw new Error(`${word}: no ${name}`);
-      return response.output_parsed;
-    }
-
-    // Flat, so every sense is one row to rewrite; nested input let the model
-    // skip subsenses. parentId keeps the hierarchy visible.
-    const toInput = (senses: RankedSense[]) =>
-      senses.map((s) => ({
-        id: s.id,
-        ...(s.id.includes('.') && { parentId: parentId(s.id) }),
-        definition: s.source.definition,
-        examples: s.source.examples,
-        groupsSubsenses: s.subsenses.length > 0,
-      }));
-
-    const chunks = lexemes.flatMap((entry, lexemeIndex) => {
-      const byId = new Map(flatten(entry.senses).map((s) => [s.id, s]));
-      return chunkSenses(entry.senses).map((senses) => ({
-        lexemeIndex,
-        senses,
-        context: contextFor(senses, byId),
-      }));
-    });
-
-    const [editedChunks, editedOrigins] = await Promise.all([
-      Promise.all(
-        chunks.map(async ({ lexemeIndex, senses, context }) => {
-          const input = {
-            headword: word,
-            partOfSpeech: lexemes[lexemeIndex].lexeme.lexicalCategory,
-            ...(context.length > 0 && {
-              context: context.map((s) => ({
-                id: s.id,
-                definition: s.source.definition,
-              })),
-            }),
-            senses: toInput(senses),
-          };
-          const keys = senses.map((s) => `${lexemeIndex}:${s.id}`);
-          // One retry when a chunk comes back invalid; a retried sense only
-          // counts as shown once its retry has streamed in.
-          for (let attempt = 1; ; attempt++) {
-            const edited = await edit(
-              sensesPrompt,
-              input,
-              EditedSensesSchema,
-              'senses',
-              (text) => {
-                for (const [, id] of text.matchAll(completedSense)) {
-                  const key = `${lexemeIndex}:${id}`;
-                  if (!completedAt.has(key)) {
-                    completedAt.set(key, performance.now() - start);
-                  }
-                }
-              },
-            );
-            const invalid = chunkProblems(senses, edited.senses);
-            if (invalid.length === 0 || attempt === 2) return edited;
-            retries.push(`${word}: ${invalid.join('; ')}`);
-            for (const key of keys) completedAt.delete(key);
-          }
-        }),
-      ),
-      Promise.all(
-        article.etymons.map((etymon) =>
-          etymon.origin
-            ? edit(
-                originPrompt,
-                { headword: word, origin: etymon.origin },
-                EditedOriginSchema,
-                'origin',
-              ).then((o) => o.origin)
-            : Promise.resolve(undefined),
-        ),
-      ),
-      scoring,
-    ]);
-    const totalMs = performance.now() - start;
-
-    const editedLexemes = lexemes.map((_, i) =>
-      chunks.flatMap((chunk, c) =>
-        chunk.lexemeIndex === i ? editedChunks[c].senses : [],
-      ),
     );
-
-    // Grounding check: every input sense exactly once, nothing added.
-    const problems: string[] = [];
-    lexemes.forEach((entry, i) => {
-      const expected = flatten(entry.senses).map((s) => s.id);
-      const actual = editedLexemes[i].map((s) => s.id);
-      const missing = expected.filter((id) => !actual.includes(id));
-      const extra = actual.filter((id) => !expected.includes(id));
-      const duplicated = actual.filter((id, k) => actual.indexOf(id) !== k);
-      if (missing.length || extra.length || duplicated.length) {
-        problems.push(
-          `${entry.lexeme.lexicalCategory}: missing [${missing}] extra [${extra}] duplicated [${duplicated}]`,
-        );
-      }
-    });
+    const jevMs = performance.now() - start;
 
     for (const entry of lexemes) entry.senses = rank(entry.senses);
     const etymonRank = article.etymons
@@ -435,27 +249,153 @@ async function main() {
       }))
       .toSorted((a, b) => b.commonness - a.commonness);
 
-    // Shown senses under a rule, keyed `lexeme:id`. When nothing passes, the
-    // article's top sense is shown so it's never empty.
-    const shownUnder = (rule: (sense: RankedSense) => boolean) => {
-      const shown = new Set(
-        lexemes.flatMap((entry, i) =>
-          [...visibleSenses(entry.senses, rule)].map((s) => `${i}:${s.id}`),
+    // Shown senses under the rule. When nothing passes, the article's top
+    // sense is shown so it's never empty.
+    const visible = new Set(
+      lexemes.flatMap((entry, i) =>
+        [...visibleSenses(entry.senses, showRules[showRule])].map((s) =>
+          senseKey(i, s.id),
         ),
-      );
-      if (shown.size === 0) {
-        const top = lexemes.findIndex((l) => l.etymon === etymonRank[0].e);
-        shown.add(`${top}:${lexemes[top].senses[0].id}`);
-      }
-      return shown;
-    };
-    const visible = shownUnder(showRules[showRule]);
-    const shownCounts = Object.fromEntries(
-      Object.entries(showRules).map(([name, rule]) => [
-        name,
-        shownUnder(rule).size,
-      ]),
+      ),
     );
+    if (visible.size === 0) {
+      const top = lexemes.findIndex((l) => l.etymon === etymonRank[0].e);
+      visible.add(senseKey(top, lexemes[top].senses[0].id));
+    }
+
+    // Input items in display order: each etymology with its shown senses,
+    // then every hidden sense, so the visible article streams first.
+    type InputItem =
+      | { id: string; kind: 'origin'; text: string }
+      | {
+          id: string;
+          kind: 'sense';
+          partOfSpeech: string;
+          parentId?: string;
+          definition: string;
+          examples: string[];
+          groupsSubsenses: boolean;
+        };
+    const senseItem = (i: number, s: RankedSense): InputItem => ({
+      id: senseKey(i, s.id),
+      kind: 'sense',
+      partOfSpeech: lexemes[i].lexeme.lexicalCategory,
+      ...(s.id.includes('.') && { parentId: senseKey(i, parentId(s.id)) }),
+      definition: s.source.definition,
+      examples: s.source.examples,
+      groupsSubsenses: s.subsenses.length > 0,
+    });
+    const displayOrder = etymonRank.flatMap(({ etymon, e }) => [
+      ...(etymon.origin
+        ? [{ id: `o${e + 1}`, kind: 'origin' as const, text: etymon.origin }]
+        : []),
+      ...lexemes.flatMap((entry, i) =>
+        entry.etymon === e
+          ? flatten(entry.senses).map((s) => senseItem(i, s))
+          : [],
+      ),
+    ]);
+    const shownItems = displayOrder.filter(
+      (item) => item.kind === 'origin' || visible.has(item.id),
+    );
+    const hiddenItems = displayOrder.filter(
+      (item) => item.kind === 'sense' && !visible.has(item.id),
+    );
+    const items = [...shownItems, ...hiddenItems];
+
+    // Chunks in display order, all requested at once. The page plays them
+    // back one after another, so the article still reads top to bottom.
+    const chunks: InputItem[][] = [];
+    let size = chunkTokens;
+    for (const item of items) {
+      const itemSize = estimateTokens(item);
+      if (size + itemSize > chunkTokens) {
+        chunks.push([]);
+        size = 0;
+      }
+      chunks.at(-1)!.push(item);
+      size += itemSize;
+    }
+    const byId = new Map(items.map((item) => [item.id, item]));
+
+    const usage = { input: 0, cached: 0, output: 0 };
+    const completedAt = new Map<string, number>();
+    let firstTextMs = Infinity;
+    const retries: string[] = [];
+
+    const editedChunks = await Promise.all(
+      chunks.map(async (chunk, c) => {
+        // Parents rewritten in another chunk, sent for context only.
+        const ids = new Set(chunk.map((item) => item.id));
+        const context = [
+          ...new Set(
+            chunk.flatMap((item) =>
+              item.kind === 'sense' && item.parentId && !ids.has(item.parentId)
+                ? [item.parentId]
+                : [],
+            ),
+          ),
+        ].map((id) => byId.get(id)!);
+        const input = {
+          headword: word,
+          ...(context.length > 0 && { context }),
+          items: chunk,
+        };
+
+        for (let attempt = 1; ; attempt++) {
+          for (const id of ids) completedAt.delete(id);
+          const stream = openai.responses.stream({
+            model,
+            instructions: prompt,
+            input: JSON.stringify(input),
+            reasoning: { effort },
+            text: { format: zodTextFormat(EditedArticleSchema, 'article') },
+          });
+          let text = '';
+          stream.on('response.output_text.delta', ({ delta }) => {
+            if (c === 0) {
+              firstTextMs = Math.min(firstTextMs, performance.now() - start);
+            }
+            text += delta;
+            for (const [, id] of text.matchAll(completedItem)) {
+              if (!completedAt.has(id)) {
+                completedAt.set(id, performance.now() - start);
+              }
+            }
+          });
+          const response = await stream.finalResponse();
+          usage.input += response.usage?.input_tokens ?? 0;
+          usage.cached +=
+            response.usage?.input_tokens_details?.cached_tokens ?? 0;
+          usage.output += response.usage?.output_tokens ?? 0;
+          const edited = response.output_parsed?.items ?? [];
+
+          const expected = chunk.map((item) => item.id);
+          const actual = edited.map((item) => item.id);
+          const problems = [
+            ...expected
+              .filter((id) => !actual.includes(id))
+              .map((id) => `${id} missing`),
+            ...actual
+              .filter(
+                (id, k) => !expected.includes(id) || actual.indexOf(id) !== k,
+              )
+              .map((id) => `${id} unexpected`),
+          ];
+          if (
+            problems.length === 0 &&
+            actual.some((id, k) => id !== expected[k])
+          ) {
+            problems.push('items reordered');
+          }
+          if (problems.length === 0 || attempt === 2) return edited;
+          retries.push(`chunk ${c + 1}: ${problems.join('; ')}`);
+        }
+      }),
+    );
+    const totalMs = performance.now() - start;
+    const edited = editedChunks.flat();
+    const editedById = new Map(edited.map((item) => [item.id, item]));
 
     const price = prices[model];
     const cost =
@@ -468,72 +408,49 @@ async function main() {
       (n, l) => n + flatten(l.senses).length,
       0,
     );
-    const visibleCount = visible.size;
 
-    // How examples relate to Wiktionary's: reused verbatim, edited (mostly
-    // the same words, which the prompt forbids), or newly written.
-    const exampleKinds = { reused: 0, edited: 0, written: 0 };
-    const words = (text: string) =>
-      new Set(text.toLowerCase().match(/[\p{L}']+/gu) ?? []);
-    const editedExamples: string[] = [];
-    lexemes.forEach((entry, i) => {
-      for (const sense of flatten(entry.senses)) {
-        const example = editedLexemes[i].find(
-          (s) => s.id === sense.id,
-        )?.example;
-        if (!example) continue;
-        if (sense.source.examples.includes(example)) {
-          exampleKinds.reused++;
-          continue;
-        }
-        const out = words(example);
-        const overlap = sense.source.examples.some((source) => {
-          const shared = [...words(source)].filter((w) => out.has(w)).length;
-          return shared / Math.max(out.size, 1) >= 0.6;
-        });
-        if (overlap) {
-          exampleKinds.edited++;
-          editedExamples.push(example);
-        } else exampleKinds.written++;
-      }
-    });
-
-    // Streaming view: a sense can be shown in its final place once its
-    // rewrite has streamed in and Jev's order is known.
-    const shownOrder = etymonRank.flatMap(({ e }) =>
-      lexemes.flatMap((entry, i) =>
-        entry.etymon === e
-          ? flatten(entry.senses)
-              .map((s) => `${i}:${s.id}`)
-              .filter((key) => visible.has(key))
-          : [],
-      ),
+    // Simulated playback: shown items appear in order. An item that is still
+    // being written types in live; one already written is revealed from the
+    // buffer at revealCharsPerSecond. A wait happens when playback reaches a
+    // later chunk that hasn't written the item yet.
+    const chunkOf = new Map(
+      chunks.flatMap((chunk, c) => chunk.map((item) => [item.id, c])),
     );
-    const readyAt = (keys: string[]) =>
-      Math.max(jevMs, ...keys.map((key) => completedAt.get(key) ?? totalMs));
-    const firstShownMs = readyAt(shownOrder.slice(0, 1));
-    const firstFiveMs = readyAt(shownOrder.slice(0, 5));
-    const allShownMs = readyAt(shownOrder);
-    const untracked = senseCount - completedAt.size;
+    let playbackMs = firstTextMs;
+    let longestWaitMs = 0;
+    let firstShownSenseMs = totalMs;
+    for (const item of shownItems) {
+      const out = editedById.get(item.id);
+      const examples = item.kind === 'sense' ? item.examples.join(' ') : '';
+      const chars = (out?.text.length ?? 0) + examples.length;
+      const buffered = playbackMs + (chars / revealCharsPerSecond) * 1000;
+      const written = completedAt.get(item.id) ?? totalMs;
+      if (chunkOf.get(item.id)! > 0) {
+        longestWaitMs = Math.max(longestWaitMs, written - buffered);
+      }
+      playbackMs = Math.max(buffered, written);
+      if (item.kind === 'sense' && firstShownSenseMs === totalMs) {
+        firstShownSenseMs = playbackMs;
+      }
+    }
+    const shownDoneMs = playbackMs;
+    const showMoreReadyMs = Math.max(
+      0,
+      ...hiddenItems.map((item) => completedAt.get(item.id) ?? totalMs),
+    );
 
     summary.push(
-      `| ${word} | ${senseCount} | ${shownCounts.learner} | ${shownCounts.score} | ${chunks.length} | ${seconds(firstShownMs)} | ${seconds(firstFiveMs)} | ${seconds(allShownMs)} | ${seconds(totalMs)} | $${cost.toFixed(4)} |`,
+      `| ${word} | ${senseCount} | ${visible.size} | ${chunks.length} | ${seconds(jevMs)} | ${seconds(firstTextMs)} | ${seconds(firstShownSenseMs)} | ${seconds(shownDoneMs)} | ${seconds(Math.max(0, longestWaitMs))} | ${seconds(showMoreReadyMs)} | $${cost.toFixed(4)} |`,
     );
 
     report.push(
       `## ${word}`,
       ``,
-      `${visibleCount} of ${senseCount} senses shown up front · ${chunks.length} chunks · Jev ${seconds(jevMs)} · first sense ${seconds(firstShownMs)} · first 5 ${seconds(firstFiveMs)} · all shown ${seconds(allShownMs)} · total ${seconds(totalMs)} · ${usage.input} in (${usage.cached} cached) / ${usage.output} out · $${cost.toFixed(4)}${untracked ? ` · ⚠ ${untracked} senses not seen streaming` : ''}`,
-      ``,
-      problems.length
-        ? `**Grounding check failed:** ${problems.join('; ')}`
-        : `Grounding check passed.`,
+      `${visible.size} of ${senseCount} senses shown up front · ${chunks.length} chunks · Jev ${seconds(jevMs)} · first text ${seconds(firstTextMs)} · first shown sense ${seconds(firstShownSenseMs)} · shown part on screen ${seconds(shownDoneMs)} · longest wait ${seconds(Math.max(0, longestWaitMs))} · show more ready ${seconds(showMoreReadyMs)} · all done ${seconds(totalMs)} · ${usage.input} in (${usage.cached} cached) / ${usage.output} out · $${cost.toFixed(4)}`,
       ``,
       retries.length
-        ? `**Retried chunks:** ${retries.join(' · ')}`
-        : `No retries.`,
-      ``,
-      `Examples: ${exampleKinds.reused} reused verbatim · ${exampleKinds.written} newly written · ${exampleKinds.edited} edited from Wiktionary${editedExamples.length ? ` (${editedExamples.map((e) => `“${e}”`).join('; ')})` : ''}`,
+        ? `**Retried:** ${retries.join(' · ')}`
+        : `Every item kept exactly once, in order.`,
       ``,
     );
 
@@ -543,19 +460,18 @@ async function main() {
         ``,
         `**Origin (Wiktionary):** ${etymon.origin ?? '—'}`,
         ``,
-        `**Origin (edited):** ${editedOrigins[e] ?? '—'}`,
+        `**Origin (edited):** ${editedById.get(`o${e + 1}`)?.text ?? '—'}`,
         ``,
       );
       lexemes.forEach((entry, i) => {
         if (entry.etymon !== e) return;
-        const edited = new Map(editedLexemes[i].map((s) => [s.id, s]));
         report.push(`#### ${entry.lexeme.lexicalCategory}`, ``);
         for (const sense of flatten(entry.senses)) {
           const depth = sense.id.split('.').length - 1;
-          const out = edited.get(sense.id);
-          const hidden = !visible.has(`${i}:${sense.id}`);
+          const out = editedById.get(senseKey(i, sense.id));
+          const hidden = !visible.has(senseKey(i, sense.id));
           report.push(
-            `${'  '.repeat(depth)}- ${hidden ? '_(show more)_ ' : ''}**${out?.definition ?? '⚠ missing'}**${out?.example ? ` — _${out.example}_` : sense.subsenses.length === 0 ? ' — _(no example)_' : ''}  `,
+            `${'  '.repeat(depth)}- ${hidden ? '_(show more)_ ' : ''}**${out?.text ?? '⚠ missing'}**${sense.source.examples.length ? ` — _${sense.source.examples.join('_ · _')}_` : ''}  `,
             `${'  '.repeat(depth)}  <sub>was: ${sense.source.definition} · commonness ${sense.commonness.toFixed(2)} · learner ${sense.learner.toFixed(2)}</sub>`,
           );
         }
