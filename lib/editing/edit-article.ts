@@ -28,6 +28,12 @@ const model = 'gpt-6-luna';
 const chunkTokens = 300;
 const firstChunkTokens = 60;
 
+// OpenAI streams often stall (about 5–10% of requests in testing), before any
+// output or even after all of it. A request that sends nothing for this long
+// is given up on, and one that stalled before any output is retried.
+const stallTimeout = 5_000;
+const stallRetries = 2;
+
 // Articles with this many senses or fewer show all of them up front.
 const showAllUpTo = 3;
 
@@ -208,14 +214,47 @@ async function editChunk(
     ),
   ].map((id) => byId.get(id)!);
 
+  const input = JSON.stringify({
+    headword,
+    ...(context.length > 0 && { context }),
+    items: chunk,
+  });
+
+  // A stall before any output is retried, unseen by the reader. After text
+  // has been sent, a retry would rewrite it, so the chunk fails instead.
+  let items = await requestChunk(input, ids, push);
+  for (let retry = 1; retry <= stallRetries; retry++) {
+    if (items !== 'stalled before output') break;
+    items = await requestChunk(input, ids, push);
+  }
+  if (items === 'stalled before output') {
+    throw new Error('Editing stalled');
+  }
+
+  const actual = items.map((item) => item.id);
+  const expected = chunk.map((item) => item.id);
+  if (
+    actual.length !== expected.length ||
+    actual.some((id, k) => id !== expected[k])
+  ) {
+    throw new Error(
+      `Edited chunk doesn't match its input: expected [${expected}], got [${actual}]`,
+    );
+  }
+  return items;
+}
+
+// One request for a chunk, pushing text as it streams in. When the stream
+// stalls after the output is complete, the output is used as is.
+async function requestChunk(
+  input: string,
+  ids: Set<string>,
+  push: (message: EditStreamMessage) => void,
+): Promise<z.infer<typeof OutputSchema>['items'] | 'stalled before output'> {
   const stream = openai.responses.stream({
     model,
     instructions: prompt,
-    input: JSON.stringify({
-      headword,
-      ...(context.length > 0 && { context }),
-      items: chunk,
-    }),
+    input,
     reasoning: { effort: 'none' },
     text: { format: zodTextFormat(OutputSchema, 'article') },
   });
@@ -236,20 +275,34 @@ async function editChunk(
     }
     if (!partial) push({ type: 'end', id });
   };
-  stream.on('response.output_text.delta', ({ delta }) => parser.write(delta));
+  let output = '';
+  stream.on('response.output_text.delta', ({ delta }) => {
+    output += delta;
+    parser.write(delta);
+  });
 
-  const response = await stream.finalResponse();
-  const actual = response.output_parsed?.items.map((item) => item.id) ?? [];
-  const expected = chunk.map((item) => item.id);
-  if (
-    actual.length !== expected.length ||
-    actual.some((id, k) => id !== expected[k])
-  ) {
-    throw new Error(
-      `Edited chunk doesn't match its input: expected [${expected}], got [${actual}]`,
-    );
+  let timer: NodeJS.Timeout | undefined;
+  const stalled = new Promise<'stalled'>((resolve) => {
+    const restart = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => resolve('stalled'), stallTimeout);
+    };
+    restart();
+    stream.on('event', restart);
+  });
+  const response = await Promise.race([stream.finalResponse(), stalled]);
+  clearTimeout(timer);
+
+  if (response !== 'stalled') {
+    return response.output_parsed?.items ?? [];
   }
-  return response.output_parsed!.items;
+  stream.abort();
+  if (output.trim() === '') return 'stalled before output';
+  try {
+    return OutputSchema.parse(JSON.parse(output)).items;
+  } catch {
+    throw new Error('Editing stalled partway through');
+  }
 }
 
 // Starts rewriting a chunk right away; its text queues up until relayed.
