@@ -1,10 +1,8 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import { useDocumentTitle } from 'usehooks-ts';
-import ContentLoader from 'react-content-loader';
-import { useSpinDelay } from 'spin-delay';
-import useSWRImmutable from 'swr/immutable';
 
 import {
   Empty,
@@ -12,37 +10,15 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
-import type { Article, Sense } from '@/lib/schemas';
+import type { EditedArticle, EditedSense } from '@/lib/schemas';
 import { cn } from '@/lib/utils';
+import { useEditedArticle } from './use-edited-article';
 
-async function fetchArticle(url: string): Promise<Article | null> {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Failed to load article (${response.status})`);
-  }
-
-  return response.json();
-}
-
-function ArticleSkeleton() {
-  return (
-    <div className="mx-auto w-full max-w-2xl pt-26">
-      <ContentLoader
-        width="100%"
-        height={140}
-        speed={1.8}
-        backgroundColor="light-dark(var(--muted), var(--gray-5))"
-        foregroundColor="light-dark(var(--brand-4), var(--gray-6))"
-      >
-        <rect x="0" y="0" width="192" height="48" rx="10" />
-        <rect x="0" y="64" width="128" height="20" rx="10" />
-        <rect x="0" y="100" width="100%" height="16" rx="10" />
-        <rect x="0" y="124" width="75%" height="16" rx="10" />
-      </ContentLoader>
-    </div>
-  );
-}
+type Reveal = {
+  revealed: Record<string, string>;
+  complete: Set<string>;
+  receivedText: (id: string) => string;
+};
 
 function ArticleNotFound() {
   return (
@@ -55,6 +31,31 @@ function ArticleNotFound() {
   );
 }
 
+function Headword({ headword, index }: { headword: string; index?: number }) {
+  return (
+    <h2 className="font-serif text-5xl font-semibold tracking-tight [font-variation-settings:'opsz'_16]">
+      {headword}
+      {index !== undefined && (
+        <sup className="text-subtle-foreground select-none">{index}</sup>
+      )}
+    </h2>
+  );
+}
+
+// Appears only if nothing new has shown up for a moment.
+function StreamingIndicator() {
+  return (
+    <div
+      aria-hidden
+      className="stream-indicator mt-3 h-3 w-16 rounded-full bg-muted"
+    />
+  );
+}
+
+function flatten(senses: EditedSense[]): EditedSense[] {
+  return senses.flatMap((sense) => [sense, ...flatten(sense.subsenses)]);
+}
+
 const senseListStyles = [
   'list-[bare-decimal]',
   'list-[bare-lower-alpha]',
@@ -63,13 +64,24 @@ const senseListStyles = [
 
 function Senses({
   senses,
+  expanded,
+  reveal,
   depth = 0,
   className,
 }: {
-  senses: Sense[];
+  senses: EditedSense[];
+  expanded: boolean;
+  reveal: Reveal;
   depth?: number;
   className?: string;
 }) {
+  // Shown senses appear as their text streams in; hidden ones, once
+  // expanded, show whatever text has arrived.
+  const visible = senses.filter((sense) =>
+    sense.shown ? sense.id in reveal.revealed : expanded,
+  );
+  if (visible.length === 0) return null;
+
   return (
     <ol
       className={cn(
@@ -78,26 +90,149 @@ function Senses({
         className,
       )}
     >
-      {senses.map((sense, senseIndex) => (
-        <li key={senseIndex} className="font-serif">
-          <p className="font-medium">{sense.definition}</p>
-
-          {sense.examples.map((example, exampleIndex) => (
-            <p key={exampleIndex} className="text-muted-foreground italic">
-              {example}
+      {visible.map((sense) => {
+        const text = sense.shown
+          ? reveal.revealed[sense.id]
+          : reveal.receivedText(sense.id) || sense.definition;
+        const complete = !sense.shown || reveal.complete.has(sense.id);
+        return (
+          <li key={sense.id} className="font-serif">
+            <p className="font-medium">
+              {text || <span className="text-muted-foreground">…</span>}
             </p>
-          ))}
 
-          {sense.subsenses.length > 0 && (
+            {complete &&
+              sense.examples.map((example, index) => (
+                <p key={index} className="text-muted-foreground italic">
+                  {example}
+                </p>
+              ))}
+
             <Senses
               senses={sense.subsenses}
+              expanded={expanded}
+              reveal={reveal}
               depth={depth + 1}
               className="mt-2"
             />
-          )}
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ol>
+  );
+}
+
+// The article as blocks in reading order: each etymon's origin, then each
+// part of speech with its shown senses. A block appears only once the block
+// before it is complete, so the article grows top to bottom without holes.
+function EditedArticleView({
+  article,
+  reveal,
+  streaming,
+  waiting,
+}: {
+  article: EditedArticle;
+  reveal: Reveal;
+  streaming: boolean;
+  waiting: boolean;
+}) {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  type Block = { key: string; ids: string[] };
+  const blocks: Block[] = article.etymons.flatMap((etymon, e) => [
+    ...(etymon.originId
+      ? [{ key: `${e}:origin`, ids: [etymon.originId] }]
+      : []),
+    ...etymon.lexemes.map((lexeme, l) => ({
+      key: `${e}:${l}`,
+      ids: flatten(lexeme.senses)
+        .filter((sense) => sense.shown)
+        .map((sense) => sense.id),
+    })),
+  ]);
+  const isComplete = (block: Block) =>
+    block.ids.every((id) => reveal.complete.has(id));
+  const visibleBlocks = new Set<string>();
+  for (const [index, block] of blocks.entries()) {
+    const previousComplete = index === 0 || isComplete(blocks[index - 1]);
+    const started = block.ids.length === 0 || block.ids[0] in reveal.revealed;
+    if (!previousComplete || !started) break;
+    visibleBlocks.add(block.key);
+  }
+
+  const showSuperscript = article.etymons.length > 1;
+
+  return (
+    <>
+      {article.etymons.map((etymon, e) => {
+        const firstBlock = etymon.originId ? `${e}:origin` : `${e}:0`;
+        if (e > 0 && !visibleBlocks.has(firstBlock)) return null;
+
+        return (
+          <section key={e} className={e > 0 ? 'mt-12' : ''}>
+            <Headword
+              headword={article.headword}
+              index={showSuperscript ? e + 1 : undefined}
+            />
+
+            {etymon.originId && visibleBlocks.has(`${e}:origin`) && (
+              <p className="mt-2 font-serif whitespace-pre-line text-muted-foreground">
+                {reveal.revealed[etymon.originId]}
+              </p>
+            )}
+
+            {etymon.lexemes.map((lexeme, l) => {
+              const key = `${e}:${l}`;
+              if (!visibleBlocks.has(key)) return null;
+              const hidden = flatten(lexeme.senses).filter((s) => !s.shown);
+              const block = blocks.find((b) => b.key === key)!;
+
+              return (
+                <div key={l} className={l === 0 ? 'mt-4' : 'mt-8'}>
+                  <h3 className="text-lg text-subtle-foreground">
+                    <span className="font-semibold select-none">
+                      {lexeme.lexicalCategory}
+                    </span>
+
+                    {lexeme.transcription && (
+                      <span className="ml-2 text-muted-foreground before:content-['/'] after:content-['/']">
+                        {lexeme.transcription}
+                      </span>
+                    )}
+                  </h3>
+
+                  <Senses
+                    senses={lexeme.senses}
+                    expanded={!!expanded[key]}
+                    reveal={reveal}
+                    className="mt-2"
+                  />
+
+                  {hidden.length > 0 && isComplete(block) && (
+                    <button
+                      type="button"
+                      className="mt-2 text-sm text-muted-foreground hover:text-foreground"
+                      onClick={() =>
+                        setExpanded((current) => ({
+                          ...current,
+                          [key]: !current[key],
+                        }))
+                      }
+                    >
+                      {expanded[key]
+                        ? 'Show less'
+                        : `Show ${hidden.length} more`}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </section>
+        );
+      })}
+
+      {streaming && waiting && <StreamingIndicator />}
+    </>
   );
 }
 
@@ -106,74 +241,51 @@ export function Article() {
     headword: string;
     variety: string;
   }>();
+  const headword = decodeURIComponent(params.headword);
 
-  useDocumentTitle(decodeURIComponent(params.headword));
+  useDocumentTitle(headword);
 
-  const {
-    data: article,
-    error,
-    isLoading,
-  } = useSWRImmutable(
-    `/api/articles/${params.variety}/${encodeURIComponent(params.headword)}`,
-    fetchArticle,
+  const { state, receivedText, retry } = useEditedArticle(
+    `/api/articles/${params.variety}/${encodeURIComponent(headword)}`,
   );
 
-  const showSkeleton = useSpinDelay(isLoading, {
-    delay: 500,
-    minDuration: 200,
-    ssr: false,
-  });
-
-  if (error) throw error;
-  if (showSkeleton) return <ArticleSkeleton />;
-  if (article === null) return <ArticleNotFound />;
-  if (!article) return null;
-
-  const showSuperscript = article.etymons.length > 1;
+  if (state.status === 'not-found') return <ArticleNotFound />;
 
   return (
     <article className="mx-auto w-full max-w-2xl py-26">
-      <h1 className="sr-only">{article.headword}</h1>
+      <h1 className="sr-only">{headword}</h1>
 
-      {article.etymons.map((etymon, etymonIndex) => (
-        <section key={etymonIndex} className={etymonIndex > 0 ? 'mt-12' : ''}>
-          <h2 className="font-serif text-5xl font-semibold tracking-tight [font-variation-settings:'opsz'_16]">
-            {article.headword}
-            {showSuperscript && (
-              <sup className="text-subtle-foreground select-none">
-                {etymonIndex + 1}
-              </sup>
-            )}
-          </h2>
+      {state.status === 'streaming' || state.status === 'done' ? (
+        <EditedArticleView
+          article={state.article}
+          reveal={{
+            revealed: state.revealed,
+            complete: state.complete,
+            receivedText,
+          }}
+          streaming={state.status === 'streaming'}
+          waiting={state.waiting}
+        />
+      ) : (
+        <section>
+          <Headword headword={headword} />
 
-          {etymon.origin && (
-            <p className="mt-2 font-serif whitespace-pre-line text-muted-foreground">
-              {etymon.origin}
+          {state.status === 'loading' && <StreamingIndicator />}
+
+          {state.status === 'error' && (
+            <p className="mt-4 text-muted-foreground">
+              This article couldn’t be loaded.{' '}
+              <button
+                type="button"
+                className="underline hover:text-foreground"
+                onClick={retry}
+              >
+                Try again
+              </button>
             </p>
           )}
-
-          {etymon.lexemes?.map((lexeme, lexemeIndex) => (
-            <div
-              key={lexemeIndex}
-              className={lexemeIndex === 0 ? 'mt-4' : 'mt-8'}
-            >
-              <h3 className="text-lg text-subtle-foreground">
-                <span className="font-semibold select-none">
-                  {lexeme.lexicalCategory}
-                </span>
-
-                {lexeme.transcription && (
-                  <span className="ml-2 text-muted-foreground before:content-['/'] after:content-['/']">
-                    {lexeme.transcription}
-                  </span>
-                )}
-              </h3>
-
-              <Senses senses={lexeme.senses} className="mt-2" />
-            </div>
-          ))}
         </section>
-      ))}
+      )}
     </article>
   );
 }

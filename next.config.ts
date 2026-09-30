@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   devIndicators: false,
   agentRules: false,
+  // The article route reads its editing prompt from disk.
+  outputFileTracingIncludes: {
+    '/api/articles/**': ['./prompts/**/*'],
+  },
 };
 
 export default nextConfig;

@@ -7,7 +7,7 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import type { Variety } from '@/lib/schemas';
+import type { EditedArticle, Variety } from '@/lib/schemas';
 import type { StoredArticle } from './stored-article';
 
 export const articles = pgTable(
@@ -24,4 +24,16 @@ export const articles = pgTable(
       sql`lower(${t.headword}) text_pattern_ops`,
     ),
   ],
+);
+
+// Articles edited into Textura's style, generated on first view.
+export const editedArticles = pgTable(
+  'edited_articles',
+  {
+    headword: text('headword').notNull(),
+    variety: text('variety').$type<Variety>().notNull().default('en-US'),
+    data: json('data').$type<EditedArticle>().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.headword, t.variety] })],
 );

@@ -2,9 +2,13 @@ import 'server-only';
 
 import { cacheLife, cacheTag } from 'next/cache';
 import { and, eq } from 'drizzle-orm';
-import type { Headword } from './schemas';
+import {
+  EditedArticleSchema,
+  type EditedArticle,
+  type Headword,
+} from './schemas';
 import { drizzleDb } from './db';
-import { articles } from './db/schema';
+import { articles, editedArticles } from './db/schema';
 import { fromStoredArticle } from './db/stored-article';
 
 export async function findArticle(headword: Headword) {
@@ -24,4 +28,32 @@ export async function findArticle(headword: Headword) {
     .limit(1);
 
   return existing ? fromStoredArticle(existing) : null;
+}
+
+// Not cached here: an article is missing until its first edit is saved. The
+// route's CDN cache covers repeat reads.
+export async function findEditedArticle(headword: Headword) {
+  const [existing] = await drizzleDb
+    .select()
+    .from(editedArticles)
+    .where(
+      and(
+        eq(editedArticles.headword, headword.form),
+        eq(editedArticles.variety, headword.variety),
+      ),
+    )
+    .limit(1);
+
+  return existing ? EditedArticleSchema.parse(existing.data) : null;
+}
+
+export async function saveEditedArticle(article: EditedArticle) {
+  await drizzleDb
+    .insert(editedArticles)
+    .values({
+      headword: article.headword,
+      variety: article.variety,
+      data: article,
+    })
+    .onConflictDoNothing();
 }

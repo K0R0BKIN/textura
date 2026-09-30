@@ -1,4 +1,5 @@
-import { findArticle } from '@/lib/articles';
+import { findArticle, findEditedArticle } from '@/lib/articles';
+import { streamEdit } from '@/lib/editing/stream-edit';
 import { cacheHeaders } from '@/lib/http';
 import { HeadwordSchema, slugToVariety } from '@/lib/schemas';
 
@@ -27,7 +28,17 @@ export async function GET(
     return Response.json(null, { headers: cacheHeaders });
   }
 
-  return Response.json(await findArticle(parsedHeadword.data), {
-    headers: cacheHeaders,
-  });
+  const edited = await findEditedArticle(parsedHeadword.data);
+
+  if (edited) {
+    return Response.json(edited, { headers: cacheHeaders });
+  }
+
+  const article = await findArticle(parsedHeadword.data);
+
+  if (!article) {
+    return Response.json(null, { headers: cacheHeaders });
+  }
+
+  return streamEdit(article);
 }
