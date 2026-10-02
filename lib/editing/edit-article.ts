@@ -203,6 +203,7 @@ async function editChunk(
   chunk: InputItem[],
   byId: Map<string, InputItem>,
   push: (message: EditStreamMessage) => void,
+  editModel = model,
 ) {
   const ids = new Set(chunk.map((item) => item.id));
   // Parents rewritten in another chunk, sent for context only.
@@ -227,10 +228,10 @@ async function editChunk(
 
   // A stall before any output is retried, unseen by the reader. After text
   // has been sent, a retry would rewrite it, so the chunk fails instead.
-  let items = await requestChunk(instructions, input, ids, push);
+  let items = await requestChunk(editModel, instructions, input, ids, push);
   for (let retry = 1; retry <= stallRetries; retry++) {
     if (items !== 'stalled before output') break;
-    items = await requestChunk(instructions, input, ids, push);
+    items = await requestChunk(editModel, instructions, input, ids, push);
   }
   if (items === 'stalled before output') {
     throw new Error('Editing stalled');
@@ -253,6 +254,7 @@ async function editChunk(
 // as the output's JSON is complete: OpenAI streams sometimes stall after that,
 // or append stray text.
 async function requestChunk(
+  model: string,
   instructions: string,
   input: string,
   ids: Set<string>,
@@ -406,11 +408,11 @@ function originItems(article: Article): InputItem[] {
 }
 
 // Rewrites only an article's etymologies, the same way editArticle does. For
-// testing the origin prompt.
-export async function editOrigins(article: Article) {
+// testing the origin prompt, optionally with another model.
+export async function editOrigins(article: Article, editModel = model) {
   const items = originItems(article);
   return items.length > 0
-    ? editChunk(article.headword, items, new Map(), () => {})
+    ? editChunk(article.headword, items, new Map(), () => {}, editModel)
     : [];
 }
 

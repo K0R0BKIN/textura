@@ -5,8 +5,9 @@
 //   node --env-file=.env.local --conditions=react-server --import tsx \
 //     scripts/eval-origins.mts [words…]
 //
-// RUNS repeats the set to show how much results vary between runs, and OUT
-// writes every rewrite and check to a JSON file.
+// RUNS repeats the set to show how much results vary between runs, MODEL
+// rewrites with another model than the editor's, and OUT writes every rewrite
+// and check to a JSON file.
 
 import { writeFileSync } from 'node:fs';
 import { noul, TypeSafeClient } from '@typesafe-ai/sdk';
@@ -37,7 +38,7 @@ const jev = new TypeSafeClient({
 });
 const checks = {
   added: noul(
-    'Does `rewrite` state anything that `source` does not: a fact, word, language, date, person, or meaning? Rewording, summarizing, and leaving things out do not count.',
+    'Does `rewrite` state anything that `source` does not: a fact, word, language, date, person, or meaning? Rewording, summarizing, and leaving things out do not count, and neither does referring to the same word\'s other etymologies in `otherSources`, such as "from the noun".',
   ),
   certainty: noul(
     'Does `rewrite` change how certain a claim is compared with `source`, for example by stating plainly what `source` calls probable, possible, or uncertain, or by hedging what `source` states plainly?',
@@ -48,6 +49,7 @@ type Result = {
   word: string;
   source: string;
   rewrite: string;
+  ms: number;
   issues: string[];
   added: number;
   certainty: number;
@@ -65,12 +67,20 @@ async function evaluate(word: string): Promise<Result[]> {
     article.etymons.map((etymon, e) => [`o${e + 1}`, etymon.origin ?? '']),
   );
 
-  const rewrites = await editOrigins(article);
+  const started = Date.now();
+  const rewrites = await editOrigins(article, process.env.MODEL);
+  const ms = Date.now() - started;
   return Promise.all(
     rewrites.map(async ({ id, text: rewrite }) => {
       const source = sources.get(id)!;
       const { answers } = await jev.systemOne({
-        state: { source, rewrite },
+        state: {
+          source,
+          otherSources: [...sources]
+            .filter(([other, text]) => other !== id && text)
+            .map(([, text]) => text),
+          rewrite,
+        },
         questions: checks,
       });
       const issues = [
@@ -88,6 +98,7 @@ async function evaluate(word: string): Promise<Result[]> {
         word,
         source,
         rewrite,
+        ms,
         issues,
         added: answers.added.noul,
         certainty: answers.certainty.noul,
@@ -129,13 +140,19 @@ for (let run = 1; run <= runs; run++) {
   const count = (match: string) =>
     results.filter((r) => r.issues.some((i) => i.startsWith(match))).length;
   const lengths = results.map((r) => r.rewrite.length).sort((a, b) => a - b);
+  // One time per word, since a word's origins are rewritten together.
+  const times = [...new Map(results.map((r) => [r.word, r.ms])).values()].sort(
+    (a, b) => a - b,
+  );
   const clean = results.filter((r) => r.issues.length === 0).length;
   console.log(
     `run ${run}: ${clean}/${results.length} origins clean | ` +
       `adds to source ${count('adds')}, changes certainty ${count('changes')}, ` +
       `reconstructed ${count('reconstructed')}, long ${count('long')} | ` +
       `length median ${lengths[Math.floor(lengths.length / 2)]}, ` +
-      `max ${lengths.at(-1)}\n`,
+      `max ${lengths.at(-1)} | time median ` +
+      `${(times[Math.floor(times.length / 2)] / 1000).toFixed(1)} s, ` +
+      `max ${(times.at(-1)! / 1000).toFixed(1)} s\n`,
   );
 }
 
