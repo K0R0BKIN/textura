@@ -166,7 +166,7 @@ async function main() {
     timeout: 5_000,
     retry: { maxRetries: 1 },
   });
-  const prompt = readFileSync('prompts/edit-article.md', 'utf8');
+  const prompt = readFileSync('prompts/edit-senses.md', 'utf8');
 
   const report: string[] = [
     `# Editing pilot`,

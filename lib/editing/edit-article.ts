@@ -41,10 +41,12 @@ const showAllUpTo = 3;
 // "show more".
 const shownFrom = 2;
 
-const prompt = readFileSync(
-  join(process.cwd(), 'prompts/edit-article.md'),
-  'utf8',
-);
+const readPrompt = (name: string) =>
+  readFileSync(join(process.cwd(), 'prompts', name), 'utf8');
+const prompts = {
+  origin: readPrompt('edit-origin.md'),
+  sense: readPrompt('edit-senses.md'),
+};
 
 const openai = new OpenAI();
 const jev = new TypeSafeClient({
@@ -220,12 +222,15 @@ async function editChunk(
     items: chunk,
   });
 
+  // Origins and senses are separate chunks, each with its own prompt.
+  const instructions = prompts[chunk[0].kind];
+
   // A stall before any output is retried, unseen by the reader. After text
   // has been sent, a retry would rewrite it, so the chunk fails instead.
-  let items = await requestChunk(input, ids, push);
+  let items = await requestChunk(instructions, input, ids, push);
   for (let retry = 1; retry <= stallRetries; retry++) {
     if (items !== 'stalled before output') break;
-    items = await requestChunk(input, ids, push);
+    items = await requestChunk(instructions, input, ids, push);
   }
   if (items === 'stalled before output') {
     throw new Error('Editing stalled');
@@ -248,13 +253,14 @@ async function editChunk(
 // as the output's JSON is complete: OpenAI streams sometimes stall after that,
 // or append stray text.
 async function requestChunk(
+  instructions: string,
   input: string,
   ids: Set<string>,
   push: (message: EditStreamMessage) => void,
 ): Promise<z.infer<typeof OutputSchema>['items'] | 'stalled before output'> {
   const stream = openai.responses.stream({
     model,
-    instructions: prompt,
+    instructions,
     input,
     reasoning: { effort: 'none' },
     text: { format: zodTextFormat(OutputSchema, 'article') },

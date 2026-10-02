@@ -12,7 +12,7 @@ import { fromStoredArticle } from '../lib/db/stored-article';
 // EFFORT sets the reasoning effort, `none` by default.
 const effort = (process.env.EFFORT ?? 'none') as 'none' | 'low';
 const openai = new OpenAI({ timeout: 15_000, maxRetries: 3 });
-const prompt = readFileSync('prompts/edit-article.md', 'utf8');
+const prompt = readFileSync('prompts/edit-origin.md', 'utf8');
 const Output = z.object({
   items: z.array(z.object({ id: z.string(), text: z.string() })),
 });
