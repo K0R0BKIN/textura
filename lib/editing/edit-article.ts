@@ -244,8 +244,9 @@ async function editChunk(
   return items;
 }
 
-// One request for a chunk, pushing text as it streams in. When the stream
-// stalls after the output is complete, the output is used as is.
+// One request for a chunk, pushing text as it streams in. It's done as soon
+// as the output's JSON is complete: OpenAI streams sometimes stall after that,
+// or append stray text.
 async function requestChunk(
   input: string,
   ids: Set<string>,
@@ -264,6 +265,7 @@ async function requestChunk(
     emitPartialValues: true,
     paths: ['$.items.*.text'],
   });
+  const items: z.infer<typeof OutputSchema>['items'] = [];
   const written = new Map<string, number>();
   parser.onValue = ({ value, parent, partial }) => {
     const id = (parent as { id?: string } | undefined)?.id;
@@ -273,12 +275,24 @@ async function requestChunk(
       push({ type: 'text', id, text: value.slice(previous) });
       written.set(id, value.length);
     }
-    if (!partial) push({ type: 'end', id });
+    if (!partial) {
+      push({ type: 'end', id });
+      items.push({ id, text: value });
+    }
   };
-  let output = '';
-  stream.on('response.output_text.delta', ({ delta }) => {
-    output += delta;
-    parser.write(delta);
+
+  let started = false;
+  const outcome = new Promise<'complete' | 'malformed'>((resolve) => {
+    parser.onEnd = () => resolve('complete');
+    stream.on('response.output_text.delta', ({ delta }) => {
+      if (parser.isEnded) return;
+      started ||= delta.trim() !== '';
+      try {
+        parser.write(delta);
+      } catch {
+        resolve('malformed');
+      }
+    });
   });
 
   let timer: NodeJS.Timeout | undefined;
@@ -290,18 +304,26 @@ async function requestChunk(
     restart();
     stream.on('event', restart);
   });
-  const response = await Promise.race([stream.finalResponse(), stalled]);
-  clearTimeout(timer);
+  // Errors, or a response that ends before its JSON does.
+  const failed = stream.finalResponse().then(
+    () => {
+      throw new Error('Edited chunk ended before its output was complete');
+    },
+    (error: unknown) => {
+      throw error;
+    },
+  );
 
-  if (response !== 'stalled') {
-    return response.output_parsed?.items ?? [];
-  }
-  stream.abort();
-  if (output.trim() === '') return 'stalled before output';
   try {
-    return OutputSchema.parse(JSON.parse(output)).items;
-  } catch {
+    const result = await Promise.race([outcome, stalled, failed]);
+    if (result === 'complete') return items;
+    if (result === 'malformed') throw new Error('Edited chunk is malformed');
+    if (!started) return 'stalled before output';
     throw new Error('Editing stalled partway through');
+  } finally {
+    clearTimeout(timer);
+    failed.catch(() => {});
+    stream.abort();
   }
 }
 
