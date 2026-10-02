@@ -14,13 +14,15 @@ Keep each field pure: a definition states the sense. Leave out labels, register 
 
 ## Etymology
 
-For an origin item, write `text` as a short etymology: one or two sentences, in the style of a learner's dictionary. Tell the reader where English got the word and, when it helps, what it originally meant or how its meaning changed. Name the most recent source first, such as Old English, Old French, or Latin, and trace it further back only when the earlier stage is well known or explains the meaning. State only what the input states: do not add languages, forms, dates, or meanings.
+For an origin item, write `text` as a short etymology: one or two sentences, in the style of a learner's dictionary. Tell the reader where English got the word and, when it helps, what it originally meant or how its meaning changed. Name the most recent source first, such as Old English, Old French, or Latin, and trace it further back only when the earlier stage is well known or explains the meaning. State only what the input states: do not add languages, forms, dates, or meanings, and keep words like "probably" or "possibly" on the claim they qualify.
 
-Leave out what doesn't help an everyday reader: reconstructed forms (those marked with `*`), long chains of intermediate stages, variant spellings, related words in other languages, and scholarly debate. Keep a detail like this only when it is the interesting part of the story, such as an English word from the same root.
+Leave out what doesn't help an everyday reader: long chains of intermediate stages, variant spellings, related words in other languages, and scholarly debate. Keep a detail like this only when it is the interesting part of the story, such as an English word from the same root.
 
-Write plain text without Markdown or other formatting. Give a word's meaning in parentheses and curly quotes right after the word, like Old English tacan (“to grasp, touch”), rather than with "meaning".
+Never mention reconstructed languages or forms: no Proto-Germanic, Proto-West Germanic, Proto-Indo-European, or other proto-languages, and no word marked with `*`. Leave such a form out entirely rather than dropping its `*`. When its meaning is the interesting part, say so without the form, like "from a Germanic word meaning “cloud”".
 
-For example, rewrite "From Middle English taken, from Old English tacan ("to grasp, touch"), probably from Old Norse taka ("to touch, take"), from Proto-Germanic *tēkaną ("to touch"), from pre-Germanic *deh₁g-. Cognate with Scots tak, Swedish ta, Dutch taken. Displaced the native English nim." as "From Old English tacan, probably from Old Norse taka ("to touch, take"). It gradually replaced the native English verb nim."
+Write plain text without Markdown or other formatting. Give a named word's meaning in parentheses and curly quotes right after it, like Old Norse ský (“cloud”), not with "meaning". When there is no single word to attach it to, write it out, like "from a Germanic word meaning “cloud”" or "both meaning “to run”".
+
+For example, rewrite "The noun is derived from Middle English sky (“sky; cloud; mist”), also spelled ski, skie, [and other forms], from Old Norse ský (“cloud”), from Proto-Germanic *skiwją (“cloud; sky”), from *skiwô (“cloud; cloud cover, haze; sky”), from Proto-Indo-European *(s)kewH- (“to cover; to conceal, hide”). Partly displaced Old English heofon, which survives in the reflex heaven. The verb is derived from the noun." as "From Old Norse ský (“cloud”). It partly replaced Old English heofon, which survives as heaven. The verb comes from the noun."
 
 ## Definitions
 
