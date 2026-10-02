@@ -55,16 +55,24 @@ const jev = new TypeSafeClient({
   retry: { maxRetries: 2 },
 });
 
-const importance = score(
-  'How important is it for an everyday reader to know this meaning of `word`, as given in `sense.definition`?',
-  [
-    'Not at all: obsolete, archaic, or found only in old texts',
-    'Hardly: rare, regional, or confined to a narrow technical or specialist field',
-    'Somewhat: occasionally met; useful but not essential',
-    'Important: regularly met in everyday reading, conversation, or media',
-    'Essential: among the first meanings anyone needs for this word',
-  ],
-);
+// Jev rates senses in batches of this many per request: one per sense means
+// over a hundred requests for a word like "run", while a whole part of speech
+// per request compresses the scores of long lists. Batches of 10 kept rank
+// agreement with one request per sense at 0.84–0.95.
+const rankBatchSize = 10;
+
+const importanceLevels = [
+  'Not at all: obsolete, archaic, or found only in old texts',
+  'Hardly: rare, regional, or confined to a narrow technical or specialist field',
+  'Somewhat: occasionally met; useful but not essential',
+  'Important: regularly met in everyday reading, conversation, or media',
+  'Essential: among the first meanings anyone needs for this word',
+] as const;
+const importance = (index: number) =>
+  score(
+    `How important is it for an everyday reader to know this meaning of \`word\`, as given in \`senses[${index}].definition\`?`,
+    importanceLevels,
+  );
 
 const OutputSchema = z.object({
   items: z.array(z.object({ id: z.string(), text: z.string() })),
@@ -409,28 +417,39 @@ export async function editArticle(
     entry.senses = withIds(entry.lexeme.senses, `${i + 1}:`);
   });
 
-  // Jev: one small request per sense, all in parallel.
+  // Jev: batches of senses from one part of speech, all in parallel.
   await Promise.all(
     lexemes.flatMap(({ lexeme, senses }) => {
-      const byId = new Map(flatten(senses).map((s) => [s.id, s]));
-      return flatten(senses).map(async (sense) => {
-        const parentKey = parentId(sense.id);
-        const parent = parentKey ? byId.get(parentKey) : undefined;
+      const all = flatten(senses);
+      const byId = new Map(all.map((s) => [s.id, s]));
+      const batches = Array.from(
+        { length: Math.ceil(all.length / rankBatchSize) },
+        (_, k) => all.slice(k * rankBatchSize, (k + 1) * rankBatchSize),
+      );
+      return batches.map(async (batch) => {
         const { answers } = await jev.systemOne({
           state: {
             word,
             partOfSpeech: lexeme.lexicalCategory,
-            sense: {
-              definition: sense.source.definition,
-              ...(parent && { parentDefinition: parent.source.definition }),
-              ...(sense.source.examples[0] && {
-                example: sense.source.examples[0],
-              }),
-            },
+            senses: batch.map((sense) => {
+              const parentKey = parentId(sense.id);
+              const parent = parentKey ? byId.get(parentKey) : undefined;
+              return {
+                definition: sense.source.definition,
+                ...(parent && { parentDefinition: parent.source.definition }),
+                ...(sense.source.examples[0] && {
+                  example: sense.source.examples[0],
+                }),
+              };
+            }),
           },
-          questions: { importance },
+          questions: Object.fromEntries(
+            batch.map((_, i) => [`s${i}`, importance(i)]),
+          ),
         });
-        sense.importance = answers.importance.score;
+        batch.forEach((sense, i) => {
+          sense.importance = answers[`s${i}`].score;
+        });
       });
     }),
   );
