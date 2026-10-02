@@ -175,11 +175,14 @@ function EditedArticleView({
               index={showSuperscript ? e + 1 : undefined}
             />
 
-            {etymon.originId && visibleBlocks.has(`${e}:origin`) && (
-              <p className="mt-2 font-serif whitespace-pre-line text-muted-foreground">
-                <Italicized text={reveal.revealed[etymon.originId] ?? ''} />
-              </p>
-            )}
+            {/* Empty when none of its sentences could be verified. */}
+            {etymon.originId &&
+              visibleBlocks.has(`${e}:origin`) &&
+              reveal.revealed[etymon.originId] && (
+                <p className="mt-2 font-serif whitespace-pre-line text-muted-foreground">
+                  <Italicized text={reveal.revealed[etymon.originId] ?? ''} />
+                </p>
+              )}
 
             {etymon.lexemes.map((lexeme, l) => {
               const key = `${e}:${l}`;

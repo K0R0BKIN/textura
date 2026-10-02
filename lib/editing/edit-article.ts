@@ -7,6 +7,7 @@ import { score, TypeSafeClient } from '@typesafe-ai/sdk';
 import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
+import { editOrigins, originItems, type OriginItem } from './edit-origins';
 import type {
   Article,
   EditedArticle,
@@ -41,12 +42,10 @@ const showAllUpTo = 3;
 // "show more".
 const shownFrom = 2;
 
-const readPrompt = (name: string) =>
-  readFileSync(join(process.cwd(), 'prompts', name), 'utf8');
-const prompts = {
-  origin: readPrompt('edit-origin.md'),
-  sense: readPrompt('edit-senses.md'),
-};
+const prompt = readFileSync(
+  join(process.cwd(), 'prompts', 'edit-senses.md'),
+  'utf8',
+);
 
 const openai = new OpenAI();
 const jev = new TypeSafeClient({
@@ -203,7 +202,6 @@ async function editChunk(
   chunk: InputItem[],
   byId: Map<string, InputItem>,
   push: (message: EditStreamMessage) => void,
-  editModel = model,
 ) {
   const ids = new Set(chunk.map((item) => item.id));
   // Parents rewritten in another chunk, sent for context only.
@@ -223,15 +221,12 @@ async function editChunk(
     items: chunk,
   });
 
-  // Origins and senses are separate chunks, each with its own prompt.
-  const instructions = prompts[chunk[0].kind];
-
   // A stall before any output is retried, unseen by the reader. After text
   // has been sent, a retry would rewrite it, so the chunk fails instead.
-  let items = await requestChunk(editModel, instructions, input, ids, push);
+  let items = await requestChunk(input, ids, push);
   for (let retry = 1; retry <= stallRetries; retry++) {
     if (items !== 'stalled before output') break;
-    items = await requestChunk(editModel, instructions, input, ids, push);
+    items = await requestChunk(input, ids, push);
   }
   if (items === 'stalled before output') {
     throw new Error('Editing stalled');
@@ -254,15 +249,13 @@ async function editChunk(
 // as the output's JSON is complete: OpenAI streams sometimes stall after that,
 // or append stray text.
 async function requestChunk(
-  model: string,
-  instructions: string,
   input: string,
   ids: Set<string>,
   push: (message: EditStreamMessage) => void,
 ): Promise<z.infer<typeof OutputSchema>['items'] | 'stalled before output'> {
   const stream = openai.responses.stream({
     model,
-    instructions,
+    instructions: prompt,
     input,
     reasoning: { effort: 'none' },
     text: { format: zodTextFormat(OutputSchema, 'article') },
@@ -357,29 +350,33 @@ function startChunk(
   return { queue, result };
 }
 
-// Starts rewriting several items in one request, with a queue per item, so
-// each can be relayed at its own place in the article. An item's queue
-// closes as soon as its text is complete.
-function startSharedChunk(headword: string, chunk: InputItem[]) {
-  if (chunk.length === 0)
-    return new Map<string, ReturnType<typeof startChunk>>();
+// Starts rewriting a word's etymologies, with a queue per etymology so each
+// can be relayed at its own place in the article. Each is checked against its
+// source first, so its text arrives whole.
+function startOrigins(headword: string, items: OriginItem[]) {
   const queues = new Map(
-    chunk.map((item) => [item.id, channel<EditStreamMessage>()]),
+    items.map((item) => [item.id, channel<EditStreamMessage>()]),
   );
-  const open = new Set(queues.keys());
-  const result = editChunk(headword, chunk, new Map(), (message) => {
-    if (message.type !== 'text' && message.type !== 'end') return;
-    queues.get(message.id)?.push(message);
-    if (message.type === 'end' && open.delete(message.id)) {
-      queues.get(message.id)!.close();
-    }
-  }).catch((error: unknown) => {
-    for (const id of open) queues.get(id)!.close(error);
-    open.clear();
-    throw error;
-  });
+  const result =
+    items.length === 0
+      ? Promise.resolve([])
+      : editOrigins(headword, items).then(
+          (origins) => {
+            for (const { id, text } of origins) {
+              const queue = queues.get(id)!;
+              if (text) queue.push({ type: 'text', id, text });
+              queue.push({ type: 'end', id });
+              queue.close();
+            }
+            return origins.map(({ id, text }) => ({ id, text }));
+          },
+          (error: unknown) => {
+            for (const queue of queues.values()) queue.close(error);
+            throw error;
+          },
+        );
   return new Map(
-    chunk.map(({ id }) => {
+    items.map(({ id }) => {
       const part = result.then((edited) =>
         edited.filter((item) => item.id === id),
       );
@@ -388,32 +385,6 @@ function startSharedChunk(headword: string, chunk: InputItem[]) {
       return [id, { queue: queues.get(id)!, result: part }];
     }),
   );
-}
-
-// An article's etymologies to rewrite, with the parts of speech each covers,
-// so related etymologies can refer to each other ("from the noun").
-function originItems(article: Article): InputItem[] {
-  return article.etymons.flatMap((etymon, e) =>
-    etymon.origin
-      ? [
-          {
-            id: `o${e + 1}`,
-            kind: 'origin' as const,
-            text: etymon.origin,
-            partsOfSpeech: etymon.lexemes.map((l) => l.lexicalCategory),
-          },
-        ]
-      : [],
-  );
-}
-
-// Rewrites only an article's etymologies, the same way editArticle does. For
-// testing the origin prompt, optionally with another model.
-export async function editOrigins(article: Article, editModel = model) {
-  const items = originItems(article);
-  return items.length > 0
-    ? editChunk(article.headword, items, new Map(), () => {}, editModel)
-    : [];
 }
 
 export async function editArticle(
@@ -425,7 +396,7 @@ export async function editArticle(
   // Etymologies don't depend on the sense order, so rewrite them while Jev
   // ranks the senses: all in one request, so each can build on the others.
   const originList = originItems(article);
-  const origins = startSharedChunk(word, originList);
+  const origins = startOrigins(word, originList);
 
   const lexemes = article.etymons.flatMap((etymon, e) =>
     etymon.lexemes.map((lexeme) => ({
@@ -525,7 +496,9 @@ export async function editArticle(
     };
   };
   const display = etymons.flatMap(({ e, lexemes }) => [
-    ...originList.filter((item) => item.id === `o${e + 1}`),
+    ...originList
+      .filter((item) => item.id === `o${e + 1}`)
+      .map((item) => ({ ...item, kind: 'origin' as const })),
     ...lexemes.flatMap(({ lexeme, senses }) =>
       flatten(senses).map((s) => ({
         item: senseItem(lexeme.lexicalCategory, s),

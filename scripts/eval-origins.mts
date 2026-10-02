@@ -5,6 +5,9 @@
 //   node --env-file=.env.local --conditions=react-server --import tsx \
 //     scripts/eval-origins.mts [words…]
 //
+// The judge here is separate from the editor's own checks, which already
+// drop sentences they can't verify; it reports what got through anyway.
+//
 // RUNS repeats the set to show how much results vary between runs, MODEL
 // rewrites with another model than the editor's, and OUT writes every rewrite
 // and check to a JSON file.
@@ -15,7 +18,7 @@ import { and, eq } from 'drizzle-orm';
 import { drizzleDb } from '../lib/db';
 import { articles } from '../lib/db/schema';
 import { fromStoredArticle } from '../lib/db/stored-article';
-import { editOrigins } from '../lib/editing/edit-article';
+import { editOrigins, originItems } from '../lib/editing/edit-origins';
 
 // Common words with several etymologies, borrowings, coinages, and uncertain
 // origins. None of them appear in the prompt's examples.
@@ -50,6 +53,8 @@ type Result = {
   source: string;
   rewrite: string;
   ms: number;
+  attempts: number;
+  dropped: string[];
   issues: string[];
   added: number;
   certainty: number;
@@ -68,10 +73,14 @@ async function evaluate(word: string): Promise<Result[]> {
   );
 
   const started = Date.now();
-  const rewrites = await editOrigins(article, process.env.MODEL);
+  const rewrites = await editOrigins(
+    article.headword,
+    originItems(article),
+    process.env.MODEL,
+  );
   const ms = Date.now() - started;
   return Promise.all(
-    rewrites.map(async ({ id, text: rewrite }) => {
+    rewrites.map(async ({ id, text: rewrite, attempts, dropped }) => {
       const source = sources.get(id)!;
       const { answers } = await jev.systemOne({
         state: {
@@ -99,6 +108,8 @@ async function evaluate(word: string): Promise<Result[]> {
         source,
         rewrite,
         ms,
+        attempts,
+        dropped,
         issues,
         added: answers.added.noul,
         certainty: answers.certainty.noul,
@@ -137,6 +148,10 @@ for (let run = 1; run <= runs; run++) {
   for (const r of results.filter((r) => r.issues.length > 0)) {
     console.log(`${r.word}: ${r.issues.join(', ')}\n  ${r.rewrite}\n`);
   }
+  // What the editor's own checks left out, to spot sentences dropped wrongly.
+  for (const r of results.filter((r) => r.dropped.length > 0)) {
+    console.log(`${r.word}: dropped\n  ${r.dropped.join('\n  ')}\n`);
+  }
   const count = (match: string) =>
     results.filter((r) => r.issues.some((i) => i.startsWith(match))).length;
   const lengths = results.map((r) => r.rewrite.length).sort((a, b) => a - b);
@@ -145,6 +160,9 @@ for (let run = 1; run <= runs; run++) {
     (a, b) => a - b,
   );
   const clean = results.filter((r) => r.issues.length === 0).length;
+  const retried = results.filter((r) => r.attempts > 1).length;
+  const dropped = results.reduce((n, r) => n + r.dropped.length, 0);
+  const empty = results.filter((r) => r.rewrite === '').length;
   console.log(
     `run ${run}: ${clean}/${results.length} origins clean | ` +
       `adds to source ${count('adds')}, changes certainty ${count('changes')}, ` +
@@ -152,7 +170,9 @@ for (let run = 1; run <= runs; run++) {
       `length median ${lengths[Math.floor(lengths.length / 2)]}, ` +
       `max ${lengths.at(-1)} | time median ` +
       `${(times[Math.floor(times.length / 2)] / 1000).toFixed(1)} s, ` +
-      `max ${(times.at(-1)! / 1000).toFixed(1)} s\n`,
+      `max ${(times.at(-1)! / 1000).toFixed(1)} s | ` +
+      `rewritten again ${retried}, sentences dropped ${dropped}, ` +
+      `origins left empty ${empty}\n`,
   );
 }
 
