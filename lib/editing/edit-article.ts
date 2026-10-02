@@ -51,7 +51,7 @@ const jev = new TypeSafeClient({
   apiKey: process.env.TYPESAFEAI_API_KEY,
   // Jev is either fast or down, so fail fast rather than wait.
   timeout: 5_000,
-  retry: { maxRetries: 1 },
+  retry: { maxRetries: 2 },
 });
 
 const importance = score(
