@@ -8,6 +8,7 @@ import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { editOrigins, originItems, type OriginItem } from './edit-origins';
+import { hedged, hedgedStream } from './hedge';
 import type {
   Article,
   EditedArticle,
@@ -34,6 +35,16 @@ const firstChunkTokens = 60;
 // is given up on, and one that stalled before any output is retried.
 const stallTimeout = 5_000;
 const stallRetries = 2;
+
+// A request slower than usual gets a duplicate, and the first to answer
+// wins (see hedge.ts): a stream that hasn't produced text after this long,
+// or a Jev call that hasn't answered.
+const hedgeStreamAfter = 2_500;
+
+// A runaway response (the model looping instead of closing its JSON) stops
+// here: far above a chunk's few hundred tokens.
+const maxOutputTokens = 2_000;
+const hedgeJevAfter = 2_000;
 
 // Articles with this many senses or fewer show all of them up front.
 const showAllUpTo = 3;
@@ -261,14 +272,6 @@ async function requestChunk(
   ids: Set<string>,
   push: (message: EditStreamMessage) => void,
 ): Promise<z.infer<typeof OutputSchema>['items'] | 'stalled before output'> {
-  const stream = openai.responses.stream({
-    model,
-    instructions: prompt,
-    input,
-    reasoning: { effort: 'none' },
-    text: { format: zodTextFormat(OutputSchema, 'article') },
-  });
-
   const parser = new JSONParser({
     emitPartialTokens: true,
     emitPartialValues: true,
@@ -287,41 +290,62 @@ async function requestChunk(
     if (!partial) {
       push({ type: 'end', id });
       items.push({ id, text: value });
+      // Done once every item is complete: the model sometimes keeps writing
+      // after the useful part instead of closing its JSON.
+      if (items.length === ids.size) resolveOutcome('complete');
     }
   };
 
   let started = false;
-  const outcome = new Promise<'complete' | 'malformed'>((resolve) => {
-    parser.onEnd = () => resolve('complete');
-    stream.on('response.output_text.delta', ({ delta }) => {
-      if (parser.isEnded) return;
-      started ||= delta.trim() !== '';
-      try {
-        parser.write(delta);
-      } catch {
-        resolve('malformed');
-      }
-    });
-  });
+  let resolveOutcome!: (outcome: 'complete' | 'malformed') => void;
+  const outcome = new Promise<'complete' | 'malformed'>(
+    (resolve) => (resolveOutcome = resolve),
+  );
+  parser.onEnd = () => resolveOutcome('complete');
 
   let timer: NodeJS.Timeout | undefined;
-  const stalled = new Promise<'stalled'>((resolve) => {
-    const restart = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => resolve('stalled'), stallTimeout);
-    };
-    restart();
-    stream.on('event', restart);
-  });
-  // Errors, or a response that ends before its JSON does.
-  const failed = stream.finalResponse().then(
-    () => {
-      throw new Error('Edited chunk ended before its output was complete');
-    },
-    (error: unknown) => {
-      throw error;
+  let resolveStalled!: (stalled: 'stalled') => void;
+  const stalled = new Promise<'stalled'>(
+    (resolve) => (resolveStalled = resolve),
+  );
+  const restartStallTimer = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => resolveStalled('stalled'), stallTimeout);
+  };
+
+  const response = hedgedStream(
+    () =>
+      openai.responses.stream({
+        model,
+        instructions: prompt,
+        input,
+        reasoning: { effort: 'none' },
+        text: { format: zodTextFormat(OutputSchema, 'article') },
+        max_output_tokens: maxOutputTokens,
+      }),
+    hedgeStreamAfter,
+    {
+      onDelta: (delta) => {
+        if (parser.isEnded) return;
+        started ||= delta.trim() !== '';
+        try {
+          parser.write(delta);
+        } catch {
+          resolveOutcome('malformed');
+        }
+      },
+      onEvent: restartStallTimer,
     },
   );
+  restartStallTimer();
+  // Errors, or a response that ends before its JSON does.
+  const failed = response.ended.then((completed) => {
+    throw new Error(
+      completed
+        ? 'Edited chunk ended before its output was complete'
+        : 'Editing request failed',
+    );
+  });
 
   try {
     const result = await Promise.race([outcome, stalled, failed]);
@@ -332,7 +356,7 @@ async function requestChunk(
   } finally {
     clearTimeout(timer);
     failed.catch(() => {});
-    stream.abort();
+    response.abort();
   }
 }
 
@@ -427,26 +451,32 @@ export async function editArticle(
         (_, k) => all.slice(k * rankBatchSize, (k + 1) * rankBatchSize),
       );
       return batches.map(async (batch) => {
-        const { answers } = await jev.systemOne({
-          state: {
-            word,
-            partOfSpeech: lexeme.lexicalCategory,
-            senses: batch.map((sense) => {
-              const parentKey = parentId(sense.id);
-              const parent = parentKey ? byId.get(parentKey) : undefined;
-              return {
-                definition: sense.source.definition,
-                ...(parent && { parentDefinition: parent.source.definition }),
-                ...(sense.source.examples[0] && {
-                  example: sense.source.examples[0],
+        const { answers } = await hedged(
+          () =>
+            jev.systemOne({
+              state: {
+                word,
+                partOfSpeech: lexeme.lexicalCategory,
+                senses: batch.map((sense) => {
+                  const parentKey = parentId(sense.id);
+                  const parent = parentKey ? byId.get(parentKey) : undefined;
+                  return {
+                    definition: sense.source.definition,
+                    ...(parent && {
+                      parentDefinition: parent.source.definition,
+                    }),
+                    ...(sense.source.examples[0] && {
+                      example: sense.source.examples[0],
+                    }),
+                  };
                 }),
-              };
+              },
+              questions: Object.fromEntries(
+                batch.map((_, i) => [`s${i}`, importance(i)]),
+              ),
             }),
-          },
-          questions: Object.fromEntries(
-            batch.map((_, i) => [`s${i}`, importance(i)]),
-          ),
-        });
+          hedgeJevAfter,
+        );
         batch.forEach((sense, i) => {
           sense.importance = answers[`s${i}`].score;
         });

@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { noul, TypeSafeClient } from '@typesafe-ai/sdk';
+import { hedged } from './hedge';
 
 // Checks rewritten etymologies against their Wiktionary source, sentence by
 // sentence, so that nothing reaches the reader that the source doesn't say.
@@ -18,6 +19,10 @@ export type SentenceCheck = { ok: true } | { ok: false; reason: string };
 // Jev's probability that a sentence adds or changes something, at or above
 // which the sentence fails.
 const failFrom = 0.65;
+
+// A check that hasn't answered after this long gets a duplicate request, and
+// the first answer wins (see hedge.ts).
+const hedgeAfter = 2_000;
 
 const jev = new TypeSafeClient({
   apiKey: process.env.TYPESAFEAI_API_KEY,
@@ -90,10 +95,14 @@ export async function checkSentence(
     return { ok: false, reason: 'reconstructed form' };
   }
 
-  const { answers } = await jev.systemOne({
-    state: { source, otherSources, sentence: sentence.text },
-    questions: checks,
-  });
+  const { answers } = await hedged(
+    () =>
+      jev.systemOne({
+        state: { source, otherSources, sentence: sentence.text },
+        questions: checks,
+      }),
+    hedgeAfter,
+  );
   const { added, changed } = answers;
   if (added.noul >= failFrom) {
     return { ok: false, reason: `adds to source (${added.noul.toFixed(2)})` };
