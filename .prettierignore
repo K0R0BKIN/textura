@@ -2,3 +2,6 @@
 # everything already in .gitignore is covered. Only committed generated
 # files need listing here.
 pnpm-lock.yaml
+
+# Model prompts are input as written: Prettier would rewrite *italics* as _italics_.
+prompts/

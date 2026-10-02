@@ -26,8 +26,9 @@ const testWords = [
   ...['fog', 'jazz'],
 ];
 
-// Longer than this is no longer a short learner's-dictionary etymology.
-const maxLength = 300;
+// Length follows the source, but past this an etymology is no longer a short
+// story.
+const maxLength = 600;
 
 const jev = new TypeSafeClient({
   apiKey: process.env.TYPESAFEAI_API_KEY,
@@ -73,7 +74,7 @@ async function evaluate(word: string): Promise<Result[]> {
         questions: checks,
       });
       const issues = [
-        /\*[^*\n]+\*|_[^_\n]+_/.test(rewrite) && 'markdown',
+        /\*\*|_[^_\n]+_|`/.test(rewrite) && 'formatting other than italics',
         // A `*` left after removing italics marks a reconstructed form.
         /\bProto-|\*/.test(rewrite.replace(/\*[^*\n]+\*/g, '')) &&
           'reconstructed form',

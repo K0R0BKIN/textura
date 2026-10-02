@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useDocumentTitle } from 'usehooks-ts';
 
 import {
@@ -177,7 +177,7 @@ function EditedArticleView({
 
             {etymon.originId && visibleBlocks.has(`${e}:origin`) && (
               <p className="mt-2 font-serif whitespace-pre-line text-muted-foreground">
-                {reveal.revealed[etymon.originId]}
+                <Italicized text={reveal.revealed[etymon.originId] ?? ''} />
               </p>
             )}
 
@@ -288,4 +288,19 @@ export function Article() {
       )}
     </article>
   );
+}
+
+// Renders the *asterisk* spans that origins use for cited words and titles in
+// italics. While text streams in, an unclosed span is italic up to the end,
+// so an asterisk never shows.
+function Italicized({ text }: { text: string }) {
+  return text
+    .split('*')
+    .map((part, i) =>
+      i % 2 === 1 ? (
+        <em key={i}>{part}</em>
+      ) : (
+        <Fragment key={i}>{part}</Fragment>
+      ),
+    );
 }
