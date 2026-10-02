@@ -6,7 +6,7 @@ The input has the `headword` and its `items`: etymologies, each with an `id`, th
 
 ## The goal
 
-Write each etymology the way a learner's dictionary such as Oxford's does: one to three plain sentences that tell an everyday reader where English got the word and, when the source gives one, the most interesting thing about it, such as how its meaning changed, its literal meaning, a word it replaced, who coined it, or a related word the reader may know. Leave out the rest of the scholarship: chains of intermediate forms, variant spellings, long lists of related words, and debate.
+Write each etymology as one to three plain sentences that tell an everyday reader where English got the word and, when the source gives one, the most interesting thing about it, such as how its meaning changed, its literal meaning, a word it replaced, who coined it, or a related word the reader may know. Leave out the rest of the scholarship: chains of intermediate forms, variant spellings, long lists of related words, and debate.
 
 Use only what the source states, and keep its certainty: what it calls probable stays probable. When the source is plain, the etymology is plain too; don't add facts you know from elsewhere.
 
