@@ -388,15 +388,30 @@ function startSharedChunk(headword: string, chunk: InputItem[]) {
   );
 }
 
-// An etymology to rewrite, with the parts of speech it covers, so that
-// related etymologies can refer to each other ("from the noun").
-function originItem(etymon: Article['etymons'][number], e: number): InputItem {
-  return {
-    id: `o${e + 1}`,
-    kind: 'origin',
-    text: etymon.origin!,
-    partsOfSpeech: etymon.lexemes.map((lexeme) => lexeme.lexicalCategory),
-  };
+// An article's etymologies to rewrite, with the parts of speech each covers,
+// so related etymologies can refer to each other ("from the noun").
+function originItems(article: Article): InputItem[] {
+  return article.etymons.flatMap((etymon, e) =>
+    etymon.origin
+      ? [
+          {
+            id: `o${e + 1}`,
+            kind: 'origin' as const,
+            text: etymon.origin,
+            partsOfSpeech: etymon.lexemes.map((l) => l.lexicalCategory),
+          },
+        ]
+      : [],
+  );
+}
+
+// Rewrites only an article's etymologies, the same way editArticle does. For
+// testing the origin prompt.
+export async function editOrigins(article: Article) {
+  const items = originItems(article);
+  return items.length > 0
+    ? editChunk(article.headword, items, new Map(), () => {})
+    : [];
 }
 
 export async function editArticle(
@@ -407,12 +422,8 @@ export async function editArticle(
 
   // Etymologies don't depend on the sense order, so rewrite them while Jev
   // ranks the senses: all in one request, so each can build on the others.
-  const origins = startSharedChunk(
-    word,
-    article.etymons.flatMap((etymon, e) =>
-      etymon.origin ? [originItem(etymon, e)] : [],
-    ),
-  );
+  const originList = originItems(article);
+  const origins = startSharedChunk(word, originList);
 
   const lexemes = article.etymons.flatMap((etymon, e) =>
     etymon.lexemes.map((lexeme) => ({
@@ -511,8 +522,8 @@ export async function editArticle(
       groupsSubsenses: s.subsenses.length > 0,
     };
   };
-  const display = etymons.flatMap(({ etymon, e, lexemes }) => [
-    ...(etymon.origin ? [originItem(etymon, e)] : []),
+  const display = etymons.flatMap(({ e, lexemes }) => [
+    ...originList.filter((item) => item.id === `o${e + 1}`),
     ...lexemes.flatMap(({ lexeme, senses }) =>
       flatten(senses).map((s) => ({
         item: senseItem(lexeme.lexicalCategory, s),
