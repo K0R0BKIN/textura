@@ -351,8 +351,8 @@ function startChunk(
 }
 
 // Starts rewriting a word's etymologies, with a queue per etymology so each
-// can be relayed at its own place in the article. Each is checked against its
-// source first, so its text arrives whole.
+// can be relayed at its own place in the article. Sentences arrive as each is
+// verified against the source.
 function startOrigins(headword: string, items: OriginItem[]) {
   const queues = new Map(
     items.map((item) => [item.id, channel<EditStreamMessage>()]),
@@ -360,16 +360,16 @@ function startOrigins(headword: string, items: OriginItem[]) {
   const result =
     items.length === 0
       ? Promise.resolve([])
-      : editOrigins(headword, items).then(
-          (origins) => {
-            for (const { id, text } of origins) {
-              const queue = queues.get(id)!;
-              if (text) queue.push({ type: 'text', id, text });
-              queue.push({ type: 'end', id });
-              queue.close();
-            }
-            return origins.map(({ id, text }) => ({ id, text }));
-          },
+      : editOrigins(headword, items, (id, event) => {
+          const queue = queues.get(id)!;
+          if (event.type === 'text') {
+            queue.push({ type: 'text', id, text: event.text });
+          } else {
+            queue.push({ type: 'end', id });
+            queue.close();
+          }
+        }).then(
+          (origins) => origins.map(({ id, text }) => ({ id, text })),
           (error: unknown) => {
             for (const queue of queues.values()) queue.close(error);
             throw error;

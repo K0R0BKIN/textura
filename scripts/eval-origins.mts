@@ -53,7 +53,6 @@ type Result = {
   source: string;
   rewrite: string;
   ms: number;
-  attempts: number;
   dropped: string[];
   issues: string[];
   added: number;
@@ -76,11 +75,12 @@ async function evaluate(word: string): Promise<Result[]> {
   const rewrites = await editOrigins(
     article.headword,
     originItems(article),
+    () => {},
     process.env.MODEL,
   );
   const ms = Date.now() - started;
   return Promise.all(
-    rewrites.map(async ({ id, text: rewrite, attempts, dropped }) => {
+    rewrites.map(async ({ id, text: rewrite, dropped }) => {
       const source = sources.get(id)!;
       const { answers } = await jev.systemOne({
         state: {
@@ -108,7 +108,6 @@ async function evaluate(word: string): Promise<Result[]> {
         source,
         rewrite,
         ms,
-        attempts,
         dropped,
         issues,
         added: answers.added.noul,
@@ -160,7 +159,6 @@ for (let run = 1; run <= runs; run++) {
     (a, b) => a - b,
   );
   const clean = results.filter((r) => r.issues.length === 0).length;
-  const retried = results.filter((r) => r.attempts > 1).length;
   const dropped = results.reduce((n, r) => n + r.dropped.length, 0);
   const empty = results.filter((r) => r.rewrite === '').length;
   console.log(
@@ -171,7 +169,7 @@ for (let run = 1; run <= runs; run++) {
       `max ${lengths.at(-1)} | time median ` +
       `${(times[Math.floor(times.length / 2)] / 1000).toFixed(1)} s, ` +
       `max ${(times.at(-1)! / 1000).toFixed(1)} s | ` +
-      `rewritten again ${retried}, sentences dropped ${dropped}, ` +
+      `sentences dropped ${dropped}, ` +
       `origins left empty ${empty}\n`,
   );
 }
