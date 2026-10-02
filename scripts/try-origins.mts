@@ -9,6 +9,8 @@ import { drizzleDb } from '../lib/db';
 import { articles } from '../lib/db/schema';
 import { fromStoredArticle } from '../lib/db/stored-article';
 
+// EFFORT sets the reasoning effort, `none` by default.
+const effort = (process.env.EFFORT ?? 'none') as 'none' | 'low';
 const openai = new OpenAI({ timeout: 15_000, maxRetries: 3 });
 const prompt = readFileSync('prompts/edit-article.md', 'utf8');
 const Output = z.object({
@@ -27,18 +29,21 @@ await Promise.all(
         ? [{ id: `o${e + 1}`, kind: 'origin', text: etymon.origin }]
         : [],
     );
+    const started = Date.now();
     const response = await openai.responses.parse({
       model: 'gpt-6-luna',
       instructions: prompt,
       input: JSON.stringify({ headword: word, items }),
-      reasoning: { effort: 'none' },
+      reasoning: { effort: effort },
       text: { format: zodTextFormat(Output, 'article') },
     });
     const lines = response.output_parsed!.items.map((item, i) => {
       const before = items[i].text.length;
       return `  [${before} → ${item.text.length}] ${item.text}`;
     });
-    console.log(`${word}\n${lines.join('\n')}\n`);
+    console.log(
+      `${word} (${((Date.now() - started) / 1000).toFixed(1)} s)\n${lines.join('\n')}\n`,
+    );
   }),
 );
 process.exit(0);
