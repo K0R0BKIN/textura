@@ -80,7 +80,7 @@ type RankedSense = {
 };
 
 type InputItem =
-  | { id: string; kind: 'origin'; text: string }
+  | { id: string; kind: 'origin'; text: string; partsOfSpeech: string[] }
   | {
       id: string;
       kind: 'sense';
@@ -355,6 +355,50 @@ function startChunk(
   return { queue, result };
 }
 
+// Starts rewriting several items in one request, with a queue per item, so
+// each can be relayed at its own place in the article. An item's queue
+// closes as soon as its text is complete.
+function startSharedChunk(headword: string, chunk: InputItem[]) {
+  if (chunk.length === 0)
+    return new Map<string, ReturnType<typeof startChunk>>();
+  const queues = new Map(
+    chunk.map((item) => [item.id, channel<EditStreamMessage>()]),
+  );
+  const open = new Set(queues.keys());
+  const result = editChunk(headword, chunk, new Map(), (message) => {
+    if (message.type !== 'text' && message.type !== 'end') return;
+    queues.get(message.id)?.push(message);
+    if (message.type === 'end' && open.delete(message.id)) {
+      queues.get(message.id)!.close();
+    }
+  }).catch((error: unknown) => {
+    for (const id of open) queues.get(id)!.close(error);
+    open.clear();
+    throw error;
+  });
+  return new Map(
+    chunk.map(({ id }) => {
+      const part = result.then((edited) =>
+        edited.filter((item) => item.id === id),
+      );
+      // Errors surface through the queue; don't also leave them unhandled.
+      part.catch(() => {});
+      return [id, { queue: queues.get(id)!, result: part }];
+    }),
+  );
+}
+
+// An etymology to rewrite, with the parts of speech it covers, so that
+// related etymologies can refer to each other ("from the noun").
+function originItem(etymon: Article['etymons'][number], e: number): InputItem {
+  return {
+    id: `o${e + 1}`,
+    kind: 'origin',
+    text: etymon.origin!,
+    partsOfSpeech: etymon.lexemes.map((lexeme) => lexeme.lexicalCategory),
+  };
+}
+
 export async function editArticle(
   article: Article,
   send: (message: EditStreamMessage) => void,
@@ -362,17 +406,12 @@ export async function editArticle(
   const word = article.headword;
 
   // Etymologies don't depend on the sense order, so rewrite them while Jev
-  // ranks the senses.
-  const origins = new Map(
-    article.etymons.flatMap((etymon, e) => {
-      if (!etymon.origin) return [];
-      const item: InputItem = {
-        id: `o${e + 1}`,
-        kind: 'origin',
-        text: etymon.origin,
-      };
-      return [[item.id, startChunk(word, [item], new Map())]];
-    }),
+  // ranks the senses: all in one request, so each can build on the others.
+  const origins = startSharedChunk(
+    word,
+    article.etymons.flatMap((etymon, e) =>
+      etymon.origin ? [originItem(etymon, e)] : [],
+    ),
   );
 
   const lexemes = article.etymons.flatMap((etymon, e) =>
@@ -473,9 +512,7 @@ export async function editArticle(
     };
   };
   const display = etymons.flatMap(({ etymon, e, lexemes }) => [
-    ...(etymon.origin
-      ? [{ id: `o${e + 1}`, kind: 'origin' as const, text: etymon.origin }]
-      : []),
+    ...(etymon.origin ? [originItem(etymon, e)] : []),
     ...lexemes.flatMap(({ lexeme, senses }) =>
       flatten(senses).map((s) => ({
         item: senseItem(lexeme.lexicalCategory, s),

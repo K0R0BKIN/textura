@@ -1,5 +1,5 @@
 // Rewrites only the origins of a few words with the current prompt, without
-// saving: one request per word, retried when it stalls.
+// saving: one request per word with all its origins, as the editor sends them.
 import { readFileSync } from 'node:fs';
 import { and, eq } from 'drizzle-orm';
 import OpenAI from 'openai';
@@ -26,7 +26,14 @@ await Promise.all(
       .limit(1);
     const items = fromStoredArticle(row!).etymons.flatMap((etymon, e) =>
       etymon.origin
-        ? [{ id: `o${e + 1}`, kind: 'origin', text: etymon.origin }]
+        ? [
+            {
+              id: `o${e + 1}`,
+              kind: 'origin',
+              text: etymon.origin,
+              partsOfSpeech: etymon.lexemes.map((l) => l.lexicalCategory),
+            },
+          ]
         : [],
     );
     const started = Date.now();
