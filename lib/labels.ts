@@ -97,3 +97,30 @@ export function sortLabels(labels: string[]) {
   }
   return { shown, usage };
 }
+
+// Removes a definition's leading parenthesis when it only repeats the sense's
+// labels, which are shown separately: "(slang) wound with a knife" becomes
+// "wound with a knife". While the definition is still streaming, an unclosed
+// leading parenthesis is held back until it's known whether it stays.
+export function withoutRepeatedLabels(
+  definition: string,
+  labels: string[],
+  streaming = false,
+) {
+  if (!definition.startsWith('(')) return definition;
+  const end = definition.indexOf(')');
+  if (end === -1) return streaming ? '' : definition;
+  const normalize = (label: string) =>
+    label
+      .toLowerCase()
+      .replace(/^in /, '')
+      .replace(/^figuratively$/, 'figurative');
+  const shown = new Set(labels.map(normalize));
+  const parts = definition
+    .slice(1, end)
+    .split(/,\s*|\s+and\s+/)
+    .map(normalize);
+  return parts.every((part) => shown.has(part))
+    ? definition.slice(end + 1).trimStart()
+    : definition;
+}

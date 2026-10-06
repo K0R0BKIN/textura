@@ -37,3 +37,16 @@ export const editedArticles = pgTable(
   },
   (t) => [primaryKey({ columns: [t.headword, t.variety] })],
 );
+
+// Phrases and phrasal verbs containing a word, such as "keep one's cool" and
+// "cool down" for "cool", each also an article of its own. Built on import.
+export const phrases = pgTable(
+  'phrases',
+  {
+    headword: text('headword').notNull(),
+    variety: text('variety').$type<Variety>().notNull().default('en-US'),
+    phrase: text('phrase').notNull(),
+    kind: text('kind').$type<'phrase' | 'phrasal verb'>().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.headword, t.variety, t.phrase] })],
+);

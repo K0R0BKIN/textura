@@ -7,7 +7,7 @@ import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { editOrigins, originItems, type OriginItem } from './edit-origins';
-import { sortLabels } from '@/lib/labels';
+import { sortLabels, withoutRepeatedLabels } from '@/lib/labels';
 import { channel } from './channel';
 import { groupFrom, groupSenses, type SenseNode } from './group-senses';
 import { hedgedStream } from './hedge';
@@ -138,10 +138,11 @@ async function editChunk(
 
   // A stall before any output is retried, unseen by the reader. After text
   // has been sent, a retry would rewrite it, so the chunk fails instead.
-  let items = await requestChunk(input, ids, push);
+  const labels = new Map(chunk.map((item) => [item.id, item.labels ?? []]));
+  let items = await requestChunk(input, ids, labels, push);
   for (let retry = 1; retry <= stallRetries; retry++) {
     if (items !== 'stalled before output') break;
-    items = await requestChunk(input, ids, push);
+    items = await requestChunk(input, ids, labels, push);
   }
   if (items === 'stalled before output') {
     throw new Error('Editing stalled');
@@ -166,6 +167,7 @@ async function editChunk(
 async function requestChunk(
   input: string,
   ids: Set<string>,
+  labels: Map<string, string[]>,
   push: (message: EditStreamMessage) => void,
 ): Promise<z.infer<typeof OutputSchema>['items'] | 'stalled before output'> {
   const parser = new JSONParser({
@@ -178,14 +180,16 @@ async function requestChunk(
   parser.onValue = ({ value, parent, partial }) => {
     const id = (parent as { id?: string } | undefined)?.id;
     if (typeof value !== 'string' || !id || !ids.has(id)) return;
+    // Labels are shown separately, so a definition doesn't repeat them.
+    const text = withoutRepeatedLabels(value, labels.get(id) ?? [], partial);
     const previous = written.get(id) ?? 0;
-    if (value.length > previous) {
-      push({ type: 'text', id, text: value.slice(previous) });
-      written.set(id, value.length);
+    if (text.length > previous) {
+      push({ type: 'text', id, text: text.slice(previous) });
+      written.set(id, text.length);
     }
     if (!partial) {
       push({ type: 'end', id });
-      items.push({ id, text: value });
+      items.push({ id, text });
       // Done once every item is complete: the model sometimes keeps writing
       // after the useful part instead of closing its JSON.
       if (items.length === ids.size) resolveOutcome('complete');

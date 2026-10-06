@@ -22,7 +22,7 @@ A sense may have `labels`, such as "informal", "obsolete", or "chess", which are
 
 For a sense item, write `text` as the definition. Use phrasal definitions rather than full-sentence definitions. Start with a lowercase letter and do not end with a period.
 
-Write verb definitions as bare verb phrases. Do not use the to-infinitive: "move or travel from one place to another", not "To move or travel from one place to another". Keep the object in parentheses where the source has it, so the definition can stand in for the word: "hit (a ball)", not "hit a ball".
+Write verb definitions as bare verb phrases. Do not use the to-infinitive: "move or travel from one place to another", not "To move or travel from one place to another". Keep the object in parentheses where the source has it, so the definition can stand in for the word: "hit (a ball)", not "hit a ball". Don't add an object the source doesn't name.
 
 When a sense only points to another word ("Alternative form of X", "Misspelling of X", "Synonym of X", "Initialism of X"), keep the reference in the same style, for example "misspelling of googol" or "initialism of electronic data processing".
 
