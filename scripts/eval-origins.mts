@@ -98,6 +98,8 @@ async function evaluate(word: string): Promise<Result[]> {
         /\bProto-|\*/.test(rewrite.replace(/\*[^*\n]+\*/g, '')) &&
           'reconstructed form',
         rewrite.length > maxLength && `long (${rewrite.length})`,
+        // Meanings follow their form in single quotes; titles may use double.
+        /\*[^*\n]+\* \(?“/.test(rewrite) && 'meaning in double quotes',
         answers.added.noul > 0.5 &&
           `adds to source (${answers.added.noul.toFixed(2)})`,
         answers.certainty.noul > 0.5 &&
