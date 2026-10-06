@@ -6,6 +6,7 @@ import { sql } from 'drizzle-orm';
 import { drizzleDb } from '@/lib/db';
 import { articles } from '@/lib/db/schema';
 import { toStoredArticle } from '@/lib/db/stored-article';
+import { parseLabels } from '@/lib/labels';
 import {
   ArticleSchema,
   HeadwordSchema,
@@ -20,7 +21,11 @@ import {
 // https://kaikki.org/dictionary/English/
 //
 // Usage:
-//   pnpm wiktionary:import <path to .jsonl or .jsonl.gz> [--dry-run]
+//   pnpm wiktionary:import <path to .jsonl or .jsonl.gz> [--dry-run] [--upsert]
+//
+// --upsert replaces only the articles in the file, leaving the rest: for
+// testing an import change on a few words, such as Kaikki's per-word files
+// (https://kaikki.org/dictionary/English/meaning/n/ni/nice.jsonl).
 
 const variety: Variety = 'en-US';
 // Rows per INSERT (Postgres allows 65,535 parameters, 3 per row) and INSERTs
@@ -51,6 +56,8 @@ type KaikkiTemplate = {
 
 type KaikkiSense = {
   glosses?: string[];
+  // Glosses with their labels, such as "(chiefly informal) Pleasant.".
+  raw_glosses?: string[];
   tags?: string[];
   form_of?: unknown[];
   examples?: { text?: string; type?: string }[];
@@ -146,8 +153,10 @@ function buildSenses(kaikkiSenses: KaikkiSense[]) {
         continue;
       }
 
+      const rawGloss = kaikkiSense.raw_glosses?.[depth];
       const sense: Sense = {
         definition,
+        labels: rawGloss ? parseLabels(rawGloss, definition) : [],
         examples: isLeaf ? getExamples(kaikkiSense) : [],
         subsenses: [],
       };
@@ -297,35 +306,45 @@ async function* readArticles(path: string) {
   yield* flush();
 }
 
-async function writeBatch(batch: Article[]) {
-  await drizzleDb.insert(articles).values(
+async function writeBatch(batch: Article[], upsert: boolean) {
+  const insert = drizzleDb.insert(articles).values(
     batch.map((article) => ({
       headword: article.headword,
       variety: article.variety,
       data: toStoredArticle(article),
     })),
   );
+  await (upsert
+    ? insert.onConflictDoUpdate({
+        target: [articles.headword, articles.variety],
+        set: { data: sql`excluded.data` },
+      })
+    : insert);
 }
 
 async function main() {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
-    options: { 'dry-run': { type: 'boolean', default: false } },
+    options: {
+      'dry-run': { type: 'boolean', default: false },
+      upsert: { type: 'boolean', default: false },
+    },
   });
 
   const [path] = positionals;
   if (!path) {
     throw new Error(
-      'Usage: pnpm wiktionary:import <path to .jsonl or .jsonl.gz> [--dry-run]',
+      'Usage: pnpm wiktionary:import <path to .jsonl or .jsonl.gz> [--dry-run] [--upsert]',
     );
   }
 
   const dryRun = values['dry-run'];
+  const upsert = values.upsert;
 
   // TRUNCATE frees the space immediately; DELETE would keep dead rows until
   // vacuum, roughly doubling storage during a re-import. The table starts
   // empty, so plain INSERTs can't conflict.
-  if (!dryRun) {
+  if (!dryRun && !upsert) {
     await drizzleDb.execute(sql`truncate table ${articles}`);
   }
 
@@ -334,7 +353,7 @@ async function main() {
   const writes = new Set<Promise<void>>();
 
   function write(articles: Article[]) {
-    const pending = writeBatch(articles).then(() => {
+    const pending = writeBatch(articles, upsert).then(() => {
       writes.delete(pending);
       imported += articles.length;
       console.log(`Imported ${imported} headwords…`);

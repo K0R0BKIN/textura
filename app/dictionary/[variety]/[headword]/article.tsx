@@ -90,6 +90,12 @@ function Senses({
         return (
           <li key={sense.id} className="font-serif">
             <p className="font-medium">
+              {/* Wiktionary's labels, before the definition as Oxford shows them. */}
+              {sense.labels.length > 0 && (
+                <span className="mr-1.5 font-normal text-muted-foreground italic">
+                  {sense.labels.join(', ')}
+                </span>
+              )}
               {text || <span className="text-muted-foreground">…</span>}
             </p>
 

@@ -16,6 +16,8 @@ Keep each field pure: a definition states the sense. Leave out bare grammar labe
 - The words it's used with: "Followed by with: able to tolerate" becomes "(cool with) able to tolerate (something)", and "Followed by out: to flatten (a piece of metal)" becomes "(draw something out) flatten (a piece of metal)".
 - The field it belongs to: "In lawn tennis, a slanting stroke" becomes "(in tennis) a slanting stroke".
 
+A sense may have `labels`, such as "informal", "obsolete", or "chess", which are shown to the reader before the definition, so don't repeat them in it; use them only to understand the sense. A sense may also have `usage`, such as "of a person" or "with and": write it into the definition in the same way, like "(of a person) friendly; attractive" or "(nice and —) pleasantly; quite".
+
 ## Definitions
 
 For a sense item, write `text` as the definition. Use phrasal definitions rather than full-sentence definitions. Start with a lowercase letter and do not end with a period.

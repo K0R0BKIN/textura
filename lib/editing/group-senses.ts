@@ -94,6 +94,9 @@ export function groupSenses(
         partOfSpeech,
         senses: senses.map((sense) => ({
           id: sense.id,
+          ...(sense.source.labels.length > 0 && {
+            labels: sense.source.labels,
+          }),
           definition: sense.source.definition,
           ...(sense.subsenses.length > 0 && {
             subsenses: sense.subsenses.map((sub) => sub.source.definition),

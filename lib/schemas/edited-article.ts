@@ -6,6 +6,8 @@ import { VarietySchema } from './variety';
 // and subsenses, with Textura's rewritten text.
 export const EditedSenseSchema = z.object({
   id: z.string(),
+  // Wiktionary's labels, shown before the definition, such as "informal".
+  labels: z.array(z.string()).default([]),
   definition: z.string(),
   examples: z.array(z.string()),
   get subsenses(): z.ZodArray<typeof EditedSenseSchema> {

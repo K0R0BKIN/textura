@@ -19,11 +19,13 @@ type StoredSense = z.input<typeof SenseSchema>;
 
 function toStoredSense({
   definition,
+  labels,
   examples,
   subsenses,
 }: Sense): StoredSense {
   return {
     definition,
+    ...(labels.length > 0 && { labels }),
     ...(examples.length > 0 && { examples }),
     ...(subsenses.length > 0 && { subsenses: subsenses.map(toStoredSense) }),
   };

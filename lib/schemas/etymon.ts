@@ -3,6 +3,8 @@ import { z } from 'zod';
 // Empty arrays are left out of stored articles and restored here on parse.
 export const SenseSchema = z.object({
   definition: z.string(),
+  // Wiktionary's labels, such as "informal" or "of a person" (see labels.ts).
+  labels: z.array(z.string()).default([]),
   examples: z.array(z.string()).default([]),
   get subsenses(): z.ZodDefault<z.ZodArray<typeof SenseSchema>> {
     return z.array(SenseSchema).default([]);

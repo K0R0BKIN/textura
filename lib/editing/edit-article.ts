@@ -7,6 +7,7 @@ import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { editOrigins, originItems, type OriginItem } from './edit-origins';
+import { sortLabels } from '@/lib/labels';
 import { channel } from './channel';
 import { groupFrom, groupSenses, type SenseNode } from './group-senses';
 import { hedgedStream } from './hedge';
@@ -63,6 +64,10 @@ type InputItem = {
   kind: 'sense';
   partOfSpeech: string;
   parentId?: string;
+  // Shown before the definition, such as "informal" or "chess".
+  labels?: string[];
+  // What the sense applies to or is used with, such as "of a person".
+  usage?: string[];
   definition: string;
   examples: string[];
   groupsSubsenses: boolean;
@@ -347,11 +352,14 @@ export async function editArticle(
   const items: InputItem[] = lexemes.flatMap(({ lexeme, senses }) =>
     flatten(senses).map((sense) => {
       const parentKey = parentId(sense.id);
+      const { shown, usage } = sortLabels(sense.source.labels);
       return {
         id: sense.id,
         kind: 'sense' as const,
         partOfSpeech: lexeme.lexicalCategory,
         ...(parentKey && { parentId: parentKey }),
+        ...(shown.length > 0 && { labels: shown }),
+        ...(usage.length > 0 && { usage }),
         definition: sense.source.definition,
         examples: sense.source.examples,
         groupsSubsenses: sense.subsenses.length > 0,
@@ -371,6 +379,7 @@ export async function editArticle(
   const toEdited = (senses: SenseNode[]): EditedSense[] =>
     senses.map((sense) => ({
       id: sense.id,
+      labels: sortLabels(sense.source.labels).shown,
       definition: '',
       examples: sense.source.examples,
       subsenses: toEdited(sense.subsenses),

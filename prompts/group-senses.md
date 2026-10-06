@@ -4,4 +4,4 @@ Oxford organizes each part of speech into a few core senses, each with subsenses
 
 Order core senses from the most central in modern use to the least, and order each core's subsenses the same way. Rare, archaic, and technical senses go after common ones.
 
-The input gives the `word`, its `partOfSpeech`, and its `senses`. Each sense has an `id` and its `definition`; some list `subsenses` of their own, which stay with them and need no placing. Use every id exactly once, either as a core sense or as a subsense. Don't write or change definitions.
+The input gives the `word`, its `partOfSpeech`, and its `senses`. Each sense has an `id`, its `definition`, and sometimes Wiktionary's `labels`, such as "obsolete", "slang", or "chess"; some list `subsenses` of their own, which stay with them and need no placing. Use every id exactly once, either as a core sense or as a subsense. Don't write or change definitions.
