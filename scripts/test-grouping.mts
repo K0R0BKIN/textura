@@ -19,7 +19,7 @@ const openai = new OpenAI({ timeout: 120_000, maxRetries: 0 });
 
 const prompt = `You arrange the senses of one part of speech of a dictionary word, taken from Wiktionary, the way the New Oxford American Dictionary does.
 
-Oxford organizes each part of speech into a few core senses, each with subsenses under it. A core sense is the most literal, central meaning of the word in modern use: not necessarily the oldest, and not necessarily the most frequent, since figurative senses are sometimes more frequent. Each subsense belongs under the core sense it comes from: a figurative extension of it, a special case of it, or another shift that keeps part of its meaning. A sense that is unrelated to the others is a core sense of its own.
+Oxford organizes each part of speech into a few core senses, each with subsenses under it. A core sense is the most literal, central meaning of the word in modern use: not necessarily the oldest, and not necessarily the most frequent, since figurative senses are sometimes more frequent. Each subsense belongs under the core sense it comes from: a figurative extension of it, a special case of it, or another shift that keeps part of its meaning. Most senses come from one of the core meanings, including figurative, specialized, and slang uses, and belong under it. A sense with no clear link to any core's meaning, such as one that comes from a different idea, is a core sense of its own; Oxford's entries often end with a few small cores like these.
 
 Order core senses from the most central in modern use to the least, and order each core's subsenses the same way. Rare, archaic, and technical senses go after common ones.
 
