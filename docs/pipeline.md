@@ -19,29 +19,34 @@ References: Anthropic, [Building effective agents](https://www.anthropic.com/eng
 
 ## Steps
 
-| Step            | Job                                                                    | Output                       | Check                                                                        | Model                                    | Status                               |
-| --------------- | ---------------------------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------ |
-| 1. **Origin**   | Rewrite each etymology as a line and, when the source has one, a story | Sentences with source quotes | Code (quotes, cited words, no starred forms) + Jev (adds or changes nothing) | Luna, no reasoning                       | Built; prompt to update to the guide |
-| 2. **Group**    | Arrange each part of speech's senses into core senses and subsenses    | A tree of sense IDs; no text | Code (every sense placed exactly once); you, against Oxford's grouping       | To test: Sol with reasoning vs Luna, low | Pilot only                           |
-| 3. **Select**   | Decide which senses show up front                                      | Importance per sense         | Agreement with your judgment                                                 | Jev, batches of 10                       | Built; may merge into Group          |
-| 4. **Define**   | Rewrite each definition in Oxford's style                              | One definition per sense ID  | Code (one per ID, in order) + a groundedness check, to build                 | Luna, no reasoning                       | Built; no test set yet               |
-| 5. **Assemble** | Stream the page top to bottom and save the article                     | The page                     | Speed measurements                                                           | Code                                     | Built                                |
+| Step            | Job                                                                    | Output                       | Check                                                                            | Model              | Status                                          |
+| --------------- | ---------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------- | ------------------ | ----------------------------------------------- |
+| 0. **Import**   | Wiktionary's senses, labels, origins, and phrases                      | Articles and a phrases table | Code                                                                             | None               | Built; labels and phrases need a full re-import |
+| 1. **Origin**   | Rewrite each etymology as a line and, when the source has one, a story | Sentences with source quotes | Code (quotes, cited words, no starred forms) + Jev (adds or changes nothing)     | Luna, no reasoning | Built; `scripts/eval-origins.mts`               |
+| 2. **Group**    | Arrange parts of speech with 6+ senses into core senses and subsenses  | Core senses, streamed        | Code (every sense placed exactly once); compared with Oxford by hand             | Sol, no reasoning  | Built                                           |
+| 3. **Define**   | Rewrite each definition in Oxford's style, keeping all its information | One definition per sense ID  | Code (one per ID, in order; repeated labels stripped); `scripts/eval-senses.mts` | Luna, no reasoning | Built                                           |
+| 4. **Assemble** | Stream the page top to bottom and save the article                     | The page                     | Speed measurements (`scripts/time-articles.mts`)                                 | Code               | Built                                           |
 
-Steps 1 and 2–3 run in parallel; step 4 needs the structure from steps 2–3.
+Every sense is shown; labels (_informal_, _obsolete_, _chess_) come straight from Wiktionary, and phrases and phrasal verbs are links at the end. Steps 1–3 all start at once: definitions are rewritten while grouping runs, and each core sense is shown as soon as it arrives.
 
-## Speed budget
+## Speed
 
-| Milestone               | Budget | Now (8 big words, median / worst) |
-| ----------------------- | ------ | --------------------------------- |
-| Headword and outline    | 1 s    | 0.8 / 1.7 s                       |
-| First text (the origin) | 3 s    | 2.5 / 4.1 s                       |
-| Whole article           | 8 s    | 5.0 / 6.5 s (without grouping)    |
+| Milestone               | Budget | Measured                    |
+| ----------------------- | ------ | --------------------------- |
+| Headword                | 1 s    | instant                     |
+| First text (the origin) | 3 s    | about 2–3 s (sometimes 5 s) |
+| First sense, big words  | 4 s    | 2.2–3.6 s                   |
+| Whole article           | 8 s    | 3–7.5 s                     |
 
-Grouping is the risk: it needs reasoning over the full list of senses (125 for _run_) and sits before step 4. Measure it before designing around it. If it's slow: group each part of speech in parallel, stream the origin while grouping runs, or find a fast model that groups well enough.
+## Quality
+
+- **Origins:** 53 of 61 clean on the test set, 0 added facts; failing sentences are dropped.
+- **Definitions:** on 1,415 definitions, about 0.3% add or change meaning (read by hand; Jev flags many faithful rewordings, so it's a pointer, not a gate).
+- **Grouping:** close to Oxford on the main core senses; some unrelated senses still land under a big core.
 
 ## Open questions
 
 1. **Origin line from structured data.** Importing `etymology_templates` would let code build the line, so it can't be wrong, leaving the model only the story. Worth it if the templates cover most origins.
 2. **Simple formations without a model.** Origins like "From un- + opened." could be formatted by code, skipping the model and the checks.
-3. **Group and Select as one step.** A model that groups senses may also decide what shows up front, replacing the Jev ranking.
-4. **Cleaning.** Some origins carry leftovers from Wiktionary's layout, such as "PIE word \*dwóh₁" or an image caption; the import should strip them.
+3. **Cleaning.** Some origins carry leftovers from Wiktionary's layout, such as "PIE word \*dwóh₁" or an image caption; the import should strip them.
+4. **Grouping quality.** Sol with low reasoning keeps unrelated senses apart a little better, but takes 4–10 s.

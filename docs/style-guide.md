@@ -6,14 +6,15 @@ Sources: NOAD entries for the 31 origin test words (looked up with `scripts/look
 
 ## Deliberate exceptions
 
-| Oxford                                             | Textura                                                           | Why                                                                                     |
-| -------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Origin at the end of the entry                     | Origin at the top                                                 | Textura leans on etymology; reading the origin first helps the reader remember the word |
-| Facts from Oxford's own research                   | Facts only from Wiktionary                                        | Every statement must be traceable to the source                                         |
-| Every origin opens with a date                     | A date only when Wiktionary gives one                             | Wiktionary rarely does: about 3% of its etymologies                                     |
-| Examples written or chosen by editors              | Wiktionary's examples, word for word                              | Examples are never generated                                                            |
-| A curated, shorter list of senses                  | All of Wiktionary's senses; the less important behind "Show more" | Nothing is lost, but the entry starts as short as Oxford's                              |
-| Labels (_informal_, _Chess_), phrases, derivatives | Not yet                                                           | Deferred; Wiktionary has the data                                                       |
+| Oxford                                | Textura                                                  | Why                                                                                     |
+| ------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Origin at the end of the entry        | Origin at the top                                        | Textura leans on etymology; reading the origin first helps the reader remember the word |
+| Facts from Oxford's own research      | Facts only from Wiktionary                               | Every statement must be traceable to the source                                         |
+| Every origin opens with a date        | A date only when Wiktionary gives one                    | Wiktionary rarely does: about 3% of its etymologies                                     |
+| Examples written or chosen by editors | Wiktionary's examples, word for word                     | Examples are never generated                                                            |
+| A curated, shorter list of senses     | All of Wiktionary's senses, grouped and labeled          | Nothing is lost; grouping and labels keep long entries readable                         |
+| Phrases with their definitions        | Phrases and phrasal verbs as links to their own articles | No model needed; each phrase gets the full treatment when opened                        |
+| Labels in Oxford's own wording        | Wiktionary's label text (_chiefly informal_, _now rare_) | Exactly what the source says, with no model involved                                    |
 
 ## Origins
 
