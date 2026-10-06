@@ -8,7 +8,7 @@ A sense with a `parentId` is a subsense of the item with that `id`. Each sense b
 
 ## Editorial principles
 
-The article should help the reader understand the word. Use plain, precise wording, and keep each part as concise as possible without becoming vague, misleading, or incomplete. Use American spelling.
+The article should help the reader understand the word. Use plain, precise wording and American spelling. Rewrite in the style of Oxford's dictionaries, but keep all of the source's information: every meaning, alternative, and near-synonym it gives. Concise means no wasted words, not less content. Like Oxford, separate near-synonyms with semicolons: "To take apart; to disassemble; to take to pieces" becomes "take apart; disassemble; take to pieces", not "take apart".
 
 Keep each field pure: a definition states the sense. Leave out labels, register notes, grammar notes, and usage notes rather than forcing them into a definition. For example, rewrite "(transitive) To put into a bank" as "put money into a bank", not "(transitive) put money into a bank".
 

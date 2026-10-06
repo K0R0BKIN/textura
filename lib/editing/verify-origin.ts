@@ -57,6 +57,20 @@ function hasReconstructedForm(text: string) {
   return /\bProto-|\*/.test(text.replace(/\*[^*\n]+\*/g, ''));
 }
 
+// Words a sentence cites in italics that the source gives only as
+// reconstructions, marked with a `*`, like *kutta in "Old Norse *kutta".
+function reconstructedWords(text: string, sources: string[]) {
+  const source = sources.join('\n');
+  return [...text.matchAll(/\*([^*\n]+)\*/g)]
+    .map((match) => match[1])
+    .filter((word) => {
+      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const starred = new RegExp(`\\*${escaped}(?!\\p{L})`, 'u');
+      const plain = new RegExp(`(^|[^*\\p{L}])${escaped}(?!\\p{L})`, 'u');
+      return starred.test(source) && !plain.test(source);
+    });
+}
+
 // Words a sentence cites in italics must be the headword or appear in the
 // sources as cited words, not only inside a gloss in quotation marks.
 function uncitedWords(text: string, headword: string, sources: string[]) {
@@ -91,7 +105,10 @@ export async function checkSentence(
   if (uncited.length > 0) {
     return { ok: false, reason: `cites words not in source: ${uncited}` };
   }
-  if (hasReconstructedForm(sentence.text)) {
+  if (
+    hasReconstructedForm(sentence.text) ||
+    reconstructedWords(sentence.text, [source, ...otherSources]).length > 0
+  ) {
     return { ok: false, reason: 'reconstructed form' };
   }
 
