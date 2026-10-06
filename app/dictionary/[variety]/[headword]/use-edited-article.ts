@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import type { EditedArticle, EditStreamMessage } from '@/lib/schemas';
+import type {
+  EditedArticle,
+  EditedSense,
+  EditStreamMessage,
+} from '@/lib/schemas';
 
 // Loads an edited article. A saved article arrives as JSON; a first view
 // streams in, and its text is revealed in order, top to bottom: an item only
@@ -45,6 +49,50 @@ function fullText(article: EditedArticle) {
   return text;
 }
 
+function senseIds(senses: EditedSense[]): string[] {
+  return senses.flatMap((sense) => [sense.id, ...senseIds(sense.subsenses)]);
+}
+
+// Items in reading order: each etymon's origin, then its senses.
+function readingOrder(article: EditedArticle) {
+  return article.etymons.flatMap((etymon) => [
+    ...(etymon.originId ? [etymon.originId] : []),
+    ...etymon.lexemes.flatMap((lexeme) => senseIds(lexeme.senses)),
+  ]);
+}
+
+// Puts a core sense after those already placed in its part of speech, taking
+// its senses out of the ones still in Wiktionary's order.
+function placeCore(
+  article: EditedArticle,
+  { etymon, lexeme, sense }: Extract<EditStreamMessage, { type: 'core' }>,
+  placed: number,
+): EditedArticle {
+  const ids = new Set(senseIds([sense]));
+  return {
+    ...article,
+    etymons: article.etymons.map((et, e) =>
+      e !== etymon
+        ? et
+        : {
+            ...et,
+            lexemes: et.lexemes.map((lx, l) =>
+              l !== lexeme
+                ? lx
+                : {
+                    ...lx,
+                    senses: [
+                      ...lx.senses.slice(0, placed),
+                      sense,
+                      ...lx.senses.slice(placed).filter((s) => !ids.has(s.id)),
+                    ],
+                  },
+            ),
+          },
+    ),
+  };
+}
+
 function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
@@ -63,8 +111,10 @@ export function useEditedArticle(url: string) {
     let article: EditedArticle | undefined;
     let order: string[] = [];
     let finished = false;
-    // Outlines received: the second regroups senses before their text.
-    let outlines = 0;
+    // Changes to the article's structure: the outline, then core senses.
+    let changes = 0;
+    // Core senses placed so far, per part of speech.
+    const placed: Record<string, number> = {};
     const shown: Record<string, number> = {};
     let lastKey = '';
     received.current = {};
@@ -97,7 +147,7 @@ export function useEditedArticle(url: string) {
       }
 
       // Skip re-rendering while waiting on the network.
-      const key = `${outlines}|${order.map((id) => shown[id] ?? 0).join()}|${ended.current.size}|${finished}`;
+      const key = `${changes}|${order.map((id) => shown[id] ?? 0).join()}|${ended.current.size}|${finished}`;
       if (key === lastKey) {
         frame = requestAnimationFrame(reveal);
         return;
@@ -129,9 +179,18 @@ export function useEditedArticle(url: string) {
         case 'outline':
           article = message.article;
           order = message.order;
-          // The reveal loop runs from the first outline on.
-          if (outlines++ === 0) frame = requestAnimationFrame(reveal);
+          changes++;
+          frame = requestAnimationFrame(reveal);
           break;
+        case 'core': {
+          if (!article) break;
+          const key = `${message.etymon}:${message.lexeme}`;
+          article = placeCore(article, message, placed[key] ?? 0);
+          placed[key] = (placed[key] ?? 0) + 1;
+          order = readingOrder(article);
+          changes++;
+          break;
+        }
         case 'text':
           received.current[message.id] =
             (received.current[message.id] ?? '') + message.text;

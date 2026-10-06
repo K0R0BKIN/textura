@@ -7,6 +7,7 @@ import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { editOrigins, originItems, type OriginItem } from './edit-origins';
+import { channel } from './channel';
 import { groupFrom, groupSenses, type SenseNode } from './group-senses';
 import { hedgedStream } from './hedge';
 import type {
@@ -104,40 +105,6 @@ function toChunks(items: InputItem[], firstBudget = chunkTokens) {
     size += itemSize;
   }
   return chunks;
-}
-
-// A buffered async queue: producers push while it's being read or before,
-// and the reader gets everything in order.
-function channel<T>() {
-  const buffer: T[] = [];
-  let closed = false;
-  let failure: unknown;
-  let wake: (() => void) | undefined;
-  return {
-    push(value: T) {
-      buffer.push(value);
-      wake?.();
-    },
-    close(error?: unknown) {
-      closed = true;
-      failure = error;
-      wake?.();
-    },
-    async *[Symbol.asyncIterator]() {
-      while (true) {
-        if (buffer.length > 0) {
-          yield buffer.shift()!;
-          continue;
-        }
-        if (closed) {
-          if (failure) throw failure;
-          return;
-        }
-        await new Promise<void>((resolve) => (wake = resolve));
-        wake = undefined;
-      }
-    },
-  };
 }
 
 // Rewrites one chunk, pushing text as it streams in. Throws when the output
@@ -367,18 +334,13 @@ export async function editArticle(
     entry.senses = withIds(entry.lexeme.senses, `${i + 1}:`);
   });
 
-  // Big parts of speech are grouped into core senses. Grouping only changes
-  // the order and nesting, so the definitions are rewritten meanwhile.
-  const grouping = lexemes.some((entry) => entry.senses.length >= groupFrom);
-  const grouped = Promise.all(
-    lexemes.map(async (entry) => {
-      if (entry.senses.length < groupFrom) return;
-      entry.senses = await groupSenses(
-        word,
-        entry.lexeme.lexicalCategory,
-        entry.senses,
-      );
-    }),
+  // Big parts of speech are grouped into core senses, which stream in as the
+  // model writes them. Grouping only changes the order and nesting, so the
+  // definitions are rewritten meanwhile.
+  const groupings = lexemes.map((entry) =>
+    entry.senses.length >= groupFrom
+      ? groupSenses(word, entry.lexeme.lexicalCategory, entry.senses)
+      : undefined,
   );
 
   // Every definition, in Wiktionary's order, rewritten in parallel chunks.
@@ -445,19 +407,30 @@ export async function editArticle(
     }
   };
 
-  let { edited, order } = outline();
+  const { edited, order } = outline();
   send({ type: 'outline', article: edited, order });
-  if (grouping) {
-    // The first origin doesn't depend on grouping, so it streams meanwhile;
-    // the outline is then sent again with the senses grouped.
-    const lead = edited.etymons[0]?.originId ? order.slice(0, 1) : [];
-    await relay(lead);
-    await grouped;
-    ({ edited, order } = outline());
-    send({ type: 'outline', article: edited, order });
-    await relay(order.slice(lead.length));
-  } else {
-    await relay(order);
+
+  // Relay in reading order. A grouped part of speech starts out with its
+  // senses in Wiktionary's order and no text; each core sense replaces them as
+  // it arrives, and its text follows.
+  let next = 0;
+  for (const [e, etymon] of edited.etymons.entries()) {
+    if (etymon.originId) await relay([etymon.originId]);
+    for (const [l, lexeme] of etymon.lexemes.entries()) {
+      const grouping = groupings[next++];
+      if (!grouping) {
+        await relay(senseIds(lexeme.senses));
+        continue;
+      }
+      const cores: EditedSense[] = [];
+      for await (const core of grouping) {
+        const [sense] = toEdited([core]);
+        cores.push(sense);
+        send({ type: 'core', etymon: e, lexeme: l, sense });
+        await relay(senseIds([sense]));
+      }
+      lexeme.senses = cores;
+    }
   }
 
   const results = (

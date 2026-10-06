@@ -37,11 +37,13 @@ export const EditedArticleSchema = z.object({
 export type EditedArticle = z.infer<typeof EditedArticleSchema>;
 
 // Messages of a streamed edit, one JSON object per line. `outline` carries
-// the article with empty text and the order in which item text arrives; it's
-// sent again, before any of their text, when senses have been grouped;
-// `text` appends to an item; `end` marks an item's text as final.
+// the article with empty text and the order in which item text arrives; in a
+// part of speech that's being grouped, the senses are in Wiktionary's order
+// until `core` messages replace them, one core sense at a time, each before
+// its text. `text` appends to an item; `end` marks an item's text as final.
 export type EditStreamMessage =
   | { type: 'outline'; article: EditedArticle; order: string[] }
+  | { type: 'core'; etymon: number; lexeme: number; sense: EditedSense }
   | { type: 'text'; id: string; text: string }
   | { type: 'end'; id: string }
   | { type: 'done' }

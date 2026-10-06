@@ -2,10 +2,12 @@ import 'server-only';
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { JSONParser } from '@streamparser/json';
 import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import type { Sense } from '@/lib/schemas';
+import { channel } from './channel';
 
 // Arranges a part of speech's senses the way Oxford does: a few core senses,
 // each with the senses that come from it as subsenses. Wiktionary lists most
@@ -13,23 +15,26 @@ import type { Sense } from '@/lib/schemas';
 // nesting change, never the senses themselves, so it can't introduce errors
 // of fact, and code checks that every sense is placed exactly once.
 
-// Tested on big entries (scripts/test-grouping.mts): Sol with low reasoning
-// groups like Oxford; Luna groups worse, and is no faster with reasoning.
+// Tested on big entries (scripts/test-grouping.mts): Sol groups like Oxford.
+// With low reasoning it's a little better at keeping unrelated senses apart,
+// but takes 4–10 s; without, the first core sense arrives in about 1.5–2.5 s
+// and the rest stream after it. Luna groups worse.
 const model = 'gpt-6-sol';
 
 // Parts of speech with fewer senses than this are short enough as they are.
 export const groupFrom = 6;
 
-// Grouping takes about 4–10 s on the biggest entries. One that takes longer
-// is given up on, and the senses keep Wiktionary's order.
-const timeout = 25_000;
+// Grouping takes about 2.5–4.5 s on the biggest entries. One that takes
+// longer is given up on, and the senses not yet placed keep Wiktionary's
+// order.
+const timeout = 15_000;
 
 const prompt = readFileSync(
   join(process.cwd(), 'prompts', 'group-senses.md'),
   'utf8',
 );
 
-const openai = new OpenAI({ timeout, maxRetries: 0 });
+const openai = new OpenAI({ maxRetries: 0 });
 
 const OutputSchema = z.object({
   cores: z.array(z.object({ id: z.string(), subsenses: z.array(z.string()) })),
@@ -37,19 +42,52 @@ const OutputSchema = z.object({
 
 export type SenseNode = { id: string; source: Sense; subsenses: SenseNode[] };
 
-// Returns the senses as core senses, each followed by its own subsenses and
-// then the senses placed under it. Never fails: senses the model leaves out
-// become core senses at the end, and if grouping fails altogether, the senses
-// stay as they were.
-export async function groupSenses(
+// Yields the senses as core senses, as each arrives: a core sense with its
+// own subsenses, then the senses placed under it. Never fails: senses the
+// model leaves out, or doesn't get to, follow as core senses of their own.
+export function groupSenses(
   word: string,
   partOfSpeech: string,
   senses: SenseNode[],
-): Promise<SenseNode[]> {
-  try {
-    const response = await openai.responses.parse({
+): AsyncIterable<SenseNode> {
+  const cores = channel<SenseNode>();
+  const byId = new Map(senses.map((sense) => [sense.id, sense]));
+  const placed = new Set<string>();
+
+  const place = (core: { id: string; subsenses: string[] }) => {
+    const node = byId.get(core.id);
+    if (!node || placed.has(core.id)) return;
+    placed.add(core.id);
+    const subsenses = core.subsenses.flatMap((id) => {
+      const sub = byId.get(id);
+      if (!sub || placed.has(id)) return [];
+      placed.add(id);
+      return [sub];
+    });
+    cores.push({ ...node, subsenses: [...node.subsenses, ...subsenses] });
+  };
+
+  const parser = new JSONParser({ paths: ['$.cores.*'] });
+  parser.onValue = ({ value }) => {
+    const core = value as { id?: unknown; subsenses?: unknown };
+    if (typeof core.id === 'string' && Array.isArray(core.subsenses)) {
+      place({
+        id: core.id,
+        subsenses: core.subsenses.filter((id) => typeof id === 'string'),
+      });
+    }
+  };
+
+  // Done as soon as the JSON is complete: the model sometimes keeps writing
+  // after it.
+  let stream: ReturnType<typeof openai.responses.stream> | undefined;
+  parser.onEnd = () => stream?.abort();
+  const timer = setTimeout(() => stream?.abort(), timeout);
+
+  (async () => {
+    stream = openai.responses.stream({
       model,
-      reasoning: { effort: 'low' },
+      reasoning: { effort: 'none' },
       instructions: prompt,
       input: JSON.stringify({
         word,
@@ -64,26 +102,25 @@ export async function groupSenses(
       }),
       text: { format: zodTextFormat(OutputSchema, 'grouping') },
     });
-    const { cores } = response.output_parsed!;
+    stream.on('response.output_text.delta', ({ delta }) => {
+      if (parser.isEnded) return;
+      try {
+        parser.write(delta);
+      } catch {
+        stream?.abort();
+      }
+    });
+    await stream.finalResponse();
+  })()
+    .catch((error: unknown) => {
+      if (parser.isEnded) return;
+      console.warn(`Grouping ${word} (${partOfSpeech}) failed:`, error);
+    })
+    .finally(() => {
+      clearTimeout(timer);
+      for (const sense of senses) if (!placed.has(sense.id)) cores.push(sense);
+      cores.close();
+    });
 
-    const byId = new Map(senses.map((sense) => [sense.id, sense]));
-    const placed = new Set<string>();
-    const grouped: SenseNode[] = [];
-    for (const core of cores) {
-      const node = byId.get(core.id);
-      if (!node || placed.has(core.id)) continue;
-      placed.add(core.id);
-      const subsenses = core.subsenses.flatMap((id) => {
-        const sub = byId.get(id);
-        if (!sub || placed.has(id)) return [];
-        placed.add(id);
-        return [sub];
-      });
-      grouped.push({ ...node, subsenses: [...node.subsenses, ...subsenses] });
-    }
-    return [...grouped, ...senses.filter((sense) => !placed.has(sense.id))];
-  } catch (error) {
-    console.warn(`Grouping ${word} (${partOfSpeech}) failed:`, error);
-    return senses;
-  }
+  return cores;
 }

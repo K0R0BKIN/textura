@@ -29,12 +29,13 @@ for (const word of words) {
 
   const started = Date.now();
   const at: Record<string, number> = {};
-  let outlines = 0;
+  let firstCore: number | undefined;
   let firstOrigin: number | undefined;
   let firstSense: number | undefined;
   const edited = await editArticle(fromStoredArticle(row), (message) => {
     const ms = Date.now() - started;
-    if (message.type === 'outline') at[`outline ${++outlines}`] = ms;
+    if (message.type === 'outline') at.outline = ms;
+    if (message.type === 'core') firstCore ??= ms;
     if (message.type === 'text') {
       if (message.id.startsWith('o')) firstOrigin ??= ms;
       else firstSense ??= ms;
@@ -50,7 +51,7 @@ for (const word of words) {
     )
     .join(', ');
   console.log(
-    `${word.padEnd(8)} outline ${seconds(at['outline 1'])}, origin ${seconds(firstOrigin)}, grouped ${seconds(at['outline 2'])}, first sense ${seconds(firstSense)}, done ${seconds(at.done)} | ${structure}`,
+    `${word.padEnd(8)} outline ${seconds(at.outline)}, origin ${seconds(firstOrigin)}, first core ${seconds(firstCore)}, first sense ${seconds(firstSense)}, done ${seconds(at.done)} | ${structure}`,
   );
 }
 process.exit(0);
