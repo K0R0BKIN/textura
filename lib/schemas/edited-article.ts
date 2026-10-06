@@ -2,13 +2,12 @@ import { z } from 'zod';
 import { LexicalCategorySchema, TranscriptionSchema } from './etymon';
 import { VarietySchema } from './variety';
 
-// An article after editing: senses in display order, each marked shown up
-// front or behind "show more", with Textura's rewritten text.
+// An article after editing: senses in display order, grouped into core senses
+// and subsenses, with Textura's rewritten text.
 export const EditedSenseSchema = z.object({
   id: z.string(),
   definition: z.string(),
   examples: z.array(z.string()),
-  shown: z.boolean(),
   get subsenses(): z.ZodArray<typeof EditedSenseSchema> {
     return z.array(EditedSenseSchema);
   },
@@ -38,7 +37,8 @@ export const EditedArticleSchema = z.object({
 export type EditedArticle = z.infer<typeof EditedArticleSchema>;
 
 // Messages of a streamed edit, one JSON object per line. `outline` carries
-// the article with empty text and the order in which item text arrives;
+// the article with empty text and the order in which item text arrives; it's
+// sent again, before any of their text, when senses have been grouped;
 // `text` appends to an item; `end` marks an item's text as final.
 export type EditStreamMessage =
   | { type: 'outline'; article: EditedArticle; order: string[] }

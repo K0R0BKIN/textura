@@ -3,12 +3,12 @@ import 'server-only';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { JSONParser } from '@streamparser/json';
-import { score, TypeSafeClient } from '@typesafe-ai/sdk';
 import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { editOrigins, originItems, type OriginItem } from './edit-origins';
-import { hedged, hedgedStream } from './hedge';
+import { groupFrom, groupSenses, type SenseNode } from './group-senses';
+import { hedgedStream } from './hedge';
 import type {
   Article,
   EditedArticle,
@@ -17,16 +17,17 @@ import type {
   Sense,
 } from '@/lib/schemas';
 
-// Edits a Wiktionary article into Textura's style. Jev rates each sense's
-// importance, which orders the senses and decides which are shown up front; the article is then rewritten in
-// parallel chunks cut in display order, and their text is emitted in that
-// order so the article can be read top to bottom while it streams.
+// Edits a Wiktionary article into Textura's style. Every definition is
+// rewritten at once, in parallel chunks, while big parts of speech are grouped
+// into Oxford's core senses (group-senses.ts). The text is relayed in reading
+// order, so the article can be read top to bottom while it streams.
 
 const model = 'gpt-6-luna';
 
 // Items are packed into chunks of about this many output tokens, each a
-// parallel request. The first chunk of shown senses is smaller: the reader
-// waits on it live, while later chunks are ready by the time they're needed.
+// parallel request. The first chunk is smaller: in an ungrouped article the
+// reader waits on it live, while later chunks are ready by the time they're
+// needed.
 const chunkTokens = 300;
 const firstChunkTokens = 60;
 
@@ -44,14 +45,6 @@ const hedgeStreamAfter = 2_500;
 // A runaway response (the model looping instead of closing its JSON) stops
 // here: far above a chunk's few hundred tokens.
 const maxOutputTokens = 2_000;
-const hedgeJevAfter = 2_000;
-
-// Articles with this many senses or fewer show all of them up front.
-const showAllUpTo = 3;
-
-// Senses at least this important are shown up front; the rest go behind
-// "show more".
-const shownFrom = 2;
 
 const prompt = readFileSync(
   join(process.cwd(), 'prompts', 'edit-senses.md'),
@@ -59,71 +52,31 @@ const prompt = readFileSync(
 );
 
 const openai = new OpenAI();
-const jev = new TypeSafeClient({
-  apiKey: process.env.TYPESAFEAI_API_KEY,
-  // Jev is either fast or down, so fail fast rather than wait.
-  timeout: 5_000,
-  retry: { maxRetries: 2 },
-});
-
-// Jev rates senses in batches of this many per request: one per sense means
-// over a hundred requests for a word like "run", while a whole part of speech
-// per request compresses the scores of long lists. Batches of 10 kept rank
-// agreement with one request per sense at 0.84–0.95.
-const rankBatchSize = 10;
-
-const importanceLevels = [
-  'Not at all: obsolete, archaic, or found only in old texts',
-  'Hardly: rare, regional, or confined to a narrow technical or specialist field',
-  'Somewhat: occasionally met; useful but not essential',
-  'Important: regularly met in everyday reading, conversation, or media',
-  'Essential: among the first meanings anyone needs for this word',
-] as const;
-const importance = (index: number) =>
-  score(
-    `How important is it for an everyday reader to know this meaning of \`word\`, as given in \`senses[${index}].definition\`?`,
-    importanceLevels,
-  );
 
 const OutputSchema = z.object({
   items: z.array(z.object({ id: z.string(), text: z.string() })),
 });
 
-type RankedSense = {
+type InputItem = {
   id: string;
-  source: Sense;
-  importance: number;
-  shown: boolean;
-  subsenses: RankedSense[];
+  kind: 'sense';
+  partOfSpeech: string;
+  parentId?: string;
+  definition: string;
+  examples: string[];
+  groupsSubsenses: boolean;
 };
 
-type InputItem =
-  | { id: string; kind: 'origin'; text: string; partsOfSpeech: string[] }
-  | {
-      id: string;
-      kind: 'sense';
-      partOfSpeech: string;
-      parentId?: string;
-      definition: string;
-      examples: string[];
-      groupsSubsenses: boolean;
-    };
-
-function flatten(senses: RankedSense[]): RankedSense[] {
+function flatten(senses: SenseNode[]): SenseNode[] {
   return senses.flatMap((sense) => [sense, ...flatten(sense.subsenses)]);
 }
 
-// Item ids are `<part of speech>:<path>`, such as `2:1.3`.
-function withIds(senses: Sense[], prefix: string): RankedSense[] {
+// Item ids are `<part of speech>:<path>`, such as `2:1.3`: a sense's place in
+// Wiktionary, which grouping doesn't change.
+function withIds(senses: Sense[], prefix: string): SenseNode[] {
   return senses.map((source, index) => {
     const id = `${prefix}${index + 1}`;
-    return {
-      id,
-      source,
-      importance: 0,
-      shown: false,
-      subsenses: withIds(source.subsenses, `${id}.`),
-    };
+    return { id, source, subsenses: withIds(source.subsenses, `${id}.`) };
   });
 }
 
@@ -132,36 +85,9 @@ function parentId(id: string) {
   return dot === -1 ? undefined : id.slice(0, dot);
 }
 
-// Orders siblings by importance (stable). A parent takes the highest
-// importance among its descendants, so an important subsense lifts its group.
-function rank(senses: RankedSense[]): RankedSense[] {
-  for (const sense of senses) {
-    sense.subsenses = rank(sense.subsenses);
-    sense.importance = Math.max(
-      sense.importance,
-      ...sense.subsenses.map((s) => s.importance),
-    );
-  }
-  return senses.toSorted((a, b) => b.importance - a.importance);
-}
-
-function markShown(senses: RankedSense[], parentShown = true) {
-  for (const sense of senses) {
-    sense.shown = parentShown && sense.importance >= shownFrom;
-    markShown(sense.subsenses, sense.shown);
-  }
-}
-
-function markAllShown(senses: RankedSense[]) {
-  for (const sense of flatten(senses)) sense.shown = true;
-}
-
-// Rough output size of an item: a rewritten definition or a condensed
-// etymology, plus JSON.
+// Rough output size of an item: a rewritten definition, plus JSON.
 function estimateTokens(item: InputItem) {
-  return item.kind === 'origin'
-    ? Math.min(item.text.length / 8, 150) + 20
-    : item.definition.length / 4 + 15;
+  return item.definition.length / 4 + 15;
 }
 
 function toChunks(items: InputItem[], firstBudget = chunkTokens) {
@@ -227,9 +153,7 @@ async function editChunk(
   const context = [
     ...new Set(
       chunk.flatMap((item) =>
-        item.kind === 'sense' && item.parentId && !ids.has(item.parentId)
-          ? [item.parentId]
-          : [],
+        item.parentId && !ids.has(item.parentId) ? [item.parentId] : [],
       ),
     ),
   ].map((id) => byId.get(id)!);
@@ -360,26 +284,28 @@ async function requestChunk(
   }
 }
 
-// Starts rewriting a chunk right away; its text queues up until relayed.
+type Queue = ReturnType<typeof channel<EditStreamMessage>>;
+
+// Starts rewriting a chunk right away. Its text queues up per item until
+// relayed, since items are relayed in reading order, which grouping decides.
 function startChunk(
   headword: string,
   chunk: InputItem[],
   byId: Map<string, InputItem>,
+  queues: Map<string, Queue>,
 ) {
-  const queue = channel<EditStreamMessage>();
-  const result = editChunk(headword, chunk, byId, queue.push).then(
-    (edited) => {
-      queue.close();
-      return edited;
-    },
-    (error) => {
-      queue.close(error);
-      throw error;
-    },
-  );
-  // Errors surface through the queue; don't also leave them unhandled.
+  const result = editChunk(headword, chunk, byId, (message) => {
+    if (message.type !== 'text' && message.type !== 'end') return;
+    const queue = queues.get(message.id)!;
+    queue.push(message);
+    if (message.type === 'end') queue.close();
+  }).catch((error: unknown) => {
+    for (const item of chunk) queues.get(item.id)!.close(error);
+    throw error;
+  });
+  // Errors surface through the queues; don't also leave them unhandled.
   result.catch(() => {});
-  return { queue, result };
+  return result;
 }
 
 // Starts rewriting a word's etymologies, with a queue per etymology so each
@@ -425,8 +351,8 @@ export async function editArticle(
 ): Promise<EditedArticle> {
   const word = article.headword;
 
-  // Etymologies don't depend on the sense order, so rewrite them while Jev
-  // ranks the senses: all in one request, so each can build on the others.
+  // Etymologies don't depend on the senses: rewrite them all in one request,
+  // so each can build on the others.
   const originList = originItems(article);
   const origins = startOrigins(word, originList);
 
@@ -434,178 +360,124 @@ export async function editArticle(
     etymon.lexemes.map((lexeme) => ({
       etymon: e,
       lexeme,
-      senses: [] as RankedSense[],
+      senses: [] as SenseNode[],
     })),
   );
   lexemes.forEach((entry, i) => {
     entry.senses = withIds(entry.lexeme.senses, `${i + 1}:`);
   });
 
-  // Jev: batches of senses from one part of speech, all in parallel.
-  await Promise.all(
-    lexemes.flatMap(({ lexeme, senses }) => {
-      const all = flatten(senses);
-      const byId = new Map(all.map((s) => [s.id, s]));
-      const batches = Array.from(
-        { length: Math.ceil(all.length / rankBatchSize) },
-        (_, k) => all.slice(k * rankBatchSize, (k + 1) * rankBatchSize),
+  // Big parts of speech are grouped into core senses. Grouping only changes
+  // the order and nesting, so the definitions are rewritten meanwhile.
+  const grouping = lexemes.some((entry) => entry.senses.length >= groupFrom);
+  const grouped = Promise.all(
+    lexemes.map(async (entry) => {
+      if (entry.senses.length < groupFrom) return;
+      entry.senses = await groupSenses(
+        word,
+        entry.lexeme.lexicalCategory,
+        entry.senses,
       );
-      return batches.map(async (batch) => {
-        const { answers } = await hedged(
-          () =>
-            jev.systemOne({
-              state: {
-                word,
-                partOfSpeech: lexeme.lexicalCategory,
-                senses: batch.map((sense) => {
-                  const parentKey = parentId(sense.id);
-                  const parent = parentKey ? byId.get(parentKey) : undefined;
-                  return {
-                    definition: sense.source.definition,
-                    ...(parent && {
-                      parentDefinition: parent.source.definition,
-                    }),
-                    ...(sense.source.examples[0] && {
-                      example: sense.source.examples[0],
-                    }),
-                  };
-                }),
-              },
-              questions: Object.fromEntries(
-                batch.map((_, i) => [`s${i}`, importance(i)]),
-              ),
-            }),
-          hedgeJevAfter,
-        );
-        batch.forEach((sense, i) => {
-          sense.importance = answers[`s${i}`].score;
-        });
-      });
     }),
   );
 
-  for (const entry of lexemes) entry.senses = rank(entry.senses);
-  const best = (senses: RankedSense[]) =>
-    Math.max(...senses.map((s) => s.importance));
-  const etymons = article.etymons
-    .map((etymon, e) => ({
-      etymon,
-      e,
-      lexemes: lexemes
-        .filter((l) => l.etymon === e)
-        .toSorted((a, b) => best(b.senses) - best(a.senses)),
-    }))
-    .toSorted((a, b) => best(b.lexemes[0].senses) - best(a.lexemes[0].senses));
-
-  // Shown up front: everything for small articles, otherwise what Jev deems
-  // worth showing, and never nothing.
-  const allSenses = lexemes.flatMap((l) => flatten(l.senses));
-  if (allSenses.length <= showAllUpTo) {
-    for (const entry of lexemes) markAllShown(entry.senses);
-  } else {
-    for (const entry of lexemes) markShown(entry.senses);
-    if (!allSenses.some((s) => s.shown)) {
-      etymons[0].lexemes[0].senses[0].shown = true;
-    }
-  }
-
-  const toEdited = (senses: RankedSense[]): EditedSense[] =>
-    senses.map((s) => ({
-      id: s.id,
-      definition: '',
-      examples: s.source.examples,
-      shown: s.shown,
-      subsenses: toEdited(s.subsenses),
-    }));
-  const outline: EditedArticle = {
-    headword: word,
-    variety: article.variety,
-    etymons: etymons.map(({ etymon, e, lexemes }) => ({
-      ...(etymon.origin && { originId: `o${e + 1}`, origin: '' }),
-      lexemes: lexemes.map(({ lexeme, senses }) => ({
-        lexicalCategory: lexeme.lexicalCategory,
-        ...(lexeme.transcription && { transcription: lexeme.transcription }),
-        senses: toEdited(senses),
-      })),
-    })),
-  };
-
-  // Items in display order: each etymology with its shown senses, then all
-  // hidden senses, so the visible article streams first.
-  const senseItem = (partOfSpeech: string, s: RankedSense): InputItem => {
-    const parentKey = parentId(s.id);
-    return {
-      id: s.id,
-      kind: 'sense',
-      partOfSpeech,
-      ...(parentKey && { parentId: parentKey }),
-      definition: s.source.definition,
-      examples: s.source.examples,
-      groupsSubsenses: s.subsenses.length > 0,
-    };
-  };
-  const display = etymons.flatMap(({ e, lexemes }) => [
-    ...originList
-      .filter((item) => item.id === `o${e + 1}`)
-      .map((item) => ({ ...item, kind: 'origin' as const })),
-    ...lexemes.flatMap(({ lexeme, senses }) =>
-      flatten(senses).map((s) => ({
-        item: senseItem(lexeme.lexicalCategory, s),
-        shown: s.shown,
-      })),
-    ),
-  ]);
-  const items = [
-    ...display.flatMap((d) => ('item' in d ? (d.shown ? [d.item] : []) : [d])),
-    ...display.flatMap((d) => ('item' in d && !d.shown ? [d.item] : [])),
-  ];
+  // Every definition, in Wiktionary's order, rewritten in parallel chunks.
+  const items: InputItem[] = lexemes.flatMap(({ lexeme, senses }) =>
+    flatten(senses).map((sense) => {
+      const parentKey = parentId(sense.id);
+      return {
+        id: sense.id,
+        kind: 'sense' as const,
+        partOfSpeech: lexeme.lexicalCategory,
+        ...(parentKey && { parentId: parentKey }),
+        definition: sense.source.definition,
+        examples: sense.source.examples,
+        groupsSubsenses: sense.subsenses.length > 0,
+      };
+    }),
+  );
   const byId = new Map(items.map((item) => [item.id, item]));
+  const queues = new Map<string, Queue>([
+    ...items.map((item) => [item.id, channel<EditStreamMessage>()] as const),
+    ...[...origins].map(([id, origin]) => [id, origin.queue] as const),
+  ]);
+  const chunks = toChunks(items, firstChunkTokens).map((chunk) =>
+    startChunk(word, chunk, byId, queues),
+  );
 
-  send({ type: 'outline', article: outline, order: items.map((i) => i.id) });
-
-  // Split into segments in display order: each etymology, already being
-  // rewritten, and the runs of senses between them, cut into chunks. Start
-  // every chunk now, then relay their text in order: the current chunk
-  // streams live while later ones buffer.
-  const segments: ReturnType<typeof startChunk>[] = [];
-  let firstRun = true;
-  let run: InputItem[] = [];
-  const flushRun = () => {
-    if (run.length === 0) return;
-    for (const chunk of toChunks(
-      run,
-      firstRun ? firstChunkTokens : chunkTokens,
-    )) {
-      segments.push(startChunk(word, chunk, byId));
-    }
-    firstRun = false;
-    run = [];
+  // The article's structure with empty text, and its items in reading order.
+  const toEdited = (senses: SenseNode[]): EditedSense[] =>
+    senses.map((sense) => ({
+      id: sense.id,
+      definition: '',
+      examples: sense.source.examples,
+      subsenses: toEdited(sense.subsenses),
+    }));
+  const senseIds = (senses: EditedSense[]): string[] =>
+    senses.flatMap((sense) => [sense.id, ...senseIds(sense.subsenses)]);
+  const outline = () => {
+    const edited: EditedArticle = {
+      headword: word,
+      variety: article.variety,
+      etymons: article.etymons.map((etymon, e) => ({
+        ...(etymon.origin && { originId: `o${e + 1}`, origin: '' }),
+        lexemes: lexemes
+          .filter((entry) => entry.etymon === e)
+          .map(({ lexeme, senses }) => ({
+            lexicalCategory: lexeme.lexicalCategory,
+            ...(lexeme.transcription && {
+              transcription: lexeme.transcription,
+            }),
+            senses: toEdited(senses),
+          })),
+      })),
+    };
+    const order = edited.etymons.flatMap((etymon) => [
+      ...(etymon.originId ? [etymon.originId] : []),
+      ...etymon.lexemes.flatMap((lexeme) => senseIds(lexeme.senses)),
+    ]);
+    return { edited, order };
   };
-  for (const item of items) {
-    if (item.kind === 'origin') {
-      flushRun();
-      segments.push(origins.get(item.id)!);
-    } else {
-      run.push(item);
+
+  const relay = async (ids: string[]) => {
+    for (const id of ids) {
+      for await (const message of queues.get(id)!) send(message);
     }
+  };
+
+  let { edited, order } = outline();
+  send({ type: 'outline', article: edited, order });
+  if (grouping) {
+    // The first origin doesn't depend on grouping, so it streams meanwhile;
+    // the outline is then sent again with the senses grouped.
+    const lead = edited.etymons[0]?.originId ? order.slice(0, 1) : [];
+    await relay(lead);
+    await grouped;
+    ({ edited, order } = outline());
+    send({ type: 'outline', article: edited, order });
+    await relay(order.slice(lead.length));
+  } else {
+    await relay(order);
   }
-  flushRun();
-  for (const { queue } of segments) {
-    for await (const message of queue) send(message);
-  }
-  const edited = (await Promise.all(segments.map((c) => c.result))).flat();
+
+  const results = (
+    await Promise.all([
+      ...chunks,
+      ...[...origins.values()].map((origin) => origin.result),
+    ])
+  ).flat();
   send({ type: 'done' });
 
-  const text = new Map(edited.map((item) => [item.id, item.text]));
+  const text = new Map(results.map((item) => [item.id, item.text]));
   const fill = (senses: EditedSense[]): EditedSense[] =>
-    senses.map((s) => ({
-      ...s,
-      definition: text.get(s.id) ?? '',
-      subsenses: fill(s.subsenses),
+    senses.map((sense) => ({
+      ...sense,
+      definition: text.get(sense.id) ?? '',
+      subsenses: fill(sense.subsenses),
     }));
   return {
-    ...outline,
-    etymons: outline.etymons.map((etymon) => ({
+    ...edited,
+    etymons: edited.etymons.map((etymon) => ({
       ...etymon,
       ...(etymon.originId && { origin: text.get(etymon.originId) ?? '' }),
       lexemes: etymon.lexemes.map((lexeme) => ({

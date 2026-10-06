@@ -63,6 +63,8 @@ export function useEditedArticle(url: string) {
     let article: EditedArticle | undefined;
     let order: string[] = [];
     let finished = false;
+    // Outlines received: the second regroups senses before their text.
+    let outlines = 0;
     const shown: Record<string, number> = {};
     let lastKey = '';
     received.current = {};
@@ -95,7 +97,7 @@ export function useEditedArticle(url: string) {
       }
 
       // Skip re-rendering while waiting on the network.
-      const key = `${order.map((id) => shown[id] ?? 0).join()}|${ended.current.size}|${finished}`;
+      const key = `${outlines}|${order.map((id) => shown[id] ?? 0).join()}|${ended.current.size}|${finished}`;
       if (key === lastKey) {
         frame = requestAnimationFrame(reveal);
         return;
@@ -127,7 +129,8 @@ export function useEditedArticle(url: string) {
         case 'outline':
           article = message.article;
           order = message.order;
-          frame = requestAnimationFrame(reveal);
+          // The reveal loop runs from the first outline on.
+          if (outlines++ === 0) frame = requestAnimationFrame(reveal);
           break;
         case 'text':
           received.current[message.id] =
@@ -192,9 +195,7 @@ export function useEditedArticle(url: string) {
     };
   }, [url, attempt]);
 
-  // Text received so far, for hidden senses expanded before their turn.
-  const receivedText = (id: string) => received.current[id] ?? '';
   const retry = () => setAttempt((n) => n + 1);
 
-  return { state, receivedText, retry };
+  return { state, retry };
 }

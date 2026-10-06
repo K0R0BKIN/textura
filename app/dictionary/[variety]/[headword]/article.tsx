@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { Fragment, useState } from 'react';
+import { Fragment } from 'react';
 import { useDocumentTitle } from 'usehooks-ts';
 
 import {
@@ -17,7 +17,6 @@ import { useEditedArticle } from './use-edited-article';
 type Reveal = {
   revealed: Record<string, string>;
   complete: Set<string>;
-  receivedText: (id: string) => string;
 };
 
 function ArticleNotFound() {
@@ -64,22 +63,17 @@ const senseListStyles = [
 
 function Senses({
   senses,
-  expanded,
   reveal,
   depth = 0,
   className,
 }: {
   senses: EditedSense[];
-  expanded: boolean;
   reveal: Reveal;
   depth?: number;
   className?: string;
 }) {
-  // Shown senses appear as their text streams in; hidden ones, once
-  // expanded, show whatever text has arrived.
-  const visible = senses.filter((sense) =>
-    sense.shown ? sense.id in reveal.revealed : expanded,
-  );
+  // Senses appear as their text streams in.
+  const visible = senses.filter((sense) => sense.id in reveal.revealed);
   if (visible.length === 0) return null;
 
   return (
@@ -91,10 +85,8 @@ function Senses({
       )}
     >
       {visible.map((sense) => {
-        const text = sense.shown
-          ? reveal.revealed[sense.id]
-          : reveal.receivedText(sense.id) || sense.definition;
-        const complete = !sense.shown || reveal.complete.has(sense.id);
+        const text = reveal.revealed[sense.id];
+        const complete = reveal.complete.has(sense.id);
         return (
           <li key={sense.id} className="font-serif">
             <p className="font-medium">
@@ -110,7 +102,6 @@ function Senses({
 
             <Senses
               senses={sense.subsenses}
-              expanded={expanded}
               reveal={reveal}
               depth={depth + 1}
               className="mt-2"
@@ -123,7 +114,7 @@ function Senses({
 }
 
 // The article as blocks in reading order: each etymon's origin, then each
-// part of speech with its shown senses. A block appears only once the block
+// part of speech with its senses. A block appears only once the block
 // before it is complete, so the article grows top to bottom without holes.
 function EditedArticleView({
   article,
@@ -136,8 +127,6 @@ function EditedArticleView({
   streaming: boolean;
   waiting: boolean;
 }) {
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-
   type Block = { key: string; ids: string[] };
   const blocks: Block[] = article.etymons.flatMap((etymon, e) => [
     ...(etymon.originId
@@ -145,9 +134,7 @@ function EditedArticleView({
       : []),
     ...etymon.lexemes.map((lexeme, l) => ({
       key: `${e}:${l}`,
-      ids: flatten(lexeme.senses)
-        .filter((sense) => sense.shown)
-        .map((sense) => sense.id),
+      ids: flatten(lexeme.senses).map((sense) => sense.id),
     })),
   ]);
   const isComplete = (block: Block) =>
@@ -187,8 +174,6 @@ function EditedArticleView({
             {etymon.lexemes.map((lexeme, l) => {
               const key = `${e}:${l}`;
               if (!visibleBlocks.has(key)) return null;
-              const hidden = flatten(lexeme.senses).filter((s) => !s.shown);
-              const block = blocks.find((b) => b.key === key)!;
 
               return (
                 <div key={l} className={l === 0 ? 'mt-4' : 'mt-8'}>
@@ -206,27 +191,9 @@ function EditedArticleView({
 
                   <Senses
                     senses={lexeme.senses}
-                    expanded={!!expanded[key]}
                     reveal={reveal}
                     className="mt-2"
                   />
-
-                  {hidden.length > 0 && isComplete(block) && (
-                    <button
-                      type="button"
-                      className="mt-2 text-sm text-muted-foreground hover:text-foreground"
-                      onClick={() =>
-                        setExpanded((current) => ({
-                          ...current,
-                          [key]: !current[key],
-                        }))
-                      }
-                    >
-                      {expanded[key]
-                        ? 'Show less'
-                        : `Show ${hidden.length} more`}
-                    </button>
-                  )}
                 </div>
               );
             })}
@@ -248,7 +215,7 @@ export function Article() {
 
   useDocumentTitle(headword);
 
-  const { state, receivedText, retry } = useEditedArticle(
+  const { state, retry } = useEditedArticle(
     `/api/articles/${params.variety}/${encodeURIComponent(headword)}`,
   );
 
@@ -264,7 +231,6 @@ export function Article() {
           reveal={{
             revealed: state.revealed,
             complete: state.complete,
-            receivedText,
           }}
           streaming={state.status === 'streaming'}
           waiting={state.waiting}
