@@ -207,7 +207,12 @@ export function useEditedArticle(url: string) {
     };
 
     (async () => {
-      const response = await fetch(url, { signal: abort.signal });
+      const response = await fetch(url, {
+        signal: abort.signal,
+        // Saved articles are cached for an hour; in development, always ask
+        // the server, which may be regenerating them.
+        cache: process.env.NODE_ENV === 'development' ? 'no-store' : 'default',
+      });
       if (!response.ok) throw new Error(`Failed to load (${response.status})`);
 
       if (response.headers.get('content-type')?.includes('application/json')) {

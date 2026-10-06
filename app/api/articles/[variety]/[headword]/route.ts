@@ -29,8 +29,11 @@ export async function GET(
   }
 
   // Both at once: the raw article is needed whenever no edit is saved yet.
+  // REGENERATE_ARTICLES=1 ignores saved edits, to test editing changes.
   const [edited, article] = await Promise.all([
-    findEditedArticle(parsedHeadword.data),
+    process.env.REGENERATE_ARTICLES === '1'
+      ? null
+      : findEditedArticle(parsedHeadword.data),
     findArticle(parsedHeadword.data),
   ]);
 

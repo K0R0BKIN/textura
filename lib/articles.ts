@@ -55,5 +55,9 @@ export async function saveEditedArticle(article: EditedArticle) {
       variety: article.variety,
       data: article,
     })
-    .onConflictDoNothing();
+    // Replaces an earlier edit, when articles are regenerated for testing.
+    .onConflictDoUpdate({
+      target: [editedArticles.headword, editedArticles.variety],
+      set: { data: article, createdAt: new Date() },
+    });
 }
