@@ -35,6 +35,16 @@ export const EditedArticleSchema = z.object({
   headword: z.string(),
   variety: VarietySchema,
   etymons: z.array(EditedEtymonSchema),
+  // Phrases and phrasal verbs containing the headword, each an article of
+  // its own, listed at the end.
+  phrases: z
+    .array(
+      z.object({
+        phrase: z.string(),
+        kind: z.enum(['phrase', 'phrasal verb']),
+      }),
+    )
+    .default([]),
 });
 export type EditedArticle = z.infer<typeof EditedArticleSchema>;
 

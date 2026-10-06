@@ -1,5 +1,7 @@
 'use client';
 
+import type { Route } from 'next';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Fragment } from 'react';
 import { useDocumentTitle } from 'usehooks-ts';
@@ -10,7 +12,11 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
-import type { EditedArticle, EditedSense } from '@/lib/schemas';
+import {
+  slugToVariety,
+  type EditedArticle,
+  type EditedSense,
+} from '@/lib/schemas';
 import { cn } from '@/lib/utils';
 import { useEditedArticle } from './use-edited-article';
 
@@ -207,9 +213,55 @@ function EditedArticleView({
         );
       })}
 
+      {/* At the end, once the article above is complete. */}
+      {blocks.every(isComplete) && (
+        <Phrases phrases={article.phrases} variety={article.variety} />
+      )}
+
       {streaming && waiting && <StreamingIndicator />}
     </>
   );
+}
+
+// Phrases and phrasal verbs containing the headword, as Oxford lists them
+// after the senses, each linking to its own article.
+function Phrases({
+  phrases,
+  variety,
+}: {
+  phrases: EditedArticle['phrases'];
+  variety: EditedArticle['variety'];
+}) {
+  const sections = [
+    { title: 'Phrases', kind: 'phrase' },
+    { title: 'Phrasal verbs', kind: 'phrasal verb' },
+  ] as const;
+  return sections.map(({ title, kind }) => {
+    const list = phrases.filter((phrase) => phrase.kind === kind);
+    if (list.length === 0) return null;
+    return (
+      <section key={kind} className="mt-8">
+        <h3 className="text-lg font-semibold text-subtle-foreground">
+          {title}
+        </h3>
+        <p className="mt-2 font-serif leading-relaxed">
+          {list.map(({ phrase }, index) => (
+            <Fragment key={phrase}>
+              {index > 0 && <span className="text-muted-foreground"> · </span>}
+              <Link
+                href={
+                  `/dictionary/${slugToVariety.encode(variety)}/${encodeURIComponent(phrase)}` as Route
+                }
+                className="font-medium hover:underline"
+              >
+                {phrase}
+              </Link>
+            </Fragment>
+          ))}
+        </p>
+      </section>
+    );
+  });
 }
 
 export function Article() {

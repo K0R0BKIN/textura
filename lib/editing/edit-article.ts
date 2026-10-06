@@ -324,6 +324,7 @@ function startOrigins(headword: string, items: OriginItem[]) {
 export async function editArticle(
   article: Article,
   send: (message: EditStreamMessage) => void,
+  phrases: EditedArticle['phrases'] = [],
 ): Promise<EditedArticle> {
   const word = article.headword;
 
@@ -394,6 +395,7 @@ export async function editArticle(
     const edited: EditedArticle = {
       headword: word,
       variety: article.variety,
+      phrases,
       etymons: article.etymons.map((etymon, e) => ({
         ...(etymon.origin && { originId: `o${e + 1}`, origin: '' }),
         lexemes: lexemes

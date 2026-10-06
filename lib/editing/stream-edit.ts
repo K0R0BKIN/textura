@@ -2,13 +2,16 @@ import 'server-only';
 
 import { after } from 'next/server';
 import { saveEditedArticle } from '@/lib/articles';
-import type { Article, EditStreamMessage } from '@/lib/schemas';
+import type { Article, EditedArticle, EditStreamMessage } from '@/lib/schemas';
 import { editArticle } from './edit-article';
 
 // Streams an article's edit as JSON lines and saves the result. The edit
 // runs to completion even if the reader disconnects, so the next view gets
 // the saved article.
-export function streamEdit(article: Article) {
+export function streamEdit(
+  article: Article,
+  phrases: EditedArticle['phrases'] = [],
+) {
   const encoder = new TextEncoder();
   let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
   let open = true;
@@ -31,7 +34,7 @@ export function streamEdit(article: Article) {
     },
   });
 
-  const job = editArticle(article, send)
+  const job = editArticle(article, send, phrases)
     .then(saveEditedArticle)
     .catch((error: unknown) => {
       console.error(error);

@@ -4,9 +4,10 @@ import { parseArgs } from 'node:util';
 import { createGunzip } from 'node:zlib';
 import { sql } from 'drizzle-orm';
 import { drizzleDb } from '@/lib/db';
-import { articles } from '@/lib/db/schema';
+import { articles, phrases } from '@/lib/db/schema';
 import { toStoredArticle } from '@/lib/db/stored-article';
 import { parseLabels } from '@/lib/labels';
+import { phraseLinks, type PhraseKind } from '@/lib/phrases';
 import {
   ArticleSchema,
   HeadwordSchema,
@@ -87,6 +88,9 @@ const lexicalCategories: Record<string, LexicalCategory> = {
 };
 
 const missingEtymology = '(This etymology is missing or incomplete.';
+
+// Phrases found on the way, written once all articles are in.
+const phraseRows: { headword: string; phrase: string; kind: PhraseKind }[] = [];
 
 const stats = {
   entries: 0,
@@ -280,8 +284,17 @@ async function* readArticles(path: string) {
     }
 
     const article = buildArticle(word, entries);
-    if (article) yield article;
-    else stats.skippedEmpty++;
+    if (!article) {
+      stats.skippedEmpty++;
+      return;
+    }
+    for (const link of phraseLinks(
+      word,
+      entries.map((entry) => entry.pos),
+    )) {
+      phraseRows.push({ ...link, phrase: word });
+    }
+    yield article;
   }
 
   for await (const line of lines) {
@@ -378,9 +391,24 @@ async function main() {
   if (!dryRun && batch.length > 0) write(batch);
   await Promise.all(writes);
 
+  if (!dryRun) {
+    if (!upsert) await drizzleDb.execute(sql`truncate table ${phrases}`);
+    for (let start = 0; start < phraseRows.length; start += batchSize) {
+      await drizzleDb
+        .insert(phrases)
+        .values(
+          phraseRows
+            .slice(start, start + batchSize)
+            .map((row) => ({ ...row, variety })),
+        )
+        .onConflictDoNothing();
+    }
+  }
+
   console.log({
     ...stats,
     megabytes: Math.round(stats.bytes / 1024 / 1024),
+    phrases: phraseRows.length,
     unmappedPos: Object.fromEntries(stats.unmappedPos),
   });
 }
