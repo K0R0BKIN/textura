@@ -6,6 +6,7 @@
 // CONFIGS=luna:none,sol:low limits the configurations; OUT=file saves results.
 import { writeFileSync } from 'node:fs';
 import { and, eq } from 'drizzle-orm';
+import { JSONParser } from '@streamparser/json';
 import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
@@ -52,15 +53,28 @@ async function group(
   config: (typeof configs)[0],
 ) {
   const started = Date.now();
+  // Streamed, as the pipeline would: the first complete core sense can be
+  // defined while the rest are still being grouped.
+  let firstText: number | undefined;
+  let firstCore: number | undefined;
+  const parser = new JSONParser({ paths: ['$.cores.*'] });
+  parser.onValue = () => (firstCore ??= Date.now() - started);
   try {
-    const response = await openai.responses.parse({
+    const stream = openai.responses.stream({
       model: config.model,
       reasoning: { effort: config.effort },
       instructions: prompt,
       input: JSON.stringify({ partOfSpeech: label, senses: input }),
       text: { format: zodTextFormat(Output, 'grouping') },
     });
-    const { cores } = response.output_parsed!;
+    stream.on('response.output_text.delta', ({ delta }) => {
+      firstText ??= Date.now() - started;
+      if (!parser.isEnded) parser.write(delta);
+    });
+    const response = await stream.finalResponse();
+    const { cores } = Output.parse(JSON.parse(response.output_text));
+    const reasoningTokens =
+      response.usage?.output_tokens_details.reasoning_tokens ?? 0;
     const placed = cores.flatMap((core) => [core.id, ...core.subsenses]);
     const ids = new Set(input.map((sense) => sense.id));
     const problems = [
@@ -72,7 +86,14 @@ async function group(
         .map((id) => `duplicate ${id}`),
       ...placed.filter((id) => !ids.has(id)).map((id) => `unknown ${id}`),
     ];
-    return { ms: Date.now() - started, cores, problems };
+    return {
+      ms: Date.now() - started,
+      firstText,
+      firstCore,
+      reasoningTokens,
+      cores,
+      problems,
+    };
   } catch (error) {
     return {
       ms: Date.now() - started,
@@ -124,7 +145,7 @@ for (const word of words) {
         groupings
           .map(
             (g) =>
-              `${g.label.split(' ')[0]} ${g.senses.length}→${g.cores.length}${g.problems.length > 0 ? ` (${g.problems.length} problems)` : ''}`,
+              `${g.label.split(' ')[0]} ${g.senses.length}→${g.cores.length} first ${((g.firstCore ?? 0) / 1000).toFixed(1)}s/${(g.ms / 1000).toFixed(1)}s r${'reasoningTokens' in g ? g.reasoningTokens : 0}${g.problems.length > 0 ? ` (${g.problems.length} problems)` : ''}`,
           )
           .join(', '),
     );
