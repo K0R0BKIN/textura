@@ -23,7 +23,7 @@ async function checkHeadwordSupport(headword: Headword) {
   const response = await client.responses.parse({
     model: 'gpt-6-luna',
     input: buildCheckHeadwordSupportPrompt(headword),
-    reasoning: { effort: 'low' },
+    reasoning: { effort: 'none' },
     text: {
       format: zodTextFormat(HeadwordSupportSchema, 'headword_support'),
     },
