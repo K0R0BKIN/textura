@@ -7,6 +7,7 @@ import { and, eq } from 'drizzle-orm';
 import { ArticleSchema, type Headword } from './schemas';
 import { drizzleDb } from './db';
 import { articles } from './db/schema';
+import { buildGenerateArticlePrompt } from './prompts/generate-article';
 
 const client = new OpenAI();
 
@@ -35,13 +36,7 @@ export async function generateArticle(headword: Headword) {
 
   const response = await client.responses.parse({
     model: 'gpt-5.4-mini',
-    prompt: {
-      id: 'pmpt_69a975f6d0b0819791769e9d5c95723a046b78f99e06fd36',
-      variables: {
-        headword: headword.form,
-        variety: headword.variety,
-      },
-    },
+    input: buildGenerateArticlePrompt(headword),
     reasoning: { effort: 'medium' },
     text: {
       format: zodTextFormat(ArticleSchema, 'article'),

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { cacheLife } from 'next/cache';
 import { findArticle } from './articles';
+import { buildCheckHeadwordSupportPrompt } from './prompts/check-headword-support';
 import {
   HeadwordSchema,
   HeadwordSupportSchema,
@@ -21,13 +22,7 @@ async function checkHeadwordSupport(headword: Headword) {
 
   const response = await client.responses.parse({
     model: 'gpt-5.4-mini',
-    prompt: {
-      id: 'pmpt_69bd228450dc8195a8bf374707050ae00df4bc468296a4e2',
-      variables: {
-        form: headword.form,
-        variety: headword.variety,
-      },
-    },
+    input: buildCheckHeadwordSupportPrompt(headword),
     reasoning: { effort: 'medium' },
     text: {
       format: zodTextFormat(HeadwordSupportSchema, 'headword_support'),
