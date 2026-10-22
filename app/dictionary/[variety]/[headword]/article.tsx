@@ -54,6 +54,17 @@ function ArticleNotFound() {
   );
 }
 
+export function ArticleError() {
+  return (
+    <Empty>
+      <EmptyHeader>
+        <EmptyTitle>Couldn’t load this word</EmptyTitle>
+        <EmptyDescription>Something went wrong. Try again.</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  );
+}
+
 export function Article() {
   const params = useParams<{
     headword: string;
@@ -77,7 +88,7 @@ export function Article() {
     ssr: false,
   });
 
-  if (error) throw error;
+  if (error) return <ArticleError />;
   if (showSkeleton) return <ArticleSkeleton />;
   if (article === null) return <ArticleNotFound />;
   if (!article) return null;
