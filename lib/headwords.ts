@@ -4,7 +4,6 @@ import OpenAI from 'openai';
 import { z } from 'zod';
 import { zodTextFormat } from 'openai/helpers/zod';
 import { cacheLife } from 'next/cache';
-import { findArticle } from './articles';
 import { buildCheckHeadwordSupportPrompt } from './prompts/check-headword-support';
 import {
   HeadwordSchema,
@@ -17,8 +16,6 @@ const client = new OpenAI();
 async function checkHeadwordSupport(headword: Headword) {
   'use cache';
   cacheLife('max');
-
-  if (await findArticle(headword)) return true;
 
   const response = await client.responses.parse({
     model: 'gpt-6-luna',

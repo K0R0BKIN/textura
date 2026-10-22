@@ -33,9 +33,6 @@ export async function generateArticle(headword: Headword) {
   cacheLife('max');
   cacheTag('articles');
 
-  const existing = await findArticle(headword);
-  if (existing) return existing;
-
   const response = await client.responses.parse({
     model: 'gpt-6-luna',
     input: buildGenerateArticlePrompt(headword),
