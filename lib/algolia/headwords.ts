@@ -35,7 +35,7 @@ function headwordObjectID(headword: Headword) {
 export function getArticleDisplay(
   article: Article,
 ): HeadwordDisplay | undefined {
-  const lexeme = article.etymons[0]?.lexemes[0];
+  const lexeme = article.homographs[0]?.lexemes[0];
   const sense = lexeme?.senses[0];
 
   if (!lexeme && !sense) return undefined;

@@ -3,13 +3,13 @@ export {
   LexicalCategorySchema,
   TranscriptionSchema,
   LexemeSchema,
-  EtymonSchema,
+  HomographSchema,
   type Sense,
   type LexicalCategory,
   type Transcription,
   type Lexeme,
-  type Etymon,
-} from './etymon';
+  type Homograph,
+} from './homograph';
 export { ArticleSchema, type Article } from './article';
 export { VarietySchema, slugToVariety, type Variety } from './variety';
 export {

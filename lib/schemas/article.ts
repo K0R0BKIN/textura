@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { EtymonSchema } from './etymon';
+import { HomographSchema } from './homograph';
 import { VarietySchema } from './variety';
 
 export const ArticleSchema = z.object({
   headword: z.string(),
   variety: VarietySchema,
-  etymons: z.array(EtymonSchema),
+  homographs: z.array(HomographSchema),
 });
 export type Article = z.infer<typeof ArticleSchema>;

@@ -33,8 +33,8 @@ export const LexemeSchema = z.object({
 });
 export type Lexeme = z.infer<typeof LexemeSchema>;
 
-export const EtymonSchema = z.object({
+export const HomographSchema = z.object({
   origin: z.string(),
   lexemes: z.array(LexemeSchema),
 });
-export type Etymon = z.infer<typeof EtymonSchema>;
+export type Homograph = z.infer<typeof HomographSchema>;

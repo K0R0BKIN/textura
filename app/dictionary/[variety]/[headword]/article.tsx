@@ -82,28 +82,31 @@ export function Article() {
   if (article === null) return <ArticleNotFound />;
   if (!article) return null;
 
-  const showSuperscript = article.etymons.length > 1;
+  const showHomographNumbers = article.homographs.length > 1;
 
   return (
     <article className="mx-auto w-full max-w-2xl py-26">
       <h1 className="sr-only">{article.headword}</h1>
 
-      {article.etymons.map((etymon, etymonIndex) => (
-        <section key={etymonIndex} className={etymonIndex > 0 ? 'mt-12' : ''}>
+      {article.homographs.map((homograph, homographIndex) => (
+        <section
+          key={homographIndex}
+          className={homographIndex > 0 ? 'mt-12' : ''}
+        >
           <h2 className="font-serif text-5xl font-semibold tracking-tight [font-variation-settings:'opsz'_16]">
             {article.headword}
-            {showSuperscript && (
+            {showHomographNumbers && (
               <sup className="text-subtle-foreground select-none">
-                {etymonIndex + 1}
+                {homographIndex + 1}
               </sup>
             )}
           </h2>
 
           <p className="mt-2 font-serif text-muted-foreground">
-            {etymon.origin}
+            {homograph.origin}
           </p>
 
-          {etymon.lexemes?.map((lexeme, lexemeIndex) => (
+          {homograph.lexemes?.map((lexeme, lexemeIndex) => (
             <div
               key={lexemeIndex}
               className={lexemeIndex === 0 ? 'mt-4' : 'mt-8'}

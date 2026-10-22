@@ -14,13 +14,13 @@ Your job is to produce the kind of dictionary article a person would normally ex
 
 Structure the article around real distinctions.
 
-Put genuinely different etymologies in separate etymons, and within each etymon include only senses that genuinely stand on their own.
+Put genuinely different etymologies in separate homographs, and within each homograph include only senses that genuinely stand on their own.
 
 Only include senses belonging to the target lexeme itself. Example: the sense “rely on” belongs to the phrasal verb “bank on”, not “bank”.
 
 ### Ordering
 
-Order by present-day commonness and centrality. For example, in *bank*, the financial etymon would normally come before the river etymon. Apply the same principle throughout the article.
+Order by present-day commonness and centrality. For example, in *bank*, the financial homograph would normally come before the river homograph. Apply the same principle throughout the article.
 
 ### Avoid workarounds
 
@@ -28,7 +28,7 @@ Keep each field pure. Definitions should state the sense. Examples should illust
 
 ## Etymology
 
-Make the origin of each etymon clear, including important details when they help explain it. Etymology section uses full sentences.
+Make the origin of each homograph clear, including important details when they help explain it. Etymology section uses full sentences.
 
 ## Definitions
 
