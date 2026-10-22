@@ -7,6 +7,8 @@ import { and, eq } from 'drizzle-orm';
 import { ArticleSchema, type Headword } from './schemas';
 import { drizzleDb } from './db';
 import { articles } from './db/schema';
+import { articleToHeadwordRecord } from './algolia/headwords';
+import { writeClient } from './algolia/write-client';
 import { buildGenerateArticlePrompt } from './prompts/generate-article';
 
 const client = new OpenAI();
@@ -54,6 +56,13 @@ export async function generateArticle(headword: Headword) {
         data: output,
       })
       .onConflictDoNothing();
+
+    await writeClient
+      .saveObject({
+        indexName: 'headwords',
+        body: articleToHeadwordRecord(output),
+      })
+      .catch((error) => console.error('Failed to index headword', error));
   }
 
   return output;
