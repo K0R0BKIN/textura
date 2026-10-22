@@ -35,9 +35,9 @@ export async function generateArticle(headword: Headword) {
   if (existing) return existing;
 
   const response = await client.responses.parse({
-    model: 'gpt-5.4-mini',
+    model: 'gpt-6-luna',
     input: buildGenerateArticlePrompt(headword),
-    reasoning: { effort: 'medium' },
+    reasoning: { effort: 'low' },
     text: {
       format: zodTextFormat(ArticleSchema, 'article'),
     },

@@ -21,9 +21,9 @@ async function checkHeadwordSupport(headword: Headword) {
   if (await findArticle(headword)) return true;
 
   const response = await client.responses.parse({
-    model: 'gpt-5.4-mini',
+    model: 'gpt-6-luna',
     input: buildCheckHeadwordSupportPrompt(headword),
-    reasoning: { effort: 'medium' },
+    reasoning: { effort: 'low' },
     text: {
       format: zodTextFormat(HeadwordSupportSchema, 'headword_support'),
     },
