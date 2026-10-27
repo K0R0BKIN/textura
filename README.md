@@ -2,6 +2,8 @@
 
 Textura is a beautiful, modern dictionary in early development. Articles are AI-generated. Only US English is supported for now.
 
+Try it [here](https://textura-umber.vercel.app/).
+
 ## Tech stack
 
 - **Framework:** Next.js 16 (App Router)
