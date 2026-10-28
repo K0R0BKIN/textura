@@ -53,8 +53,6 @@ flowchart LR
 
 Articles are generated with OpenAI [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs) against a Zod schema, so the response arrives parsed and typed. The same schema types the Postgres column, the article page and the search index.
 
-The article schema, simplified:
-
 ```ts
 export const ArticleSchema = z.object({
   headword: z.string(),
