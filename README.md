@@ -2,7 +2,7 @@
 
 Textura is a beautiful, modern dictionary in early development. Articles are AI-generated. Only US English is supported for now.
 
-Try it [here](https://textura-umber.vercel.app/).
+Try it out at [textura-umber.vercel.app](https://textura-umber.vercel.app/).
 
 ## Tech stack
 
