@@ -47,3 +47,6 @@ next-env.d.ts
 /.playwright-cli/
 /playwright/.cache/
 /playwright/.auth/
+
+# neon
+.neon
